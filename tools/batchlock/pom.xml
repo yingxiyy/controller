@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<project
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+        xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.4.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>net.flex.dci.otn.controller.batchlock</groupId>
+    <artifactId>batchlock-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0.0-SNAPSHOT</version>
+    <description>provide lock service</description>
+
+    <modules>
+        <module>batchlock-core</module>
+        <module>providers/zookeeper/batchlock-provider-zookeeper-curator</module>
+        <module>batchlock-lib</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jdk.version>1.8</jdk.version>
+        <logback.version>1.2.3</logback.version>
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <version>2.4.1</version>
+                <type>pom</type>
+                <scope>import</scope>
+
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-x-discovery</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-recipes</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-framework</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>apache-curator</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.zookeeper</groupId>
+                        <artifactId>zookeeper</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!--		      <dependency>-->
+            <!--		        <groupId>org.apache.curator</groupId>-->
+            <!--		        <artifactId>curator-x-discovery</artifactId>-->
+            <!--		        <version>4.0.1</version>-->
+            <!--		      </dependency>-->
+            <!--		      <dependency>-->
+            <!--		        <groupId>org.apache.curator</groupId>-->
+            <!--		        <artifactId>curator-recipes</artifactId>-->
+            <!--		        <version>4.0.1</version>-->
+            <!--		      </dependency>-->
+            <!--		      <dependency>-->
+            <!--		        <groupId>org.apache.curator</groupId>-->
+            <!--		        <artifactId>curator-framework</artifactId>-->
+            <!--		        <version>4.0.1</version>-->
+            <!--		      </dependency>-->
+            <!--		      <dependency>-->
+            <!--		        <groupId>org.apache.curator</groupId>-->
+            <!--		        <artifactId>curator-client</artifactId>-->
+            <!--		        <version>4.0.1</version>-->
+            <!--		      </dependency>-->
+            <!--		      <dependency>-->
+            <!--		        <groupId>org.apache.curator</groupId>-->
+            <!--		        <artifactId>apache-curator</artifactId>-->
+            <!--		        <version>4.0.1</version>-->
+            <!--		      </dependency>-->
+            <dependency>
+                <groupId>org.apache.zookeeper</groupId>
+                <artifactId>zookeeper</artifactId>
+                <version>3.4.6</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${jdk.version}</source>
+                    <target>${jdk.version}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+                <configuration>
+                    <forkCount>4</forkCount>
+                    <argLine>-Xmx512m</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
+                    <source>8</source>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.2</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="LOG_DIR" value="${testLogDir:-C:/DCI/logs}"/>
+
+    <appender name="METHOD_FILE" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <filter class="net.flex.dci.otn.controller.implement.tunnel.RequireTestLogNameFilter"/>
+        <discriminator class="ch.qos.logback.classic.sift.MDCBasedDiscriminator">
+            <key>testLogName</key>
+            <defaultValue>implement-unit-test</defaultValue>
+        </discriminator>
+        <sift>
+            <appender name="FILE-${testLogName}" class="ch.qos.logback.core.FileAppender">
+                <file>${LOG_DIR}/${testLogName}.log</file>
+                <append>false</append>
+                <encoder>
+                    <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{80} - %msg%n</pattern>
+                </encoder>
+            </appender>
+        </sift>
+    </appender>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{60} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="METHOD_FILE"/>
+    </root>
+
+    <logger name="net.flex.dci.otn.controller.implement.tunnel" level="DEBUG"/>
+    <logger name="net.flex.dci.otn.controller.implement.common" level="DEBUG"/>
+</configuration>

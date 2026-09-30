@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>net.flex.dci.otn</groupId>
+    <artifactId>controller</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <groupId>net.flex.dci.otn.controller.allocate</groupId>
+  <artifactId>ne</artifactId>
+  <name>alloc-designer-api</name>
+  <description>provide NE card info for config topo</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.3.2</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jsonschema2pojo</groupId>
+        <artifactId>jsonschema2pojo-maven-plugin</artifactId>
+        <version>1.1.0</version>
+        <executions>
+          <execution>
+            <id>1</id>
+            <configuration>
+              <sourceDirectory>${basedir}/src/main/resources/schema</sourceDirectory>
+              <targetPackage>${project.groupId}.${project.artifactId}</targetPackage>
+              <useCommonsLang3>true</useCommonsLang3>
+            </configuration>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>2</id>
+            <configuration>
+              <sourceDirectory>${basedir}/src/main/resources/json</sourceDirectory>
+              <sourceType>json</sourceType>
+              <targetPackage>${project.groupId}.${project.artifactId}</targetPackage>
+              <useCommonsLang3>true</useCommonsLang3>
+            </configuration>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+</project>

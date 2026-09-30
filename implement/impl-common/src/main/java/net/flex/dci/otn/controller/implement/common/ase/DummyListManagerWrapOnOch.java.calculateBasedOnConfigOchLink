@@ -1,0 +1,467 @@
+package net.flex.dci.otn.controller.implement.common.ase;
+
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import net.flex.dci.otc.common.util.NeYangModel;
+import net.flex.dci.otc.common.util.SpringBeanFinder;
+import net.flex.dci.otc.common.util.frequency.FrequencyAvailable;
+import net.flex.dci.otc.mongo.dao.OchLinkDao;
+import net.flex.dci.otc.mongo.dao.SiteLinkDao;
+import net.flex.dci.otc.mongo.dto.OchLinkBriefInfo;
+import net.flex.dci.otc.mongo.mdoel.ChangedObject;
+import net.flex.dci.otn.controller.implement.common.utils.CommonUtils;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.common.otn.types.rev180515.GridType;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.common.otn.types.rev180515.ImplementState;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Link;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.LinkBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.supported.links.SupportedLink;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.site.topology.rev180426.Link1;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.site.topology.rev180426.Link1Builder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.site.topology.rev180426.site.link.attributes.Site;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.site.topology.rev180426.site.link.attributes.SiteBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.site.topology.rev180426.site.link.attributes.site.Available;
+
+@Slf4j
+public class DummyListManagerWrapOnOch {
+
+    private ChangedObject changedObject;
+
+    private DummyListManager dummyListManager;
+    private DummyOchCreator dummyOchCreator;
+    private Link businessOchLinkForCreatedDummy;
+    private List<String> workingDummyOchLinkRefs = new ArrayList<>();
+    private Map<String, String> dummyOchLinkIdByFrequencyRange = new HashMap<>();
+
+
+    @Getter
+    private String siteLinkId;
+
+    @Getter
+    private DummyListManager.Result result;
+
+
+    public DummyListManagerWrapOnOch(ChangedObject changedObject, Link siteLink) {
+        this.changedObject = changedObject;
+        this.siteLinkId = siteLink.getLinkId().getValue();
+
+        init(siteLink);
+    }
+
+    private void init(Link siteLink) {
+        log.debug("dummy manager init with siteLink {}", siteLinkId);
+        Site siteLinkAttr = siteLink.getAugmentation(Link1.class).getSite();
+        NeYangModel neYangModel = CommonUtils.getYangModelInProperties(
+                siteLinkAttr.getProperties());
+        List<Available> initalScope = FrequencyAvailable.getInitializedAvailableList(neYangModel,
+                CommonUtils.getWDMBand(siteLinkAttr), GridType._0);
+
+        //初始化，
+        // 1. 获取dummyOchLink 已经下发到设备的och的频率，因为这些是需要在 业务波 配置下发/删除的时候清理的
+        // 2. 同时获取所有系统中已经下发到设备的业务波的频率，（partial/implement) 因为这些波道是不能占用的
+        List<DummyListManager.FrequencyRange> supportedBands = convert(initalScope);
+        List<OchLinkBriefInfo> siteLinkOchBriefInfos = getSiteLinkOchBriefInfos();
+        if (siteLinkOchBriefInfos == null) {
+            siteLinkOchBriefInfos = Collections.emptyList();
+        }
+        List<String> siteLinkDummyRefs = siteLinkAttr.getDummyLink();
+        List<String> mergedDummyRefs = siteLinkDummyRefs;
+        boolean hasDbDummyOch = siteLinkOchBriefInfos.stream()
+                .anyMatch(DummyListManagerWrapOnOch::isNonAllocateDummyOch);
+        if (siteLinkDummyRefs != null || hasDbDummyOch) {
+            List<String> dummyRefsBase = siteLinkDummyRefs == null
+                    ? Collections.emptyList()
+                    : siteLinkDummyRefs;
+            mergedDummyRefs = mergeDummyOchLinkRefs(dummyRefsBase, siteLinkOchBriefInfos);
+            if (!dummyRefsBase.equals(mergedDummyRefs)) {
+                // 按 OCH 表中的非 Allocate dummy 关系补齐 siteLink 关系；计算本身也使用这个来源。
+                log.error("repair missing non-allocate dummy relation on siteLink {}, before {}, after {}",
+                        siteLinkId, dummyRefsBase, mergedDummyRefs);
+                siteLink = updateSiteLinkDummyRefs(siteLink, mergedDummyRefs);
+                siteLinkAttr = siteLink.getAugmentation(Link1.class).getSite();
+            }
+
+            log.debug("DUMMY_RELATION_CHECK siteLink={}\n dummyRefs={}\n briefOchInfos={}\n",
+                    siteLinkId,
+                    safeJoin(siteLinkAttr.getDummyLink()),
+                    safeJoin(briefInfoSummary(siteLinkOchBriefInfos)));
+        }
+        workingDummyOchLinkRefs = buildWorkingDummyOchLinkRefs(siteLinkDummyRefs, siteLinkOchBriefInfos);
+        if (siteLinkDummyRefs == null && workingDummyOchLinkRefs.isEmpty()) {
+            mergedDummyRefs = null;
+        } else {
+            mergedDummyRefs = workingDummyOchLinkRefs;
+        }
+        List<DummyListManager.FrequencyRange> dummyOchList = buildDummyList(mergedDummyRefs, siteLinkOchBriefInfos);
+        List<DummyListManager.FrequencyRange> businessOchList = buildAvailableList(siteLinkAttr.getSupportedLink(), siteLinkOchBriefInfos);
+
+        dummyListManager = new DummyListManager(supportedBands, dummyOchList, businessOchList);
+        dummyOchCreator = new DummyOchCreator(siteLink.getLinkId().getValue(), changedObject);
+    }
+
+    private Link updateSiteLinkDummyRefs(Link siteLink, List<String> mergedDummyRefs) {
+        Site siteLinkAttr = siteLink.getAugmentation(Link1.class).getSite();
+        Link newLink = new LinkBuilder(siteLink).addAugmentation(Link1.class, new Link1Builder()
+                        .setSite(new SiteBuilder(siteLinkAttr)
+                                .setDummyLink(mergedDummyRefs)
+                                .build())
+                        .build())
+                .build();
+        changedObject.addChangedSiteLink(newLink);
+        return newLink;
+    }
+
+    private List<OchLinkBriefInfo> getSiteLinkOchBriefInfos() {
+        OchLinkDao ochLinkDao = SpringBeanFinder.getBean(OchLinkDao.class);
+        // The brief query is based on OCH supporting-link relationship. A ROADM OCH
+        // that crosses multiple siteLinks will be returned for each related siteLink.
+        return ochLinkDao.retrieveAllOchLinkBriefInfoByOchLinkIds(
+                Collections.singletonList(siteLinkId));
+    }
+
+    private List<DummyListManager.FrequencyRange> convert(List<Available> initalScope) {
+        return initalScope.stream().map(x -> new DummyListManager
+                .FrequencyRange(x.getLowerFrequency().getValue().longValue(),
+                x.getUpperFrequency().getValue().longValue())).collect(Collectors.toList());
+    }
+
+    public void addBusinessOch(long lower, long upper) {
+        result = dummyListManager.addBusinessOch(new DummyListManager.FrequencyRange(lower, upper));
+//        fetchRemovedDummyOch(result.getRemoved());
+//        fetchCreatedDummyOch(result.getAdded());
+    }
+
+    public void delBusinessOch(long lower, long upper) {
+        result = dummyListManager.removeBusinessOch(new DummyListManager.FrequencyRange(lower, upper));
+//        fetchRemovedDummyOch(result.getRemoved());
+//        fetchCreatedDummyOch(result.getAdded());
+    }
+
+    public void useBusinessOchDirection(Link businessOchLink) {
+        // 只有补假波会新建 DGE WSS XC，此时需要和业务 OCH 上的 source/destination 方向一致。
+        businessOchLinkForCreatedDummy = businessOchLink;
+    }
+
+    public List<Link> fetchCreatedDummyOch() {
+        List<DummyListManager.FrequencyRange> addedList = result.getAdded();
+        log.info("add dummy och ({}), {} on siteLink {}", addedList.size(), addedList, siteLinkId);
+        List<Link> toCreatedOchLinkList = addedList.stream().map(added -> {
+            Link dummyOchLink = businessOchLinkForCreatedDummy == null
+                    ? dummyOchCreator.createAseOchLink(added.lower, added.upper)
+                    : dummyOchCreator.createAseOchLink(added.lower, added.upper, businessOchLinkForCreatedDummy);
+
+            log.debug("insert new dummy och link, {}", dummyOchLink.getLinkId().getValue());
+            return dummyOchLink;
+        }).collect(Collectors.toList());
+
+        return toCreatedOchLinkList;
+    }
+
+    public List<String> fetchRemovedDummyOch() {
+        List<DummyListManager.FrequencyRange> removedList = result.getRemoved();
+        log.info("remove dummy och ({}), {} on siteLink {}", removedList.size(), removedList,
+                siteLinkId);
+        List<String> toRemovedOchIdList = removedList.stream().map(removed -> {
+            //get remove dummyOch linkID
+            String ochLinkId = getDummyOchLinkId(removed.getLower(), removed.getUpper());
+            if (ochLinkId == null) {
+                String msg = "this is impossible, haven't find dummy och in dummyList of siteLink";
+                throw new RuntimeException(msg);
+            }
+
+            log.debug("remove dummy och link, {}", ochLinkId);
+            return ochLinkId;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+
+        return toRemovedOchIdList;
+    }
+
+    public List<Link> getWorkingDummyOchLinks() {
+        return workingDummyOchLinkRefs.stream()
+                .map(ochLinkId -> changedObject.getChangedOchLink(ochLinkId))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private String getDummyOchLinkId(long lower, long upper) {
+        String target = lower + "-" + upper;
+        String ochLinkId = dummyOchLinkIdByFrequencyRange.get(target);
+        if (ochLinkId != null) {
+            return ochLinkId;
+        }
+
+        Link siteLink = changedObject.getChangedSiteLink(siteLinkId);
+        Site siteLinkAttr = siteLink.getAugmentation(Link1.class).getSite();
+        List<String> dummyOchLinkIdList = siteLinkAttr.getDummyLink();
+        if (dummyOchLinkIdList == null) {
+            return null;
+        }
+
+        Optional<String> strOp = dummyOchLinkIdList.stream()
+                .filter(id -> id.contains(target))
+                .findAny();
+        if (strOp.isPresent()) {
+            return strOp.get();
+        }
+        return null;
+    }
+
+
+    //拿到所有已经下发给设备的dummyOch ， 即使是partial
+    private List<DummyListManager.FrequencyRange> buildDummyList(List<String> dummyOchLinkIdList,
+                                                                 List<OchLinkBriefInfo> siteLinkOchBriefInfos) {
+        List<String> errorLink = new ArrayList<>();
+
+        List<DummyListManager.FrequencyRange> impledOchList =
+                buildDummyFrequencyRanges(dummyOchLinkIdList, siteLinkOchBriefInfos, errorLink);
+        updateDummyOchLinkIdByFrequencyRange(dummyOchLinkIdList, siteLinkOchBriefInfos, errorLink);
+
+        recoverSiteLinkErrorData(errorLink);
+//        log.info("we have {} dummy frequency on sitelink", impledOchList.size());
+        return impledOchList;
+    }
+
+    private void updateDummyOchLinkIdByFrequencyRange(List<String> dummyOchLinkIdList,
+                                                      List<OchLinkBriefInfo> siteLinkOchBriefInfos,
+                                                      List<String> errorLink) {
+        if (dummyOchLinkIdList == null) {
+            return;
+        }
+        Map<String, OchLinkBriefInfo> briefInfoMap = indexBriefInfoById(siteLinkOchBriefInfos);
+        dummyOchLinkIdList.stream()
+                .filter(ochLinkId -> !errorLink.contains(ochLinkId))
+                .map(briefInfoMap::get)
+                .filter(Objects::nonNull)
+                .filter(briefInfo -> !ImplementState.Allocate.equals(briefInfo.getImplementState()))
+                .forEach(briefInfo -> dummyOchLinkIdByFrequencyRange.put(
+                        briefInfo.getLowerFrequency().longValue() + "-" + briefInfo.getUpperFrequency().longValue(),
+                        briefInfo.getOchLinkId()));
+    }
+
+    private void recoverSiteLinkErrorData(List<String> errorLink) {
+        if (errorLink.isEmpty()) {
+            return;
+        }
+        log.error(
+                "find error info in dummylink, following och link is not existed in och-link table {}",
+                errorLink);
+        Link siteLink = changedObject.getChangedSiteLink(siteLinkId);
+        Site siteLinkAttr = siteLink.getAugmentation(Link1.class).getSite();
+
+        ArrayList<String> newDummyList = new ArrayList<>(siteLinkAttr.getDummyLink());
+        newDummyList.removeIf(errorLink::contains);
+
+        Link newLink = new LinkBuilder(siteLink).addAugmentation(Link1.class, new Link1Builder()
+                        .setSite(new SiteBuilder(siteLinkAttr)
+                                .setDummyLink(newDummyList)
+                                .build())
+                        .build())
+                .build();
+
+        SiteLinkDao siteLinkDao = SpringBeanFinder.getBean(SiteLinkDao.class);
+        siteLinkDao.saveSiteLink(newLink);
+        changedObject.addChangedSiteLink(newLink);
+    }
+
+    //siteLink 的 supportedLink 都是业务 OCH link，这里只返回非 Allocate 状态的业务波频率
+    private List<DummyListManager.FrequencyRange> buildAvailableList(List<SupportedLink> supportedLink,
+                                                                     List<OchLinkBriefInfo> siteLinkOchBriefInfos) {
+
+        if (supportedLink == null) {
+            return new ArrayList<>();
+        }
+
+        List<String> supportedOchLinkIds = supportedLink.stream()
+                .map(sl -> sl.getLinkRef().getValue())
+                .collect(Collectors.toList());
+        List<DummyListManager.FrequencyRange> impledOchList =
+                buildBusinessFrequencyRanges(supportedOchLinkIds, siteLinkOchBriefInfos);
+
+//        log.info("we have {} business frequency on sitelink.", impledOchList.size());
+        return impledOchList;
+    }
+
+    static List<DummyListManager.FrequencyRange> buildDummyFrequencyRanges(
+            List<String> dummyOchLinkIdList,
+            List<OchLinkBriefInfo> siteLinkOchBriefInfos,
+            List<String> errorLink) {
+        List<DummyListManager.FrequencyRange> impledOchList = new ArrayList<>();
+        if (dummyOchLinkIdList == null) {
+            impledOchList.add(new DummyListManager.FrequencyRange(0, 0));
+            return impledOchList;
+        }
+
+        Map<String, OchLinkBriefInfo> briefInfoMap = indexBriefInfoById(siteLinkOchBriefInfos);
+        dummyOchLinkIdList.forEach(ochLinkId -> {
+            OchLinkBriefInfo ochLink = briefInfoMap.get(ochLinkId);
+            if (ochLink == null) {
+                // Keep the old recovery behavior: a stale siteLink.dummyLink relation
+                // is removed when the referenced dummy OCH no longer exists.
+                log.error("the dummy och link has been removed some where, still exists in siteLink, remove it {}", ochLinkId);
+                errorLink.add(ochLinkId);
+            } else if (ochLink.getImplementState().equals(ImplementState.Allocate)) {
+                log.error("the dummy och link working in Allocate, will remove it {}", ochLinkId);
+                errorLink.add(ochLinkId);
+            } else {
+                addOchFrequency(ochLink, impledOchList);
+            }
+        });
+
+        return impledOchList;
+    }
+
+    private List<String> buildWorkingDummyOchLinkRefs(List<String> siteLinkDummyRefs,
+                                                      List<OchLinkBriefInfo> siteLinkOchBriefInfos) {
+        Set<String> workingRefs = new LinkedHashSet<>();
+        if (siteLinkDummyRefs != null) {
+            workingRefs.addAll(siteLinkDummyRefs);
+        }
+        if (siteLinkOchBriefInfos != null) {
+            siteLinkOchBriefInfos.stream()
+                    .filter(DummyListManagerWrapOnOch::isNonAllocateDummyOch)
+                    .map(OchLinkBriefInfo::getOchLinkId)
+                    .filter(Objects::nonNull)
+                    .forEach(workingRefs::add);
+        }
+
+        // 同一次业务动作中新增/删除的 dummy OCH 还没有入库，计算必须叠加 ChangedObject。
+        changedObject.getChangedOchLinkList().values().stream()
+                .filter(this::isWorkingDummyOchOnCurrentSiteLink)
+                .map(link -> link.getLinkId().getValue())
+                .forEach(workingRefs::add);
+        workingRefs.removeAll(changedObject.getRemovedOchLinkIdList());
+        return new ArrayList<>(workingRefs);
+    }
+
+    private boolean isWorkingDummyOchOnCurrentSiteLink(Link ochLink) {
+        if (ochLink == null || ochLink.getLinkId() == null
+                || !isDummyOchLinkId(ochLink.getLinkId().getValue())
+                || ochLink.getSupportingLink() == null) {
+            return false;
+        }
+        org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.och.topology.rev180515.och.link.attributes.Och och =
+                ochLink.getAugmentation(org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.och.topology.rev180515.Link1.class)
+                        .getOch();
+        if (ImplementState.Allocate.equals(och.getImplementState())) {
+            return false;
+        }
+        return ochLink.getSupportingLink().stream()
+                .anyMatch(sl -> siteLinkId.equals(sl.getLinkRef().getValue()));
+    }
+
+    /**
+     * 2026-08-14 新加的，因为测试发现，某些情况会出现ochLink table 中有这个ochLink 但是siteLink的dummyOchLink列表中没有
+     * 这个地方就是merge
+     * @param dummyOchLinkIdList  siteLink数据结构中保存的dummyOchLinkID 列表
+     * @param ochBriefInfosInOchLinkTable  ochLink 数据库中查出来的ochLinkId
+     * @return
+     */
+    static List<String> mergeDummyOchLinkRefs(List<String> dummyOchLinkIdList,
+                                              List<OchLinkBriefInfo> ochBriefInfosInOchLinkTable) {
+        List<String> merged = new ArrayList<>(dummyOchLinkIdList);
+
+        if (ochBriefInfosInOchLinkTable != null) {
+            ochBriefInfosInOchLinkTable.stream()
+                    .filter(DummyListManagerWrapOnOch::isNonAllocateDummyOch)
+                    .map(OchLinkBriefInfo::getOchLinkId)
+                    .filter(Objects::nonNull)
+                    .forEach(ochLinkId -> {
+                        if (!merged.contains(ochLinkId)) {
+                            merged.add(ochLinkId);
+                        }
+                    });
+        }
+
+        return merged;
+    }
+
+    private static boolean isNonAllocateDummyOch(OchLinkBriefInfo briefInfo) {
+        return briefInfo != null
+                && !ImplementState.Allocate.equals(briefInfo.getImplementState())
+                && isDummyOch(briefInfo);
+    }
+
+    private static boolean isDummyOch(OchLinkBriefInfo briefInfo) {
+        String friendlyName = briefInfo.getFriendlyName();
+        String ochLinkId = briefInfo.getOchLinkId();
+        return (friendlyName != null && friendlyName.startsWith("ASE:"))
+                || isDummyOchLinkId(ochLinkId);
+    }
+
+    private static boolean isDummyOchLinkId(String ochLinkId) {
+        return ochLinkId != null && ochLinkId.startsWith("OchLink-#");
+    }
+
+    static List<DummyListManager.FrequencyRange> buildBusinessFrequencyRanges(
+            List<String> supportedOchLinkIds,
+            List<OchLinkBriefInfo> siteLinkOchBriefInfos) {
+        List<DummyListManager.FrequencyRange> impledOchList = new ArrayList<>();
+        Map<String, OchLinkBriefInfo> briefInfoMap = indexBriefInfoById(siteLinkOchBriefInfos);
+        supportedOchLinkIds.forEach(ochLinkId -> {
+            OchLinkBriefInfo ochLink = briefInfoMap.get(ochLinkId);
+            if (ochLink == null) {
+                log.error("meaningless ochLink :{},skip it", ochLinkId);
+            } else if (!ochLink.getImplementState().equals(ImplementState.Allocate)) {
+                addOchFrequency(ochLink, impledOchList);
+            }
+        });
+        return impledOchList;
+    }
+
+    private static Map<String, OchLinkBriefInfo> indexBriefInfoById(
+            List<OchLinkBriefInfo> siteLinkOchBriefInfos) {
+        Map<String, OchLinkBriefInfo> briefInfoMap = new HashMap<>();
+        if (siteLinkOchBriefInfos == null) {
+            return briefInfoMap;
+        }
+        siteLinkOchBriefInfos.forEach(briefInfo -> {
+            if (briefInfo != null && briefInfo.getOchLinkId() != null) {
+                briefInfoMap.put(briefInfo.getOchLinkId(), briefInfo);
+            }
+        });
+        return briefInfoMap;
+    }
+
+    private static void addOchFrequency(OchLinkBriefInfo ochLink,
+                                        List<DummyListManager.FrequencyRange> impledOchList) {
+        log.info("get och frequency the ochLinkId is:{}", ochLink.getOchLinkId());
+        long lower = ochLink.getLowerFrequency().longValue();
+        long upper = ochLink.getUpperFrequency().longValue();
+        impledOchList.add(new DummyListManager.FrequencyRange(lower, upper));
+    }
+
+
+    private static List<String> briefInfoSummary(List<OchLinkBriefInfo> siteLinkOchBriefInfos) {
+        if (siteLinkOchBriefInfos == null) {
+            return Collections.emptyList();
+        }
+        return siteLinkOchBriefInfos.stream()
+                .filter(Objects::nonNull)
+                .map(info -> String.format("%s[%s,%s,%s]",
+                        info.getOchLinkId(),
+                        info.getLowerFrequency(),
+                        info.getUpperFrequency(),
+                        info.getImplementState()))
+                .collect(Collectors.toList());
+    }
+
+    private static String safeJoin(List<String> values) {
+        if (values == null || values.isEmpty()) {
+            return "";
+        }
+        return values.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining("\n"));
+    }
+
+}

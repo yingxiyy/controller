@@ -1,0 +1,39 @@
+server:
+  port: @port.allocate@
+  yangModel: ByteDance
+  # Automatic new-OCH frequency allocation order: ASCENDING or DESCENDING.
+  frequency-allocation-order: ASCENDING
+
+# false means mandatory nodes and SiteLinks are unordered containment constraints.
+# Ordered mandatory resources are not supported and are rejected when this is true.
+tunnel:
+  route:
+    mandatory-resources-ordered: false
+#kafka:
+#  partition-number: '5'
+
+
+logging.level.org: info
+logging.level.root: debug
+logging.level.net.flex.dci.otn.controller.allocate: DEBUG
+logging.level.net.flex.dci.otc.common.util: DEBUG
+logging.level.net.flex.dci.otc.tools.lock: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+kafka:
+  bootstrap-servers: 127.0.0.1:9092
+  replication-factor: '1'
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+kafka:
+  bootstrap-servers: $KAFKA_BROKER
+  replication-factor: ${KAFKA_REPLICA}

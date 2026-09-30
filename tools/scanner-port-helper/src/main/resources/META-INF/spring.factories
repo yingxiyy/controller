@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+net.flex.dci.otc.controller.scanner.port.helper.config.ScannerPortHelperAutoConfiguration

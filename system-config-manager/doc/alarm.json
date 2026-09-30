@@ -1,0 +1,90 @@
+{
+  "alarms": {
+    "alarm": [
+      {
+        "id": "403128",
+        "state": {
+          "id": "403128",
+          "resource": "PORT-1-40-NMS",
+          "component": "PORT-1-40-NMS",
+          "text": "NMS_Port_Down",
+          "group": "PORT_Failure",
+          "time-created": "1638747260063",
+          "severity": "CRITICAL",
+          "service-affect": "false",
+          "type-id": "SYS"
+        }
+      },
+      {
+        "id": "404266",
+        "state": {
+          "id": "404266",
+          "resource": "PORT-1-40-CON",
+          "component": "PORT-1-40-CON",
+          "text": "CON_Port_Enable",
+          "group": "PORT_Abnormal",
+          "time-created": "1638432279345",
+          "severity": "MINOR",
+          "service-affect": "false",
+          "type-id": "SYS"
+        }
+      },
+      {
+        "id": "11182",
+        "state": {
+          "id": "11182",
+          "resource": "AMPLIFIER-1-1-BA",
+          "component": "PORT-1-1-LINE",
+          "text": "APR_Active",
+          "group": "OA_Port_Failure",
+          "time-created": "1638844963024",
+          "severity": "MAJOR",
+          "service-affect": "false",
+          "type-id": "OTS"
+        }
+      },
+      {
+        "id": "11177",
+        "state": {
+          "id": "11177",
+          "resource": "PORT-1-1-LINE",
+          "component": "PORT-1-1-LINE",
+          "text": "MUT_LOS;PA input power is lower than threshold -35.00 dBm, at the same time, OSC input power is lower than threshold -43.00 dBm",
+          "group": "OA_Port_Failure",
+          "time-created": "1638844964717",
+          "severity": "CRITICAL",
+          "service-affect": "true",
+          "type-id": "OTS"
+        }
+      },
+      {
+        "id": "12199",
+        "state": {
+          "id": "12199",
+          "resource": "PORT-1-1-SIG",
+          "component": "PORT-1-1-SIG",
+          "text": "BA_Input_LOS;BA input power is lower than threshold -35.00 dBm",
+          "group": "Port_Failure_OA_SIG",
+          "time-created": "1638844963275",
+          "severity": "CRITICAL",
+          "service-affect": "true",
+          "type-id": "LOS"
+        }
+      },
+      {
+        "id": "325213",
+        "state": {
+          "id": "325213",
+          "resource": "APS-1-3-1",
+          "component": "PORT-1-3-A",
+          "text": "OP_Switch;Received signal is switched from port A to B. Start time:2021-12-09 14:55:37.0 End time:2021-12-09 14:55:37.1 Duration:1 ms",
+          "group": "OP_Switch",
+          "time-created": "1639032937591",
+          "severity": "WARNING",
+          "service-affect": "true",
+          "type-id": "AIS"
+        }
+      }
+    ]
+  }
+}

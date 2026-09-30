@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>net.flex.dci.otn</groupId>
+    <artifactId>controller</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <groupId>net.flex.dci.otn.controller.tools</groupId>
+  <artifactId>utils</artifactId>
+  <description>provide common class in controller</description>
+  <packaging>jar</packaging>
+
+
+  <dependencies>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>net.flex.dci.otc</groupId>
+      <artifactId>db-mongo</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>net.flex.dci.otc</groupId>
+      <artifactId>optical-tools</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+
+<!--  <build>-->
+<!--    <plugins>-->
+<!--      <plugin>-->
+<!--        <groupId>org.apache.maven.plugins</groupId>-->
+<!--        <artifactId>maven-resources-plugin</artifactId>-->
+<!--        <version>2.7</version>-->
+<!--        <configuration>-->
+<!--          <delimiters>-->
+<!--            <delimiter>@</delimiter>-->
+<!--          </delimiters>-->
+<!--          <useDefaultDelimiters>false</useDefaultDelimiters>-->
+<!--        </configuration>-->
+<!--      </plugin>-->
+<!--    </plugins>-->
+<!--  </build>-->
+
+</project>

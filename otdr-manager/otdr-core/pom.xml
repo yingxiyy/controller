@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>otdr-core</artifactId>
+  <dependencies>
+    <dependency>
+      <artifactId>otdr-common</artifactId>
+      <groupId>net.flex.dci.otn</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>fastjson</artifactId>
+      <groupId>com.alibaba</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>rpc-client</artifactId>
+      <groupId>net.flex.dci.otn</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>netconf-serialization</artifactId>
+      <groupId>net.flex.dci.otc</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>db-mongo</artifactId>
+      <groupId>net.flex.dci.otc</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>db-mysql</artifactId>
+      <groupId>net.flex.dci.otc</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>kafka</artifactId>
+      <groupId>net.flex.dci.otn.controller.tools</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>scanner-port-helper</artifactId>
+      <groupId>net.flex.dci.otn</groupId>
+    </dependency>
+  </dependencies>
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>otdr-manager</artifactId>
+    <groupId>net.flex.dci.otn</groupId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+
+  <properties>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+  </properties>
+
+</project>

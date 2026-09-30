@@ -1,0 +1,3827 @@
+{
+  "info": {
+    "_postman_id": "cda88381-e2cc-4de8-b1be-1eac274af9e7",
+    "name": "Device Maintenance API Tests",
+    "description": "设备维护服务API测试集合\n\n注意事项:\n1. 内部微服务调用，无需 OAuth2 认证\n2. 所有备份/恢复接口已更新为批量格式（支持单设备或多设备）\n3. 批量升级已拆分为 Batch Upgrade Tests 和 Workflow Management Tests\n4. 所有单步操作接口保留用于调试\n\n测试分组:\n- Health Checks: 健康检查\n- Device Task Management: 任务管理\n- Device Operations Status Tests: 设备状态查询\n- Software Download/Commit/Rollback Tests: 单步操作测试（调试用）\n- Device Backup/Restore/Upgrade Tests: 单步操作测试（调试用）\n- Batch Operations Tests: 批量单步操作\n- Batch Upgrade Tests: 批量升级（创建、查询、管理）\n- Workflow Management Tests: 工作流管理（步骤控制、重试、移除）\n- Notification Query Tests: 通知查询（辅助）\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Checks",
+      "item": [
+        {
+          "name": "Service Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has status UP', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('UP');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{actuator_base}}/actuator/health",
+              "host": [
+                "{{actuator_base}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Health check for device maintenance service"
+          },
+          "response": []
+        },
+        {
+          "name": "ZooKeeper & Service Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.test('Response contains namespace', function () {",
+                  "    pm.expect(data.namespace).to.eql(pm.environment.get('zk_namespace'));",
+                  "});",
+                  "pm.test('Self service registration is present', function () {",
+                  "    pm.expect(Array.isArray(data.self)).to.eql(true);",
+                  "    pm.expect(data.self.length).to.be.above(0);",
+                  "});",
+                  "if (Array.isArray(data.otherServices)) {",
+                  "    const missing = data.otherServices.filter(item => item.status !== 'REGISTERED');",
+                  "    if (missing.length) {",
+                  "        console.warn('Some services are not registered:', missing.map(s => s.serviceName));",
+                  "    }",
+                  "}",
+                  "pm.test('Response schema basic validation', function () {",
+                  "    pm.expect(data).to.have.property('status');",
+                  "    pm.expect(data).to.have.property('self');",
+                  "    pm.expect(data).to.have.property('otherServices');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base}}/health/zookeeper?services={{zk_services}}",
+              "host": [
+                "{{api_base}}"
+              ],
+              "path": [
+                "health",
+                "zookeeper"
+              ],
+              "query": [
+                {
+                  "key": "services",
+                  "value": "{{zk_services}}"
+                }
+              ]
+            },
+            "description": "Check ZooKeeper registration status for device-maintenance and dependent services"
+          },
+          "response": []
+        }
+      ],
+      "description": "Basic health check endpoints"
+    },
+    {
+      "name": "Device Task Management",
+      "item": [
+        {
+          "name": "Get All Device Tasks",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response structure is correct\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.exist;",
+                  "    ",
+                  "    if (jsonData.success && jsonData.data) {",
+                  "        // ⭐ 新格式：data 是一个对象，包含 tasks 数组和分页信息",
+                  "        pm.expect(jsonData.data).to.have.property('tasks');",
+                  "        pm.expect(jsonData.data).to.have.property('totalCount');",
+                  "        pm.expect(jsonData.data).to.have.property('page');",
+                  "        pm.expect(jsonData.data).to.have.property('size');",
+                  "        ",
+                  "        var tasks = jsonData.data.tasks;",
+                  "        var totalCount = jsonData.data.totalCount;",
+                  "        ",
+                  "        console.log(\"✅ 任务查询成功\");",
+                  "        console.log(\"   总记录数: \" + totalCount);",
+                  "        console.log(\"   当前页: \" + jsonData.data.page);",
+                  "        console.log(\"   每页大小: \" + jsonData.data.size);",
+                  "        console.log(\"   本页返回: \" + tasks.length + \" 条\");",
+                  "        ",
+                  "        if (tasks.length > 0) {",
+                  "            console.log(\"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\");",
+                  "            console.log(\"📋 最近的任务:\");",
+                  "            tasks.slice(0, 3).forEach(function(task, index) {",
+                  "                console.log((index + 1) + \". \" + task.taskType + \" - \" + task.status);",
+                  "                console.log(\"   Device: \" + (task.deviceName || task.deviceId));",
+                  "                console.log(\"   Batch: \" + (task.batchName || 'N/A'));",
+                  "                if (task.vendorType) console.log(\"   Vendor: \" + task.vendorType);",
+                  "                console.log(\"   Created: \" + task.createdTime);",
+                  "            });",
+                  "            console.log(\"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\");",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 0,\n  \"size\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-device-tasks",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-tasks"
+              ]
+            },
+            "description": "Get all device tasks with pagination and filtering.\n\n**New Features (v2):**\n- Filter by `batchId` to get all tasks in a specific batch\n- Response now includes `totalCount`, `page`, `size` for better pagination\n- Response includes complete fields: `batchName`, `workflowId`, `deviceIp`, `vendorType`, `vendorName`, `backupFilePath`, `currentVersion`, `targetVersion`, `retryCount`\n\n**Request Body (all fields optional):**\n```json\n{\n  \"deviceId\": \"Site-xxx#Ne-xxx\",\n  \"batchId\": \"batch-id-here\",\n  \"taskType\": \"BACKUP\",\n  \"status\": \"COMPLETED\",\n  \"page\": 0,\n  \"size\": 10\n}\n```\n\n**Response Format:**\n```json\n{\n  \"success\": true,\n  \"message\": \"获取设备任务列表成功，共100个任务\",\n  \"data\": {\n    \"tasks\": [...],\n    \"totalCount\": 100,\n    \"page\": 0,\n    \"size\": 10\n  }\n}\n```\n\n**DeviceTaskResponse Fields:**\n- `taskId`, `batchId`, `batchName`, `workflowId`\n- `taskType`, `deviceId`, `deviceName`, `deviceIp`\n- `vendorType`, `vendorName`\n- `sftpServerName`, `status`, `filePath`\n- `backupFilePath`, `backupFileName`\n- `currentVersion`, `targetVersion`, `retryCount`\n- `errorMessage`, `debugPayload`\n- `scheduledTime`, `createdTime`, `updatedTime`, `startedTime`, `completedTime`"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Device Task Detail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskId\": \"{{task_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-device-task-detail",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-task-detail"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Device Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Cancel task request processed', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.success) {",
+                  "        pm.test('Task cancelled successfully', function () {",
+                  "            pm.expect(jsonData.message).to.include('取消成功');",
+                  "        });",
+                  "    } else {",
+                  "        console.log('Cancel failed (expected):', jsonData.message);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskId\": \"{{single_backup_task_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:cancel-device-task",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:cancel-device-task"
+              ]
+            },
+            "description": "取消指定任务 - 只能取消 SCHEDULED/PENDING/RUNNING 状态的任务"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Device Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Delete task request processed', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.success) {",
+                  "        pm.test('Task deleted successfully', function () {",
+                  "            pm.expect(jsonData.message).to.include('删除成功');",
+                  "        });",
+                  "    } else {",
+                  "        console.log('Delete failed (expected):', jsonData.message);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskId\": \"{{single_backup_task_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:delete-device-task",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:delete-device-task"
+              ]
+            },
+            "description": "删除指定任务 - 只能删除 COMPLETED/FAILED/CANCELLED 状态的任务"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel All Tasks (Test Helper)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Cancel all tasks succeeded', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    ",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('🗑️ Cancel All Tasks Result:');",
+                  "    console.log('  Total Found: ' + jsonData.data.totalFound);",
+                  "    console.log('  Success: ' + jsonData.data.successCount);",
+                  "    console.log('  Failed: ' + jsonData.data.failedCount);",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:cancel-all-tasks",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:cancel-all-tasks"
+              ]
+            },
+            "description": "⚠️ 测试辅助接口：批量取消所有正在进行的任务（SCHEDULED/PENDING/RUNNING）\n\n**用途：**\n- 快速清理测试环境\n- 取消所有正在运行或等待的任务\n\n**注意：**\n- 这是测试专用接口，生产环境慎用\n- 不需要任何参数\n- 会自动找到并取消所有可取消状态的任务"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete All Tasks (Test Helper)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Delete all tasks succeeded', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    ",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('🗑️ Delete All Tasks Result:');",
+                  "    console.log('  Total Found: ' + jsonData.data.totalFound);",
+                  "    console.log('  Success: ' + jsonData.data.successCount);",
+                  "    console.log('  Failed: ' + jsonData.data.failedCount);",
+                  "    console.log('  TaskInfo Notified: ' + jsonData.data.notifiedCount);",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:delete-all-tasks",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:delete-all-tasks"
+              ]
+            },
+            "description": "⚠️ 测试辅助接口：批量删除所有已完成的任务（COMPLETED/FAILED/CANCELLED/EXPIRED）\n\n**用途：**\n- 快速清理测试环境\n- 删除所有已完成、失败或取消的任务\n- 自动发送软删除通知给 TaskInfo\n\n**注意：**\n- 这是测试专用接口，生产环境慎用\n- 不需要任何参数\n- 会自动找到并删除所有可删除状态的任务\n- 每个任务都会发送 TaskInfo 更新通知（标记为 deleted=true）"
+          },
+          "response": []
+        }
+      ],
+      "description": "Generic device task query APIs including cancel and delete"
+    },
+    {
+      "name": "Device Availability Tests",
+      "item": [
+        {
+          "name": "Check Single Device Availability",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.have.property('deviceId');",
+                  "    pm.expect(jsonData.data).to.have.property('available');",
+                  "    pm.expect(jsonData.data).to.have.property('status');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"Site-1982001432668278784#Ne-1982001549945212928\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:check-device-availability",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:check-device-availability"
+              ]
+            },
+            "description": "查询单个设备的可用性状态\n\n返回信息包括:\n- 设备是否可用\n- 最新任务ID和类型\n- 最新任务状态\n- 批次ID（如果有）\n- 错误信息（如果有）"
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Check Device Availability",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has device list\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "    pm.expect(jsonData.data.length).to.be.greaterThan(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Each device has required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.data.forEach(function(device) {",
+                  "        pm.expect(device).to.have.property('deviceId');",
+                  "        pm.expect(device).to.have.property('available');",
+                  "        pm.expect(device).to.have.property('status');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceIds\": [\n    \"Site-1982001432668278784#Ne-1982001549945212928\",\n    \"Site-1982001432668278784#Ne-1982001550028898304\",\n    \"Site-1982001432668278784#Ne-1982001550054064128\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-check-device-availability",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-check-device-availability"
+              ]
+            },
+            "description": "批量查询多个设备的可用性状态\n\n用途:\n- 在创建批量操作前检查设备是否可用\n- 调试设备状态问题\n- 筛选可用设备"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Device List Query Tests",
+      "item": [
+        {
+          "name": "Get All Devices List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response structure is valid\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    ",
+                  "    if (jsonData.success) {",
+                  "        pm.expect(jsonData.data).to.be.an('array');",
+                  "        ",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "        console.log('✅ 全网设备列表查询成功');",
+                  "        console.log('  设备总数: ' + jsonData.data.length);",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "        ",
+                  "        if (jsonData.data.length > 0) {",
+                  "            var firstDevice = jsonData.data[0];",
+                  "            pm.expect(firstDevice).to.have.property('nodeId');",
+                  "            pm.expect(firstDevice.nodeId).to.have.property('value');",
+                  "            ",
+                  "            console.log('第一个设备:');",
+                  "            console.log('  NodeId: ' + firstDevice.nodeId.value);",
+                  "            if (firstDevice['friendly-name']) {",
+                  "                console.log('  Friendly Name: ' + firstDevice['friendly-name']);",
+                  "            }",
+                  "            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-all-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-all-devices"
+              ]
+            },
+            "description": "获取全网所有主设备列表\n\n功能说明：\n- 查询MongoDB中所有主设备（Site-xxx#Ne-xxx格式）\n- 自动过滤掉子设备（equipment-id）\n- 返回包含所有设备的完整列表\n- 使用RESTCONF格式，与其他设备维护接口保持一致\n\n主设备定义：\n- neId格式：Site-xxx#Ne-xxx（包含1个#分隔符）\n- 排除子设备：Site-xxx#Ne-xxx#CHASSIS-1（包含2个或更多#）\n\n返回数据：\n- data: 设备数组，每个设备包含完整的Node信息\n- 设备字段包括：nodeId, friendly-name, ip-address, vendor-type, operational-state 等\n\n使用场景：\n- 全网设备备份前获取设备列表\n- 批量操作前的设备选择\n- 系统监控和统计"
+          },
+          "response": []
+        }
+      ],
+      "description": "设备列表查询接口\n\n用于获取全网设备信息，供批量操作使用"
+    },
+    {
+      "name": "Device Operations Status Tests",
+      "item": [
+        {
+          "name": "Get Device Operations Status (By Device ID)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response structure validation', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData).to.have.property('timestamp');",
+                  "    ",
+                  "    if (jsonData.success) {",
+                  "        pm.expect(jsonData).to.have.property('data');",
+                  "        const data = jsonData.data;",
+                  "        ",
+                  "        // 验证基本设备信息",
+                  "        pm.expect(data).to.have.property('deviceId');",
+                  "        pm.expect(data).to.have.property('deviceName');",
+                  "        pm.expect(data).to.have.property('currentSoftware');",
+                  "        pm.expect(data).to.have.property('currentDatabase');",
+                  "        pm.expect(data).to.have.property('systemDateTime');",
+                  "        ",
+                  "        // 验证软件操作结构",
+                  "        pm.expect(data).to.have.property('softwareOperations');",
+                  "        const software = data.softwareOperations;",
+                  "        pm.expect(software).to.have.property('download');",
+                  "        pm.expect(software).to.have.property('upgrade');",
+                  "        ",
+                  "        // 验证数据库操作结构",
+                  "        pm.expect(data).to.have.property('databaseOperations');",
+                  "        const database = data.databaseOperations;",
+                  "        pm.expect(database).to.have.property('backup');",
+                  "        pm.expect(database).to.have.property('restore');",
+                  "        ",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "        console.log('✅ 设备操作状态查询成功');",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "        console.log('设备ID:', data.deviceId);",
+                  "        console.log('设备名称:', data.deviceName || 'null');",
+                  "        console.log('当前软件版本:', data.currentSoftware || 'null');",
+                  "        console.log('当前数据库版本:', data.currentDatabase || 'null');",
+                  "        console.log('系统时间:', data.systemDateTime || 'null');",
+                  "        console.log('');",
+                  "        console.log('📊 软件操作状态:');",
+                  "        console.log('  下载状态:', software.download.state || 'null');",
+                  "        console.log('  下载文件:', software.download.fileName || 'null');",
+                  "        console.log('  升级状态:', software.upgrade.state || 'null');",
+                  "        console.log('  升级时间:', software.upgrade.upgradeTime || 'null');",
+                  "        console.log('');",
+                  "        console.log('💾 数据库操作状态:');",
+                  "        console.log('  备份状态:', database.backup.state || 'null');",
+                  "        console.log('  备份文件:', database.backup.backupFile || 'null');",
+                  "        console.log('  恢复状态:', database.restore.state || 'null');",
+                  "        console.log('  恢复时间:', database.restore.restoreTime || 'null');",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceIdentifier\": \"{{mongodb_device_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-device-operations-status",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-operations-status"
+              ]
+            },
+            "description": "通过设备ID查询设备的所有维护操作状态\n\n**功能说明:**\n- 查询MongoDB op-phy-node集合中存储的设备维护状态\n- 包含软件下载、升级、数据库备份、恢复等所有操作的状态信息\n- 使用RESTCONF格式，与其他设备维护接口保持一致\n\n**请求格式:**\n```json\n{\n  \"deviceIdentifier\": \"Site-xxx#Ne-xxx\" // 或设备名称\n}\n```\n\n**返回数据:**\n- 设备基本信息（ID、名称、软件版本、数据库版本）\n- 软件操作状态（下载、升级）\n- 数据库操作状态（备份、恢复）\n- 所有空值字段返回null"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Device Operations Status (By Device Name)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Device found by name', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.exist;",
+                  "    ",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('✅ 通过设备名称查询成功');",
+                  "    console.log('查询名称: {{mongodb_device_name}}');",
+                  "    console.log('找到设备ID:', jsonData.data.deviceId);",
+                  "    console.log('设备名称:', jsonData.data.deviceName);",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceIdentifier\": \"{{mongodb_device_name}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-device-operations-status",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-operations-status"
+              ]
+            },
+            "description": "通过设备名称（friendly-name）查询设备操作状态\n\n**功能说明:**\n- 使用设备的friendly-name进行查询\n- 内部会自动解析为对应的设备ID\n- 返回的数据结构与设备ID查询完全相同\n- 使用与其他维护接口相同的RESTCONF格式\n\n**使用场景:**\n- 当只知道设备名称时的便捷查询\n- 用户界面友好的查询方式"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Operations Status - Device Not Found (Error Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Device not found error handling', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('未找到设备');",
+                  "    ",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('✅ 错误处理测试通过');",
+                  "    console.log('查询设备:', '{{nonexistent_device_id}}');",
+                  "    console.log('错误信息:', jsonData.message);",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceIdentifier\": \"{{nonexistent_device_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-device-operations-status",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-operations-status"
+              ]
+            },
+            "description": "测试查询不存在设备的错误处理\n\n**测试目的:**\n- 验证API的错误处理机制\n- 确保返回正确的错误信息\n- 验证响应格式的一致性\n\n**预期结果:**\n- success: false\n- message: \"未找到设备: xxx\"\n- 不包含data字段"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Operations Status - Invalid Device Name (Error Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Invalid device name error handling', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('未找到设备');",
+                  "    ",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('✅ 无效设备名称错误处理测试通过');",
+                  "    console.log('查询名称:', '{{nonexistent_device_name}}');",
+                  "    console.log('错误信息:', jsonData.message);",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceIdentifier\": \"{{nonexistent_device_name}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-device-operations-status",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-operations-status"
+              ]
+            },
+            "description": "测试使用无效设备名称查询的错误处理\n\n**测试场景:**\n- 使用不存在的设备名称进行查询\n- 验证friendly-name查询的错误处理\n\n**与设备ID错误测试的区别:**\n- 这里测试的是通过名称查询的路径\n- 验证名称解析失败的情况"
+          },
+          "response": []
+        },
+        {
+          "name": "Compare Device Status vs Task Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Device operations data analysis', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    if (jsonData.success && jsonData.data) {",
+                  "        const data = jsonData.data;",
+                  "        const software = data.softwareOperations;",
+                  "        const database = data.databaseOperations;",
+                  "        ",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "        console.log('📊 设备操作状态分析');",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "        console.log('🔍 基本信息:');",
+                  "        console.log('  设备ID: ' + data.deviceId);",
+                  "        console.log('  设备名称: ' + (data.deviceName || 'null'));",
+                  "        console.log('  当前软件版本: ' + (data.currentSoftware || 'null'));",
+                  "        console.log('  当前数据库版本: ' + (data.currentDatabase || 'null'));",
+                  "        console.log('  系统时间: ' + (data.systemDateTime || 'null'));",
+                  "        console.log('');",
+                  "        ",
+                  "        // 分析软件操作状态",
+                  "        console.log('💻 软件操作状态:');",
+                  "        console.log('  📥 下载状态:');",
+                  "        console.log('    - 状态: ' + (software.download.state || 'null'));",
+                  "        console.log('    - 文件: ' + (software.download.fileName || 'null'));",
+                  "        console.log('    - 版本: ' + (software.download.softwareVersion || 'null'));",
+                  "        console.log('    - 时间: ' + (software.download.downloadTime || 'null'));",
+                  "        console.log('  ⬆️ 升级状态:');",
+                  "        console.log('    - 状态: ' + (software.upgrade.state || 'null'));",
+                  "        console.log('    - 时间: ' + (software.upgrade.upgradeTime || 'null'));",
+                  "        console.log('    - 回滚文件: ' + (software.upgrade.rollbackFile || 'null'));",
+                  "        console.log('');",
+                  "        ",
+                  "        // 分析数据库操作状态",
+                  "        console.log('💾 数据库操作状态:');",
+                  "        console.log('  📦 备份状态:');",
+                  "        console.log('    - 状态: ' + (database.backup.state || 'null'));",
+                  "        console.log('    - 文件: ' + (database.backup.backupFile || 'null'));",
+                  "        console.log('    - 时间: ' + (database.backup.backupTime || 'null'));",
+                  "        console.log('  🔄 恢复状态:');",
+                  "        console.log('    - 状态: ' + (database.restore.state || 'null'));",
+                  "        console.log('    - 时间: ' + (database.restore.restoreTime || 'null'));",
+                  "        console.log('    - 恢复文件: ' + (database.restore.restoreFromFile || 'null'));",
+                  "        console.log('');",
+                  "        ",
+                  "        // 状态摘要",
+                  "        let activeOperations = [];",
+                  "        if (software.download.state && software.download.state !== 'COMPLETE') {",
+                  "            activeOperations.push('软件下载: ' + software.download.state);",
+                  "        }",
+                  "        if (software.upgrade.state && software.upgrade.state !== 'COMPLETE') {",
+                  "            activeOperations.push('软件升级: ' + software.upgrade.state);",
+                  "        }",
+                  "        if (database.backup.state && database.backup.state !== 'COMPLETE') {",
+                  "            activeOperations.push('数据库备份: ' + database.backup.state);",
+                  "        }",
+                  "        if (database.restore.state && database.restore.state !== 'COMPLETE') {",
+                  "            activeOperations.push('数据库恢复: ' + database.restore.state);",
+                  "        }",
+                  "        ",
+                  "        console.log('📋 操作摘要:');",
+                  "        if (activeOperations.length > 0) {",
+                  "            console.log('  ⚡ 正在进行的操作:');",
+                  "            activeOperations.forEach(op => console.log('    • ' + op));",
+                  "        } else {",
+                  "            console.log('  ✅ 当前无正在进行的维护操作');",
+                  "            if (software.upgrade.state === 'COMPLETE') {",
+                  "                console.log('  ℹ️  最近完成升级操作');",
+                  "            }",
+                  "        }",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "        ",
+                  "        pm.test('Data completeness check', function () {",
+                  "            // 至少应该有设备ID和设备名称",
+                  "            pm.expect(data.deviceId).to.exist;",
+                  "            // 检查是否有版本信息",
+                  "            pm.expect(data.currentSoftware || data.currentDatabase).to.exist;",
+                  "        });",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceIdentifier\": \"{{test_device_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-device-operations-status",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-operations-status"
+              ]
+            },
+            "description": "综合分析设备操作状态数据\n\n**测试目的:**\n- 详细分析MongoDB中的设备状态数据\n- 对比不同操作类型的状态信息\n- 提供可读的状态摘要\n\n**分析内容:**\n- 设备基本信息完整性\n- 各类操作的状态分布\n- 正在进行的操作识别\n- 历史操作记录\n\n**使用场景:**\n- 调试和验证MongoDB数据\n- 了解设备当前状态\n- 系统状态监控"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Device Operations Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response should be successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData).to.have.property('totalCount');",
+                  "});",
+                  "",
+                  "pm.test('Data should be an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "    pm.expect(jsonData.totalCount).to.equal(jsonData.data.length);",
+                  "});",
+                  "",
+                  "pm.test('Each device should have required fields', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.length > 0) {",
+                  "        const firstDevice = jsonData.data[0];",
+                  "        pm.expect(firstDevice).to.have.property('deviceId');",
+                  "        pm.expect(firstDevice).to.have.property('deviceName');",
+                  "        pm.expect(firstDevice).to.have.property('communicationStatus');",
+                  "        pm.expect(firstDevice).to.have.property('operationalState');",
+                  "        pm.expect(firstDevice).to.have.property('currentSoftware');",
+                  "        pm.expect(firstDevice).to.have.property('currentDatabase');",
+                  "        pm.expect(firstDevice).to.have.property('softwareOperations');",
+                  "        pm.expect(firstDevice).to.have.property('databaseOperations');",
+                  "    }",
+                  "});",
+                  "",
+                  "// 输出统计信息",
+                  "const jsonData = pm.response.json();",
+                  "console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "console.log('📊 所有设备操作状态统计');",
+                  "console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "console.log('总设备数: ' + jsonData.totalCount);",
+                  "console.log('');",
+                  "",
+                  "if (jsonData.data && jsonData.data.length > 0) {",
+                  "    console.log('设备列表:');",
+                  "    jsonData.data.forEach((device, index) => {",
+                  "        console.log(`  ${index + 1}. ${device.deviceName || device.deviceId}`);",
+                  "        console.log(`     通信状态: ${device.communicationStatus || 'null'}`);",
+                  "        console.log(`     运行状态: ${device.operationalState || 'null'}`);",
+                  "        console.log(`     当前软件: ${device.currentSoftware || 'null'}`);",
+                  "        if (device.softwareOperations) {",
+                  "            if (device.softwareOperations.download && device.softwareOperations.download.state) {",
+                  "                console.log(`     下载状态: ${device.softwareOperations.download.state}`);",
+                  "            }",
+                  "            if (device.softwareOperations.upgrade && device.softwareOperations.upgrade.state) {",
+                  "                console.log(`     升级状态: ${device.softwareOperations.upgrade.state}`);",
+                  "            }",
+                  "        }",
+                  "        console.log('');",
+                  "    });",
+                  "}",
+                  "console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-all-device-operations-status",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-all-device-operations-status"
+              ]
+            },
+            "description": "获取所有主设备的操作状态\n\n**功能说明:**\n- 查询MongoDB中所有主设备（Site-xxx#Ne-xxx格式）的维护状态\n- 自动过滤掉子设备（equipment-id）\n- 返回包含所有设备的完整状态列表\n- 使用RESTCONF格式，与其他设备维护接口保持一致\n\n**主设备定义:**\n- neId格式：Site-xxx#Ne-xxx（包含1个#分隔符）\n- 排除子设备：Site-xxx#Ne-xxx#CHASSIS-1（包含2个或更多#）\n\n**返回数据:**\n- data: 设备状态数组\n- totalCount: 设备总数\n- 每个设备包含完整的操作状态信息（下载、升级、备份、恢复等）\n\n**使用场景:**\n- 系统监控仪表板\n- 批量设备状态检查\n- 数据分析和报表生成"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Device Operations Status (With Filters)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response should be successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData).to.have.property('totalCount');",
+                  "    pm.expect(jsonData).to.have.property('filters');",
+                  "});",
+                  "",
+                  "pm.test('Filters should be applied', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.filters).to.be.an('object');",
+                  "    ",
+                  "    // 验证返回的设备都符合过滤条件",
+                  "    if (jsonData.data && jsonData.data.length > 0) {",
+                  "        jsonData.data.forEach(device => {",
+                  "            if (jsonData.filters.operationalState) {",
+                  "                pm.expect(device.operationalState).to.equal(jsonData.filters.operationalState);",
+                  "            }",
+                  "            if (jsonData.filters.communicationStatus) {",
+                  "                pm.expect(device.communicationStatus).to.equal(jsonData.filters.communicationStatus);",
+                  "            }",
+                  "        });",
+                  "    }",
+                  "});",
+                  "",
+                  "// 输出过滤结果",
+                  "const jsonData = pm.response.json();",
+                  "console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "console.log('🔍 设备状态过滤查询结果');",
+                  "console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "console.log('过滤条件: ' + JSON.stringify(jsonData.filters));",
+                  "console.log('匹配设备数: ' + jsonData.totalCount);",
+                  "console.log('');",
+                  "",
+                  "if (jsonData.data && jsonData.data.length > 0) {",
+                  "    console.log('符合条件的设备:');",
+                  "    jsonData.data.forEach((device, index) => {",
+                  "        console.log(`  ${index + 1}. ${device.deviceName || device.deviceId}`);",
+                  "        console.log(`     通信状态: ${device.communicationStatus || 'null'}`);",
+                  "        console.log(`     运行状态: ${device.operationalState || 'null'}`);",
+                  "        console.log(`     当前软件: ${device.currentSoftware || 'null'}`);",
+                  "        console.log('');",
+                  "    });",
+                  "} else {",
+                  "    console.log('⚠️  没有找到符合条件的设备');",
+                  "}",
+                  "console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"operationalState\": \"up\",\n  \"communicationStatus\": \"syncFinished\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-all-device-operations-status",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-all-device-operations-status"
+              ]
+            },
+            "description": "获取所有主设备的操作状态（支持过滤）\n\n**过滤条件说明:**\n\n支持的过滤字段：\n1. **operationalState**: 运行状态\n   - 可选值: \"up\", \"down\", \"unknown\"\n   - 匹配方式: 精确匹配（不区分大小写）\n\n2. **communicationStatus**: 通信状态\n   - 可选值: \"syncFinished\", \"syncFailed\", \"unknown\"\n   - 匹配方式: 精确匹配（不区分大小写）\n\n3. **deviceName**: 设备名称\n   - 匹配方式: 模糊匹配（不区分大小写）\n   - 示例: \"COHERENT\" 可以匹配所有包含 \"COHERENT\" 的设备名\n\n4. **currentSoftware**: 当前软件版本\n   - 匹配方式: 精确匹配（不区分大小写）\n   - 示例: \"POS_3.4.0.120_20250909\"\n\n5. **currentDatabase**: 当前数据库版本\n   - 匹配方式: 精确匹配（不区分大小写）\n\n**过滤逻辑:**\n- 所有指定的条件必须同时满足（AND逻辑）\n- 空值或未指定的字段将被忽略\n- 不提供过滤条件则返回所有设备\n\n**示例用法:**\n\n1. 查找所有在线且通信正常的设备:\n```json\n{\n  \"operationalState\": \"up\",\n  \"communicationStatus\": \"syncFinished\"\n}\n```\n\n2. 查找所有COHERENT设备:\n```json\n{\n  \"deviceName\": \"COHERENT\"\n}\n```\n\n3. 查找特定软件版本的设备:\n```json\n{\n  \"currentSoftware\": \"POS_3.4.0.120_20250909\"\n}\n```\n\n4. 组合查询（在线 + COHERENT品牌）:\n```json\n{\n  \"operationalState\": \"up\",\n  \"deviceName\": \"COHERENT\"\n}\n```"
+          },
+          "response": []
+        }
+      ],
+      "description": "Device operations status query from MongoDB op-phy-node collection"
+    },
+    {
+      "name": "Software Download Tests",
+      "item": [
+        {
+          "name": "Single Device Download (No Batch, Immediate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": null,\n  \"deviceIds\": [\n    \"{{test_device_id}}\"\n  ],\n  \"softwarePackage\": \"{{test_software_package}}\",\n  \"sftpServerId\": \"{{default_sftp_server_name}}\",\n  \"remark\": \"单设备下载测试 - 不创建Batch\",\n  \"scheduledTime\": null,\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-download-software",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-download-software"
+              ]
+            },
+            "description": "单设备下载（不创建Batch对象）\n\n特点:\n- batchName=null，不创建Batch对象\n- 不发送TaskInfo通知\n- DeviceTask.batchId=null\n- 立即执行"
+          },
+          "response": []
+        },
+        {
+          "name": "Single Device Download (No Batch, Scheduled)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": null,\n  \"deviceIds\": [\n    \"{{test_device_id}}\"\n  ],\n  \"softwarePackage\": \"{{test_software_package}}\",\n  \"sftpServerId\": \"{{default_sftp_server_name}}\",\n  \"remark\": \"单设备下载测试 - 定时执行\",\n  \"scheduledTime\": 1761976800000,\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-download-software",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-download-software"
+              ]
+            },
+            "description": "单设备下载 - 定时执行\n\n请修改scheduledTime为未来时间\n格式: YYYY-MM-DDTHH:mm:ss"
+          },
+          "response": []
+        }
+      ],
+      "description": "Device software download functionality"
+    },
+    {
+      "name": "Software Commit Tests",
+      "item": [
+        {
+          "name": "Commit Software (Immediate)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceIds\": [\"{{test_device_id}}\"],\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"fileName\": \"Release_POS_3.4.0.150_20251013.tar\",\n  \"description\": \"Batch commit software test - single device, immediate execution\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-commit-upgrade",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-commit-upgrade"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Commit Software (Scheduled)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceIds\": [\"{{test_device_id}}\"],\n  \"sftpServerName\": \"{{test_sftp_server_name}}\",\n  \"fileName\": \"software-package-v1.0.0.tar.gz\",\n  \"scheduledTime\": 1735660799000,\n  \"description\": \"Batch commit software test - single device, scheduled execution\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-commit-upgrade",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-commit-upgrade"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Commit Software (Multiple Devices)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceIds\": [\n    \"Site-1983844018349543424#Ne-1983844174008553472\",\n    \"Site-1983844018349543424#Ne-1983844174008553473\",\n    \"Site-1983844018349543424#Ne-1983844174008553474\"\n  ],\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"fileName\": \"Release_POS_3.4.0.150_20251013.tar\",\n  \"description\": \"Batch commit software test - multiple devices\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-commit-upgrade",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-commit-upgrade"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Software Rollback Tests",
+      "item": [
+        {
+          "name": "Rollback Software (Single Device, Immediate)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{test_device_id}}\",\n  \"sftpServerName\": \"{{test_sftp_server_name}}\",\n  \"fileName\": \"software-package-v0.9.0.tar.gz\",\n  \"description\": \"Rollback software test - immediate execution\",\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:rollback-software",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:rollback-software"
+              ]
+            },
+            "description": "单设备回滚（立即执行）"
+          },
+          "response": []
+        },
+        {
+          "name": "Rollback Software (Single Device, Scheduled)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{test_device_id}}\",\n  \"sftpServerName\": \"{{test_sftp_server_name}}\",\n  \"fileName\": \"software-package-v0.9.0.tar.gz\",\n  \"scheduledTime\": 1735660799000,\n  \"description\": \"Rollback software test - scheduled execution\",\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:rollback-software",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:rollback-software"
+              ]
+            },
+            "description": "单设备回滚（定时执行）"
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Rollback Software (Multiple Devices, Immediate)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Batch rollback response is valid\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.exist;",
+                  "    ",
+                  "    if (jsonData.success && jsonData.data) {",
+                  "        console.log('✅ 批量回滚任务创建成功');",
+                  "        console.log('  批次ID: ' + jsonData.data.batchId);",
+                  "        console.log('  批次名称: ' + jsonData.data.batchName);",
+                  "        console.log('  总设备数: ' + jsonData.data.totalDevices);",
+                  "        console.log('  运行中: ' + jsonData.data.runningDevices);",
+                  "        console.log('  失败: ' + jsonData.data.failedDevices);",
+                  "        console.log('  状态: ' + jsonData.data.status);",
+                  "        ",
+                  "        // 保存 batchId",
+                  "        pm.environment.set('rollback_batch_id', jsonData.data.batchId);",
+                  "    } else {",
+                  "        console.log('❌ 批量回滚失败: ' + jsonData.message);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"批量回滚测试\",\n  \"deviceIds\": [\n    \"Site-1#Ne-1\",\n    \"Site-2#Ne-2\"\n  ],\n  \"fileNames\": [\n    \"Release_v1.0.20241101.tar\",\n    \"Release_v2.0.20241115.tar\"\n  ],\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"scheduledTime\": null,\n  \"remark\": \"紧急批量回滚\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-rollback-software",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-rollback-software"
+              ]
+            },
+            "description": "批量设备回滚（立即执行）\n\n⭐ 关键特性：\n- 每个设备对应一个回滚文件（deviceIds 和 fileNames 按顺序一一对应）\n- 使用 CompletableFuture + 线程池实现并发处理（最大并发20）\n- 单个设备失败不影响其他设备（异常隔离）\n- TaskInfo 通知、operator、endTime 处理与 batch backup 完全一致\n\n请求示例：\n```json\n{\n  \"batchName\": \"批量回滚测试\",\n  \"deviceIds\": [\"Site-1#Ne-1\", \"Site-2#Ne-2\"],\n  \"fileNames\": [\"Release_v1.0.tar\", \"Release_v2.0.tar\"],\n  \"sftpServerName\": \"backup-sftp-server\",\n  \"scheduledTime\": null,\n  \"remark\": \"紧急回滚\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Rollback Software (Multiple Devices, Scheduled)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Scheduled batch rollback created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('batchId');",
+                  "    pm.expect(jsonData.data).to.have.property('status');",
+                  "    pm.expect(jsonData.data.status).to.equal('SCHEDULED');",
+                  "    pm.expect(jsonData.data).to.have.property('scheduledTime');",
+                  "    ",
+                  "    // 保存 batchId",
+                  "    pm.environment.set('scheduled_rollback_batch_id', jsonData.data.batchId);",
+                  "    ",
+                  "    console.log('✅ 定时批量回滚任务已创建');",
+                  "    console.log('  批次ID: ' + jsonData.data.batchId);",
+                  "    console.log('  定时执行时间: ' + jsonData.data.scheduledTime);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"定时批量回滚\",\n  \"deviceIds\": [\n    \"Site-1#Ne-1\",\n    \"Site-2#Ne-2\"\n  ],\n  \"fileNames\": [\n    \"Release_v1.0.tar\",\n    \"Release_v2.0.tar\"\n  ],\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"scheduledTime\": 1762924800000,\n  \"remark\": \"计划维护窗口回滚\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-rollback-software",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-rollback-software"
+              ]
+            },
+            "description": "批量设备回滚（定时执行）\n\n特点：\n- 支持定时执行\n- 创建时状态为 SCHEDULED\n- 所有设备在指定时间一起进入执行线程池\n\n请修改 scheduledTime 为未来时间（Unix timestamp in milliseconds）"
+          },
+          "response": []
+        }
+      ],
+      "description": "设备软件回滚功能测试\n\n支持：\n- 单设备回滚（rollback-software）\n- 批量设备回滚（batch-rollback-software）- 每个设备对应不同的回滚文件"
+    },
+    {
+      "name": "Device Backup Tests",
+      "item": [
+        {
+          "name": "Single Device Backup (No Batch, Immediate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": null,\n  \"deviceIds\": [\n    \"{{test_device_id}}\"\n  ],\n  \"basePath\": \"/dbbackup\",\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"remark\": \"单设备备份测试 - 不创建Batch\",\n  \"scheduledTime\": null,\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-backup-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-backup-devices"
+              ]
+            },
+            "description": "单设备备份（不创建Batch对象）\n\n特点:\n- batchName=null，不创建Batch对象\n- 不发送TaskInfo通知\n- DeviceTask.batchId=null"
+          },
+          "response": []
+        },
+        {
+          "name": "Single Device Backup (No Batch, Scheduled)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": null,\n  \"deviceIds\": [\n    \"{{test_device_id}}\"\n  ],\n  \"basePath\": \"/dbbackup\",\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"remark\": \"单设备备份测试 - 定时执行\",\n  \"scheduledTime\": 1761984000000,\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-backup-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-backup-devices"
+              ]
+            },
+            "description": "单设备备份 - 定时执行\n\n请修改scheduledTime为未来时间"
+          },
+          "response": []
+        },
+        {
+          "name": "Single Device Backup (via Batch API)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data && jsonData.data.taskId) {",
+                  "        pm.environment.set('single_backup_task_id', jsonData.data.taskId);",
+                  "        console.log('Single Backup Task ID saved:', jsonData.data.taskId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceIds\": [\n    \"{{test_device_id}}\"\n  ],\n  \"batchName\": \"batch_backup_1\",\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"scheduledTime\": 1762407990000,\n  \"basePath\": \"{{backup_target_path}}\",\n  \"debug\":true\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-backup-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-backup-devices"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Scheduled Device Backup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data && jsonData.data.taskId) {",
+                  "        pm.environment.set('scheduled_backup_task_id', jsonData.data.taskId);",
+                  "        console.log('Scheduled Backup Task ID saved:', jsonData.data.taskId);",
+                  "        pm.test('Task status should be SCHEDULED', function () {",
+                  "            pm.expect(jsonData.data.status).to.eql('SCHEDULED');",
+                  "        });",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceIds\": [\n    \"{{test_device_id_2}}\"\n  ],\n  \"batchName\": \"Scheduled-Device-Backup-{{$timestamp}}\",\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"scheduledTime\": 1761959400000,\n  \"debug\": false,\n  \"basePath\": \"{{backup_target_path}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-backup-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-backup-devices"
+              ]
+            },
+            "description": "创建定时备份任务 - 请修改scheduledTime为未来时间（格式: YYYY-MM-DDTHH:mm:ss）"
+          },
+          "response": []
+        },
+        {
+          "name": "Scheduled Batch Device Backup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Batch backup scheduled successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.data).to.have.property('batchId');",
+                  "    pm.expect(jsonData.data).to.have.property('status');",
+                  "    pm.expect(jsonData.data.status).to.equal('SCHEDULED');",
+                  "    pm.expect(jsonData.data).to.have.property('scheduledTime');",
+                  "    pm.expect(jsonData.data).to.have.property('scheduledDevices');",
+                  "    ",
+                  "    // Save batchId for later use",
+                  "    pm.environment.set('scheduled_backup_batch_id', jsonData.data.batchId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"批量备份测试\",\n  \"deviceIds\": [\n    \"{{test_device_id}}\"\n  ],\n  \"basePath\": \"/dbbackup\",\n  \"sftpServerName\": \"test-sftp-user1\",\n  \"scheduledTime\": null,\n  \"remark\": \"\",\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-backup-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-backup-devices"
+              ]
+            },
+            "description": "创建定时批量备份任务\n\n特点:\n- 支持多设备批量备份\n- 指定定时执行时间\n- 所有设备在指定时间一起进入执行线程池\n- 创建时状态为 SCHEDULED"
+          },
+          "response": []
+        },
+        {
+          "name": "Scheduled Batch Backup with Debug",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Scheduled backup with debug created successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.data).to.have.property('batchId');",
+                  "    pm.expect(jsonData.data).to.have.property('status');",
+                  "    pm.expect(jsonData.data.status).to.equal('SCHEDULED');",
+                  "    ",
+                  "    // Verify debug flag is set",
+                  "    pm.expect(jsonData.data).to.have.property('debug');",
+                  "    pm.expect(jsonData.data.debug).to.be.true;",
+                  "    ",
+                  "    // Save batchId for verification after execution",
+                  "    pm.environment.set('scheduled_debug_backup_batch_id', jsonData.data.batchId);",
+                  "    ",
+                  "    console.log('Scheduled backup with debug created. BatchId:', jsonData.data.batchId);",
+                  "    console.log('Please wait for execution and verify debugPayload using get-all-tasks API');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"定时备份Debug测试\",\n  \"deviceIds\": [\n    \"Site-1982001432668278784#Ne-1982001549945212928\"\n  ],\n  \"basePath\": \"/dbbackup\",\n  \"sftpServerName\": \"test-sftp-user1\",\n  \"scheduledTime\": 1761782400000,\n  \"remark\": \"测试定时任务Debug功能\",\n  \"debug\": true\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-backup-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-backup-devices"
+              ]
+            },
+            "description": "测试定时任务Debug功能\\n\\n验证点:\\n1. debug=true 被正确保存到 Batch\\n2. 定时任务执行后，debugPayload 包含完整的 RPC 信息\\n3. 可通过 get-all-tasks 查询到 debugPayload\\n\\n测试步骤:\\n1. 创建定时备份（scheduledTime设置为1-2分钟后）\\n2. 等待定时任务执行\\n3. 调用 get-all-tasks 查询任务\\n4. 验证 debugPayload 不为空"
+          },
+          "response": []
+        },
+        {
+          "name": "All Devices Backup (With Filter)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Response should be successful', function () {",
+                  "        pm.expect(jsonData.success).to.eql(true);",
+                  "    });",
+                  "    if (jsonData.success && jsonData.data && jsonData.data.batchId) {",
+                  "        pm.environment.set('batch_backup_id', jsonData.data.batchId);",
+                  "        console.log('Batch Backup ID saved:', jsonData.data.batchId);",
+                  "    }",
+                  "    pm.test('Response should contain summary', function () {",
+                  "        pm.expect(jsonData.data).to.have.property('totalDevices');",
+                  "        pm.expect(jsonData.data).to.have.property('successfulDevices');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"backupPath\": \"{{backup_target_path}}\",\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"deviceTypeFilter\": \"Router\",\n  \"batchName\": \"Router Backup Batch\",\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:backup-all-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:backup-all-devices"
+              ]
+            },
+            "description": "批量备份所有Router类型设备"
+          },
+          "response": []
+        },
+        {
+          "name": "All Devices Backup (No Filter)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Response should be successful', function () {",
+                  "        pm.expect(jsonData.success).to.eql(true);",
+                  "    });",
+                  "    if (jsonData.success && jsonData.data) {",
+                  "        if (jsonData.data.batchId) {",
+                  "            pm.environment.set('batch_backup_all_id', jsonData.data.batchId);",
+                  "            console.log('All Devices Backup Batch ID saved:', jsonData.data.batchId);",
+                  "        }",
+                  "        pm.test('Should backup all devices', function () {",
+                  "            pm.expect(jsonData.data.totalDevices).to.be.above(0);",
+                  "        });",
+                  "        console.log('Total devices:', jsonData.data.totalDevices);",
+                  "        console.log('Successful tasks:', jsonData.data.successfulDevices);",
+                  "        console.log('Failed tasks:', jsonData.data.failedDevices);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"backupPath\": \"{{backup_target_path}}\",\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"batchName\": \"Full System Backup\",\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:backup-all-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:backup-all-devices"
+              ]
+            },
+            "description": "批量备份所有设备（不过滤设备类型）"
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Backup with Debug (Single Device)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Backup batch created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data && jsonData.data.batchId) {",
+                  "        pm.environment.set('debug_backup_batch_id', jsonData.data.batchId);",
+                  "        console.log('✅ Debug Backup Batch ID:', jsonData.data.batchId);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"备份测试（Debug模式）\",\n  \"deviceIds\": [\n    \"Site-1982001432668278784#Ne-1982001549945212928\"\n  ],\n  \"basePath\": \"/dbbackup\",\n  \"sftpServerName\": \"test-sftp-user1\",\n  \"remark\": \"测试debug模式下的备份\",\n  \"debug\": true\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-backup-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-backup-devices"
+              ]
+            },
+            "description": "测试带debug参数的批量备份\n\n当 debug=true 时：\n- DeviceTask 的 debugPayload 会保存到数据库\n- get-batch-detail 接口会返回 debugPayload 字段\n- debugPayload 包含：stack trace, 请求参数, RPC payload"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Batch Detail (Backup - With Debug)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Backup batch detail structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    ",
+                  "    var data = jsonData.data;",
+                  "    pm.expect(data.batchType).to.eql('BACKUP');",
+                  "    pm.expect(data.isWorkflowBatch).to.be.false;",
+                  "    pm.expect(data.workflows).to.be.an('array').that.is.empty;",
+                  "    pm.expect(data.deviceTasks).to.be.an('array');",
+                  "    ",
+                  "    console.log('✅ Batch Type:', data.batchType);",
+                  "    console.log('✅ Is Workflow Batch:', data.isWorkflowBatch);",
+                  "    console.log('✅ Device Tasks Count:', data.deviceTasks.length);",
+                  "    ",
+                  "    // 检查 debugPayload",
+                  "    if (data.deviceTasks.length > 0) {",
+                  "        var task = data.deviceTasks[0];",
+                  "        if (task.debugPayload) {",
+                  "            console.log('✅ Debug Payload exists:', task.debugPayload.substring(0, 100) + '...');",
+                  "        } else {",
+                  "            console.log('⚠️ Debug Payload is null (task may not have failed yet)');",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"{{debug_backup_batch_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-batch-detail",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-batch-detail"
+              ]
+            },
+            "description": "查询备份批次详情（debug模式）\n\n验证点：\n- isWorkflowBatch: false（备份无workflow）\n- workflows: []（空数组）\n- deviceTasks: 包含任务详情\n- deviceTasks[].debugPayload: 应该有值（因为创建时debug=true）"
+          },
+          "response": []
+        }
+      ],
+      "description": "Device data backup functionality"
+    },
+    {
+      "name": "Device Restore Tests",
+      "item": [
+        {
+          "name": "Single Device Restore (Immediate)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Single restore task created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success) {",
+                  "        pm.expect(jsonData.data).to.have.property('taskId');",
+                  "        pm.expect(jsonData.data).to.have.property('deviceId');",
+                  "        pm.expect(jsonData.data).to.have.property('status');",
+                  "        console.log('✅ 单设备恢复任务创建成功');",
+                  "        console.log('  TaskId: ' + jsonData.data.taskId);",
+                  "        console.log('  DeviceId: ' + jsonData.data.deviceId);",
+                  "        console.log('  Status: ' + jsonData.data.status);",
+                  "    } else {",
+                  "        console.log('❌ 创建失败: ' + jsonData.message);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{test_device_id}}\",\n  \"filePath\": \"/dbbackup/192_168_3_245/20251107/143020.db\",\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"scheduledTime\": null,\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:restore-device-data",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:restore-device-data"
+              ]
+            },
+            "description": "单设备恢复（真正的单设备接口）\n\n特点:\n- 必须指定完整的 filePath（不支持 basePath 自动查找）\n- 不创建 Batch 对象\n- batchId 和 batchName 为 null\n- 发送单任务级 TaskInfo 通知\n- 立即执行（scheduledTime=null）\n\n与批量恢复的区别:\n- restore-device-data: 单设备专用，不创建批次\n- batch-restore-devices: 批量恢复（支持单个或多个设备），会创建批次"
+          },
+          "response": []
+        },
+        {
+          "name": "Single Device Restore (No Batch, Scheduled)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": null,\n  \"deviceIds\": [\n    \"{{test_device_id}}\"\n  ],\n  \"basePath\": \"/dbbackup\",\n  \"dateDir\": \"20251028\",\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"remark\": \"单设备恢复测试 - 定时执行\",\n  \"scheduledTime\": 1761998400000,\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-restore-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-restore-devices"
+              ]
+            },
+            "description": "单设备恢复 - 定时执行\n\n请修改scheduledTime为未来时间"
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Device Restore (Immediate)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data && jsonData.data.batchId) {",
+                  "        pm.environment.set('restore_batch_id', jsonData.data.batchId);",
+                  "        console.log('✅ Restore Batch ID:', jsonData.data.batchId);",
+                  "        pm.test('Batch status should be RUNNING or SCHEDULED', function () {",
+                  "            pm.expect(['RUNNING', 'SCHEDULED', 'COMPLETED']).to.include(jsonData.data.status);",
+                  "        });",
+                  "        pm.test('Should have device results', function () {",
+                  "            pm.expect(jsonData.data.deviceResults).to.be.an('array');",
+                  "            pm.expect(jsonData.data.deviceResults.length).to.be.greaterThan(0);",
+                  "        });",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"恢复-{{$timestamp}}\",\n  \"deviceIds\": [\"{{test_device_id}}\"],\n  \"basePath\": \"{{backup_target_path}}\",\n  \"dateDir\": 20251106,\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"scheduledTime\": 1762410750000,\n  \"remark\": \"执行批量恢复测试\",\n  \"debug\": true\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-restore-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-restore-devices"
+              ]
+            },
+            "description": "立即执行的批量设备恢复任务（支持单设备或多设备）\n\n参数说明：\n- deviceIds: 设备ID数组\n- rootPath: 备份根路径\n- dateDir: 日期目录（可选，为空则自动查找最新）\n- sftpServerId: SFTP服务器ID\n- scheduledTime: 定时执行时间（null=立即执行）\n- debug: 调试模式"
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Restore - Auto Find Latest (No dateDir)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Auto restore batch started\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    ",
+                  "    if (jsonData.success) {",
+                  "        pm.expect(jsonData.data).to.have.property('batchId');",
+                  "        pm.expect(jsonData.data).to.have.property('deviceResults');",
+                  "        ",
+                  "        // 验证自动找到的文件路径格式",
+                  "        var firstResult = jsonData.data.deviceResults[0];",
+                  "        if (firstResult && firstResult.backupFilePath) {",
+                  "            pm.expect(firstResult.backupFilePath).to.match(/\\.db$/);",
+                  "            console.log('✅ 自动找到备份文件:', firstResult.backupFilePath);",
+                  "        }",
+                  "        ",
+                  "        pm.environment.set('auto_restore_batch_id', jsonData.data.batchId);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"自动查找最新备份-{{$timestamp}}\",\n  \"deviceIds\": [\"{{test_device_id}}\"],\n  \"basePath\": \"{{backup_target_path}}\",\n  \"dateDir\": null,\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"scheduledTime\": null,\n  \"remark\": \"自动查找最新日期和最新备份文件\",\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-restore-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-restore-devices"
+              ]
+            },
+            "description": "批量恢复 - 自动查找最新备份\n\n功能:\n- dateDir 为 null，系统自动查找最新日期目录\n- 自动选择该日期目录下最新时间戳的备份文件\n\n路径查找逻辑:\n1. rootPath/[设备名]/ - 列出所有日期目录\n2. 选择最新日期目录（yyyyMMdd格式，降序排序）\n3. 列出该日期目录下的所有 .db 文件\n4. 选择文件名最新的备份文件\n\n示例:\n- rootPath: /dbbackup\n- 设备名: 升级测试\n- 自动找到: /dbbackup/升级测试/20251027/154623.db"
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Restore - Scheduled (With dateDir)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data && jsonData.data.batchId) {",
+                  "        pm.environment.set('scheduled_restore_batch_id', jsonData.data.batchId);",
+                  "        console.log('✅ Scheduled Restore Batch ID:', jsonData.data.batchId);",
+                  "        pm.test('Batch status should be SCHEDULED', function () {",
+                  "            pm.expect(jsonData.data.status).to.eql('SCHEDULED');",
+                  "        });",
+                  "        pm.test('Batch should have scheduledTime', function () {",
+                  "            pm.expect(jsonData.data).to.have.property('scheduledTime');",
+                  "        });",
+                  "        pm.test('Batch should have device results', function () {",
+                  "            pm.expect(jsonData.data.deviceResults).to.be.an('array');",
+                  "        });",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"定时恢复-{{$timestamp}}\",\n  \"deviceIds\": [\"{{test_device_id}}\"],\n  \"basePath\": \"{{backup_target_path}}\",\n  \"dateDir\": \"20251027\",\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"scheduledTime\": 1761978600000,\n  \"remark\": \"定时批量恢复 - 指定日期目录\",\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-restore-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-restore-devices"
+              ]
+            },
+            "description": "创建定时恢复任务 - 请修改scheduledTime为未来时间（格式: YYYY-MM-DDTHH:mm:ss）"
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Restore - With Debug Mode",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Restore task created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data && jsonData.data.batchId) {",
+                  "        pm.environment.set('debug_restore_batch_id', jsonData.data.batchId);",
+                  "        console.log('✅ Debug Restore Batch ID:', jsonData.data.batchId);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"Debug恢复-{{$timestamp}}\",\n  \"deviceIds\": [\"{{test_device_id}}\"],\n  \"basePath\": \"{{backup_target_path}}\",\n  \"dateDir\": null,\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"scheduledTime\": null,\n  \"remark\": \"测试debug模式下的恢复\",\n  \"debug\": true\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-restore-devices",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-restore-devices"
+              ]
+            },
+            "description": "批量恢复 - Debug模式\n\n当 debug=true 时：\n- RPC请求/响应会被记录在 DeviceTask.debugPayload\n- 可以通过 get-batch-detail 接口查看调试信息"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Batch Detail (Restore - With Debug)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Restore batch detail structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    ",
+                  "    var data = jsonData.data;",
+                  "    pm.expect(data.batchType).to.eql('RESTORE');",
+                  "    pm.expect(data.isWorkflowBatch).to.be.false;",
+                  "    pm.expect(data.workflows).to.be.an('array').that.is.empty;",
+                  "    ",
+                  "    console.log('✅ Batch Type:', data.batchType);",
+                  "    console.log('✅ Is Workflow Batch:', data.isWorkflowBatch);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"{{debug_restore_batch_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-batch-detail",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-batch-detail"
+              ]
+            },
+            "description": "查询恢复批次详情（debug模式）\n\n验证点：\n- isWorkflowBatch: false（恢复无workflow）\n- batchType: RESTORE\n- deviceTasks[].debugPayload: 应该有值"
+          },
+          "response": []
+        }
+      ],
+      "description": "设备恢复测试\n\n所有测试已更新为批量恢复接口 (batch-restore-devices):\n- 支持单设备或多设备\n- 支持自动查找最新备份（dateDir=null）\n- 支持指定日期目录恢复（dateDir=\"20251027\"）\n- 支持定时执行\n- 支持Debug模式"
+    },
+    {
+      "name": "Device Upgrade Tests",
+      "item": [
+        {
+          "name": "Batch Upgrade Software",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Batch upgrade response is valid\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.exist;",
+                  "    ",
+                  "    if (jsonData.success && jsonData.data) {",
+                  "        console.log('✅ 批量升级任务创建成功');",
+                  "        console.log('  总设备数: ' + jsonData.data.totalDevices);",
+                  "        console.log('  成功: ' + jsonData.data.successCount);",
+                  "        console.log('  失败: ' + jsonData.data.failedCount);",
+                  "        console.log('  状态: ' + jsonData.data.status);",
+                  "    } else {",
+                  "        console.log('❌ 批量升级失败: ' + jsonData.message);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"Batch Upgrade Test\",\n  \"deviceIds\": [\n    \"{{test_device_id}}\"\n  ],\n  \"upgradeFilePath\": \"/software/Release_POS_3.4.0.150_20251013.tar\",\n  \"targetVersion\": \"POS_3.4.0.150_20251013\",\n  \"sftpServerName\": \"{{test_sftp_server}}\",\n  \"debug\": true\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:batch-upgrade-software",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-upgrade-software"
+              ]
+            },
+            "description": "批量升级软件（非工作流模式）\n\n**说明**：\n- 这是简单的批量升级，不使用工作流\n- 所有设备升级到同一版本\n- 使用同一SFTP服务器\n- targetVersion 是可选参数（用于记录）\n\n**与 create-upgrade-batch 的区别**：\n- create-upgrade-batch: 工作流模式，支持下载、备份、升级步骤的手动/自动流转\n- batch-upgrade-software: 简单批量升级，直接执行升级操作"
+          },
+          "response": []
+        }
+      ],
+      "description": "Device software upgrade functionality"
+    },
+    {
+      "name": "Batch Tests",
+      "item": [
+        {
+          "name": "Create Batch Upgrade (Manual)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Batch created successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('batchId');",
+                  "    ",
+                  "    // ⭐ 保存 batchId 到环境变量",
+                  "    if (jsonData.data && jsonData.data.batchId) {",
+                  "        pm.environment.set('current_batch_id', jsonData.data.batchId);",
+                  "        pm.environment.set('batch_upgrade_id', jsonData.data.batchId);  // 兼容旧变量名",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "        console.log('✅ BatchId 已保存到环境变量');",
+                  "        console.log('  current_batch_id = ' + jsonData.data.batchId);",
+                  "        console.log('  batch_upgrade_id = ' + jsonData.data.batchId);",
+                  "        console.log('  批次名称: ' + jsonData.data.batchName);",
+                  "        console.log('  执行模式: ' + jsonData.data.executionMode);",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"Test Batch Upgrade - Manual\",\n  \"deviceIds\": [\"{{test_device_id}}\"],\n  \"upgradeFilePath\": \"{{test_upgrade_file_path}}\",\n  \"executionMode\": \"MANUAL\",\n  \"scheduledMode\": \"IMMEDIATE\",\n  \"enableDownload\": true,\n  \"enableBackup\": true,\n  \"enableUpgrade\": true,\n  \"operationInterval\": {{batch_operation_interval}},\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"backupBasePath\": \"/backup/upgrade_batch\",\n  \"maxRetryCount\": {{batch_max_retry_count}}\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:create-upgrade-batch",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:create-upgrade-batch"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Batch Upgrade (Scheduled)",
+          "event": [
+            {
+              "listen": "pre-request",
+              "script": {
+                "exec": [
+                  "// Set scheduled time to 5 minutes from now",
+                  "const now = new Date();",
+                  "const scheduledTime = new Date(now.getTime() + 5 * 60 * 1000);",
+                  "pm.environment.set('scheduled_time', scheduledTime.toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Batch created successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('batchId');",
+                  "    ",
+                  "    // ⭐ 保存 batchId 到环境变量",
+                  "    if (jsonData.data && jsonData.data.batchId) {",
+                  "        pm.environment.set('current_batch_id', jsonData.data.batchId);",
+                  "        pm.environment.set('batch_upgrade_id', jsonData.data.batchId);  // 兼容旧变量名",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "        console.log('✅ BatchId 已保存到环境变量');",
+                  "        console.log('  current_batch_id = ' + jsonData.data.batchId);",
+                  "        console.log('  batch_upgrade_id = ' + jsonData.data.batchId);",
+                  "        console.log('  批次名称: ' + jsonData.data.batchName);",
+                  "        console.log('  执行模式: ' + jsonData.data.executionMode);",
+                  "        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"Test Batch Upgrade - Scheduled\",\n  \"deviceIds\": [\"{{test_device_id}}\"],\n  \"upgradeFilePath\": \"{{test_upgrade_file_path}}\",\n  \"executionMode\": \"MANUAL\",\n  \"scheduledMode\": \"SCHEDULED\",\n  \"enableDownload\": true,\n  \"enableBackup\": true,\n  \"enableUpgrade\": true,\n  \"scheduledTime\": \"{{scheduled_time}}\",\n  \"operationInterval\": {{batch_operation_interval}},\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"backupBasePath\": \"/backup/upgrade_batch\",\n  \"maxRetryCount\": {{batch_max_retry_count}}\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:create-upgrade-batch",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:create-upgrade-batch"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Batch Upgrade (Debug Mode)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data && jsonData.data.batchId) {",
+                  "        pm.environment.set('batch_auto_id', jsonData.data.batchId);",
+                  "        console.log('Debug Batch ID saved:', jsonData.data.batchId);",
+                  "        pm.test('Debug batch created successfully', function () {",
+                  "            pm.expect(jsonData.success).to.be.true;",
+                  "            pm.expect(jsonData.data.batchName).to.eql('Test Batch Upgrade - Debug');",
+                  "        });",
+                  "    } else {",
+                  "        pm.test('Batch creation failed', function () {",
+                  "            pm.expect.fail('Failed to create debug batch: ' + (jsonData.message || 'Unknown error'));",
+                  "        });",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchName\": \"start_sj_2\",\n  \"deviceIds\": [\"Site-1983844018349543424#Ne-1983844257752027136\"],\n  \"upgradeFilePath\": \"/software/Release_POS_3.4.0.120_20250909.tar\",\n  \"executionMode\": \"MANUAL\",\n  \"scheduledMode\": \"IMMEDIATE\",\n  \"enableDownload\": true,\n  \"enableBackup\": false,\n  \"enableUpgrade\": false,\n  \"operationInterval\": {{batch_operation_interval}},\n  \"sftpServerName\": \"{{default_sftp_server_name}}\",\n  \"maxRetryCount\": {{batch_max_retry_count}}\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:create-upgrade-batch",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:create-upgrade-batch"
+              ]
+            },
+            "description": "创建带debug=true的批次任务，将保存RPC payload到数据库以便调试"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Batches (All Types)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response structure is correct\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success', true);",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.have.property('total');",
+                  "    pm.expect(jsonData.data).to.have.property('pageNum');",
+                  "    pm.expect(jsonData.data).to.have.property('pageSize');",
+                  "    pm.expect(jsonData.data).to.have.property('totalPages');",
+                  "});",
+                  "",
+                  "pm.test(\"Data contains batch summaries\", function () {",
+                  "    var data = pm.response.json().data.data;",
+                  "    pm.expect(data).to.be.an('array');",
+                  "    ",
+                  "    if (data.length > 0) {",
+                  "        var batch = data[0];",
+                  "        pm.expect(batch).to.have.property('batchId');",
+                  "        pm.expect(batch).to.have.property('batchName');",
+                  "        pm.expect(batch).to.have.property('batchType');",
+                  "        pm.expect(batch).to.have.property('status');",
+                  "        pm.expect(batch).to.have.property('totalCount');",
+                  "        ",
+                  "        console.log('✅ 第一个批次:', batch.batchName);",
+                  "        console.log('   类型:', batch.batchType);",
+                  "        console.log('   状态:', batch.status);",
+                  "        console.log('   总数:', batch.totalCount);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageNum\": 1,\n  \"pageSize\": 20\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-all-batches",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-all-batches"
+              ]
+            },
+            "description": "获取所有批次列表（所有类型：UPGRADE/BACKUP/RESTORE/DOWNLOAD）\n\n支持的过滤参数：\n- batchType: UPGRADE/BACKUP/RESTORE/DOWNLOAD\n- status: RUNNING/COMPLETED/FAILED 等\n- pageNum: 页码（默认1）\n- pageSize: 每页大小（默认20）"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Batches (Filter by BACKUP Type)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"All batches are BACKUP type\", function () {",
+                  "    var data = pm.response.json().data.data;",
+                  "    if (data && data.length > 0) {",
+                  "        data.forEach(batch => {",
+                  "            pm.expect(batch.batchType).to.eql('BACKUP');",
+                  "        });",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageNum\": 1,\n  \"pageSize\": 20,\n  \"batchType\": \"BACKUP\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-all-batches",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-all-batches"
+              ]
+            },
+            "description": "只查询 BACKUP 类型的批次"
+          },
+          "response": []
+        },
+        {
+          "name": "Retry Batch Upgrade",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"{{batch_upgrade_id}}\",\n  \"deviceIds\": [\n    \"{{test_device_id_2}}\"\n  ],\n  \"fromStep\": \"BACKUP\",\n  \"debug\": false\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:retry-upgrade-task",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:retry-upgrade-task"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Batch Upgrade (Single)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"{{batch_upgrade_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:cancel-upgrade-batch",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:cancel-upgrade-batch"
+              ]
+            },
+            "description": "取消单个批量升级任务，将批次状态设置为CANCELLED，并级联取消所有正在进行的子任务"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel All Running Batches (All Types)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Cancel all operation completed\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    ",
+                  "    if (jsonData.success) {",
+                  "        pm.expect(jsonData.data).to.have.property('successCount');",
+                  "        pm.expect(jsonData.data).to.have.property('failureCount');",
+                  "        pm.expect(jsonData.data).to.have.property('successBatchIds');",
+                  "        pm.expect(jsonData.data).to.have.property('failureDetails');",
+                  "        ",
+                  "        console.log('✅ 取消所有运行批次:', jsonData.data.successCount, '成功,', jsonData.data.failureCount, '失败');",
+                  "        console.log('成功的批次ID:', jsonData.data.successBatchIds);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:cancel-all-batches",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:cancel-all-batches"
+              ]
+            },
+            "description": "取消所有运行中的批次（所有类型：DOWNLOAD、BACKUP、RESTORE、UPGRADE）\n\n功能:\n- 自动查询所有RUNNING状态的批次\n- 按批次类型执行不同的取消逻辑：\n  * UPGRADE：调用完整的工作流取消逻辑\n  * 其他类型：更新批次状态为CANCELLED，取消关联的DeviceTask\n- 逐个取消每个批次\n- 返回详细的成功/失败统计和批次ID列表\n\n无需输入参数，系统自动处理所有运行中的批次"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Batch Upgrade (Single)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"{{batch_upgrade_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:delete-upgrade-batch",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:delete-upgrade-batch"
+              ]
+            },
+            "description": "删除单个批量升级任务。注意：RUNNING状态的批次无法直接删除，需要先取消"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete All Non-Running Batches (All Types)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Delete all operation completed\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    ",
+                  "    if (jsonData.success) {",
+                  "        pm.expect(jsonData.data).to.have.property('successCount');",
+                  "        pm.expect(jsonData.data).to.have.property('failureCount');",
+                  "        pm.expect(jsonData.data).to.have.property('successBatchIds');",
+                  "        pm.expect(jsonData.data).to.have.property('failureDetails');",
+                  "        ",
+                  "        console.log('✅ 删除所有非运行批次:', jsonData.data.successCount, '成功,', jsonData.data.failureCount, '失败');",
+                  "        console.log('成功的批次ID:', jsonData.data.successBatchIds);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:delete-all-batches",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:delete-all-batches"
+              ]
+            },
+            "description": "删除所有非运行中的批次（所有类型：DOWNLOAD、BACKUP、RESTORE、UPGRADE）\n\n功能:\n- 自动查询所有非RUNNING状态的批次（COMPLETED、FAILED、CANCELLED、PENDING）\n- 包括所有类型的批次\n- 按批次类型执行不同的删除逻辑：\n  * UPGRADE：调用完整的工作流删除逻辑（级联删除workflow和设备任务）\n  * 其他类型：删除批次记录和关联的DeviceTask\n- 逐个删除每个批次\n- 返回详细的成功/失败统计和批次ID列表\n\n无需输入参数，系统自动处理所有非运行中的批次\n\n注意：RUNNING状态的批次不会被删除，需要先使用cancel-all-batches接口取消"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Upgrade Batches (Filter)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PENDING\",\n  \"batchName\": \"{{batch_name_prefix}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-upgrade-batches",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-upgrade-batches"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Batch Detail (Unified)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response structure is correct\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success', true);",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    ",
+                  "    var data = jsonData.data;",
+                  "    pm.expect(data).to.have.property('batchId');",
+                  "    pm.expect(data).to.have.property('batchType');",
+                  "    pm.expect(data).to.have.property('workflows');",
+                  "    pm.expect(data).to.have.property('deviceTasks');",
+                  "    pm.expect(data).to.have.property('isWorkflowBatch');",
+                  "});",
+                  "",
+                  "pm.test(\"Workflow is simplified (no deviceName, errorMessage, etc)\", function () {",
+                  "    var data = pm.response.json().data;",
+                  "    ",
+                  "    if (data.workflows && data.workflows.length > 0) {",
+                  "        var workflow = data.workflows[0];",
+                  "        ",
+                  "        // 应该有的字段",
+                  "        pm.expect(workflow).to.have.property('workflowId');",
+                  "        pm.expect(workflow).to.have.property('deviceId');",
+                  "        pm.expect(workflow).to.have.property('status');",
+                  "        pm.expect(workflow).to.have.property('retryCount');",
+                  "        ",
+                  "        // 不应该有的字段（已移到 DeviceTask）",
+                  "        pm.expect(workflow).to.not.have.property('deviceName');",
+                  "        pm.expect(workflow).to.not.have.property('errorMessage');",
+                  "        pm.expect(workflow).to.not.have.property('createdTime');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"DeviceTasks contains detailed info\", function () {",
+                  "    var data = pm.response.json().data;",
+                  "    ",
+                  "    pm.expect(data.deviceTasks).to.be.an('array');",
+                  "    ",
+                  "    if (data.deviceTasks.length > 0) {",
+                  "        var task = data.deviceTasks[0];",
+                  "        ",
+                  "        // DeviceTask 包含所有详细信息",
+                  "        pm.expect(task).to.have.property('taskId');",
+                  "        pm.expect(task).to.have.property('workflowId'); // 关联",
+                  "        pm.expect(task).to.have.property('deviceName'); // 设备详情",
+                  "        pm.expect(task).to.have.property('taskType');",
+                  "        pm.expect(task).to.have.property('status');",
+                  "        pm.expect(task).to.have.property('createdTime'); // 时间戳",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"{{batch_auto_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-batch-detail",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-batch-detail"
+              ]
+            },
+            "description": "获取批次详情 (统一接口) - 自动识别批次类型 (UPGRADE/BACKUP/RESTORE)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Batch Workflows (Workflow Batch Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Workflows array returned\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success', true);",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Workflow is simplified (only control info)\", function () {",
+                  "    var workflows = pm.response.json().data;",
+                  "    ",
+                  "    if (workflows.length > 0) {",
+                  "        var workflow = workflows[0];",
+                  "        ",
+                  "        // 只有流程控制字段",
+                  "        pm.expect(workflow).to.have.property('workflowId');",
+                  "        pm.expect(workflow).to.have.property('deviceId');",
+                  "        pm.expect(workflow).to.have.property('status');",
+                  "        ",
+                  "        // 详细信息已移除",
+                  "        pm.expect(workflow).to.not.have.property('deviceName');",
+                  "        pm.expect(workflow).to.not.have.property('downloadStatus');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"{{batch_auto_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:get-batch-workflows",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-batch-workflows"
+              ]
+            },
+            "description": "获取批次的工作流列表 (仅工作流批次，非工作流批次返回空)"
+          },
+          "response": []
+        },
+        {
+          "name": "Proceed Manual Batch to Next Step",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"{{batch_auto_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:proceed-upgrade-batch",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:proceed-upgrade-batch"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Retry Workflow",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retry operation successful\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success', true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"{{batch_manual_id}}\",\n  \"deviceId\": \"{{test_device_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:retry-upgrade-workflow",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:retry-upgrade-workflow"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Workflow",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Remove operation successful\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success', true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"{{batch_manual_id}}\",\n  \"deviceId\": \"{{test_device_id_2}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_api_base}}/device-maintenance:remove-upgrade-workflow",
+              "host": [
+                "{{device_api_base}}"
+              ],
+              "path": [
+                "device-maintenance:remove-upgrade-workflow"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "批次测试 - 支持所有批次类型 (升级工作流/备份/恢复)"
+    },
+    {
+      "name": "Notification Query Tests (Auxiliary)",
+      "item": [
+        {
+          "name": "Get All Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base}}/notifications/all",
+              "host": [
+                "{{api_base}}"
+              ],
+              "path": [
+                "notifications",
+                "all"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recent 10 Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base}}/notifications/recent?limit=10",
+              "host": [
+                "{{api_base}}"
+              ],
+              "path": [
+                "notifications",
+                "recent"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Notifications by Topic (status-events)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base}}/notifications/by-topic/status-events",
+              "host": [
+                "{{api_base}}"
+              ],
+              "path": [
+                "notifications",
+                "by-topic",
+                "status-events"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Notifications (keyword: software)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base}}/notifications/search?keyword=software",
+              "host": [
+                "{{api_base}}"
+              ],
+              "path": [
+                "notifications",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "keyword",
+                  "value": "software"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Notification Statistics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base}}/notifications/stats",
+              "host": [
+                "{{api_base}}"
+              ],
+              "path": [
+                "notifications",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Clear All Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_base}}/notifications/clear",
+              "host": [
+                "{{api_base}}"
+              ],
+              "path": [
+                "notifications",
+                "clear"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Auxiliary interfaces to view Kafka notifications received from status-events topic"
+    }
+  ]
+}

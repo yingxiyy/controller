@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/Welcome5",
+  "definitions": {
+    "Welcome5": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "type": "string"
+        },
+        "face": {
+          "type": "string"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "vendorName": {
+          "type": "string"
+        },
+        "vendorShortName": {
+          "type": "string"
+        },
+        "vendorType": {
+          "type": "string"
+        },
+        "fix-eq": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FixEq"
+          }
+        },
+        "slot": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Slot"
+          }
+        },
+        "overview": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "required": [
+        "direction",
+        "face",
+        "fix-eq",
+        "height",
+        "overview",
+        "slot",
+        "vendorName",
+        "vendorShortName",
+        "vendorType",
+        "width"
+      ],
+      "title": "Welcome5"
+    },
+    "FixEq": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "coords": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "visibile": {
+          "type": "boolean"
+        },
+        "solt": {
+          "type": "string",
+          "format": "integer"
+        }
+      },
+      "required": [
+        "coords",
+        "id",
+        "solt",
+        "type",
+        "visibile"
+      ],
+      "title": "FixEq"
+    },
+    "Slot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "coords": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "coords",
+        "id"
+      ],
+      "title": "Slot"
+    }
+  }
+}

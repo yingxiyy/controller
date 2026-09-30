@@ -1,0 +1,47 @@
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<configuration>
+  <include resource="/org/springframework/boot/logging/logback/base.xml"/>
+  <include resource=
+    "org/springframework/boot/logging/logback/defaults.xml" />
+  <include resource=
+    "org/springframework/boot/logging/logback/file-appender.xml" />
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+  <appender name="RollingFile"
+    class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG}/designer.log</file>
+    <encoder
+      class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
+    </encoder>
+
+    <rollingPolicy
+      class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- rollover daily and when the file reaches 10 MegaBytes -->
+      <fileNamePattern>${LOG}/designer-%d{yyyy-MM-dd}.%i.log
+      </fileNamePattern>
+      <maxHistory>10</maxHistory>
+      <timeBasedFileNamingAndTriggeringPolicy
+        class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <maxFileSize>50MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <totalSizeCap>1GB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
+  <root level="info">
+    <appender-ref ref="STDOUT"/>
+    <appender-ref ref="RollingFile"/>
+  </root>
+  <logger name="com.nokia.cd.otn.controller.allocate.designer" level="trace"/>
+</configuration>

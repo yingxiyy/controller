@@ -1,0 +1,78 @@
+#
+# /*
+#  * Copyright (c) 2021-2020 and others.  All rights reserved.
+#  *
+#  * This program and the accompanying materials are made available under the
+#  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+#  * and is available at http://www.eclipse.org/legal/epl-v10.html
+#  */
+#
+server:
+  port: @port.impl-app@
+  yangModel: ByteDance
+
+author:
+  account: admin
+  password: admin
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+controller:
+  implement:
+    writeWithoutIP: true
+    disableDeimplSiteLink: true
+    uploadNeParam: true
+    tunnelOverAse: false
+
+
+
+logging.level.org: debug
+logging.level.root: debug
+logging.level.net.flex.dci.otn.controller.implement: DEBUG
+logging.level.net.flex.dci.otc.common.util: DEBUG
+logging.level.net.flex.dci.otc.tools.lock: DEBUG
+
+#logging:
+#  config: classpath:logback-spring.xml
+#  level:
+#    org.springframework.web: DEBUG
+#    org.apache.kafka.clients: OFF
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+kafka:
+  bootstrap-servers: 10.242.111.39:9092
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+server:
+  address: ${myIp}
+
+kafka:
+  bootstrap-servers: ${KAFKA_BROKER}
+  replication-factor: 1
+
+
+controller:
+  implement:
+    writeWithoutIP: false
+    disableDeimplSiteLink: false
+    uploadNeParam: false
+    tunnelOverAse: false
+
+  byteDance:
+    ots-channel-power-control-mode: "APC"
+    meida-channel-source-to-dest-power-control-mode: "APC"
+    meida-channel-dest-to-source-power-control-mode: "APC"
+    meida-channel-source-power-auto-control-threshold: 0.5
+    meida-channel-dest-power-auto-control-threshold: 0.5
+    meida-channel-power-auto-control-range: 6

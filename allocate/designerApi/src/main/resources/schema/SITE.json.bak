@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/site",
+  "definitions": {
+    "site": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "model": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/model"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "topology"
+      ],
+      "title": "site"
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "grid": {
+          "type": "integer"
+        },
+        "main": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "slave": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "main"
+      ],
+      "title": "model"
+    }
+  }
+}

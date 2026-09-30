@@ -1,0 +1,268 @@
+{
+  "desc": "name reuqest route map",
+  "instance": [
+    {
+      "name": "nms-service",
+      "prefix": [
+        "/restconf/operations/**",
+        "/restconf/operational/**",
+        "/restconf/config/**"
+      ],
+      "sub-path": [
+        "nms"
+      ]
+    },
+    {
+      "name": "allocator",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "site-topology:create-sites",
+        "site-topology:update-site",
+        "site-topology:remove-sites",
+        "site-topology:create-link",
+        "site-topology:remove-link",
+        "tunnel:compute-tunnels",
+        "tunnel:create-tunnel",
+        "tunnel:remove-tunnel",
+        "ne-capability:get-vendor-list",
+        "ne-capability:get-supported-frequency",
+        "ne-capability:get-ot-card-capability",
+        "site-topology:allocate-link",
+        "site-topology:create-link-2",
+        "site-topology:compute-link",
+        "tunnel:allocate-tunnels",
+        "tunnel:allocate-tunnels-2",
+        "tunnel:allocate-tunnels-3",
+        "tunnel:create-tunnel-2",
+        "tunnel:create-tunnel-3",
+        "site-topology:create-network",
+        "site-topology:allocate-network",
+        "site-topology:get-roadm-info",
+        "site-topology:get-connectable-network",
+        "ne-capability:get-och-link-protection-type",
+        "ne-capability:get-site-link-protection-type"
+      ]
+    },
+    {
+      "name": "appMonitor",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "pmc:get-version",
+        "pmc:get-system-info"
+      ]
+    },
+    {
+      "name": "implementor",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "otn-phy-topology:update-node",
+        "otn-phy-topology:update-equip",
+        "otn-phy-topology:update-link",
+        "otn-phy-topology:remove-ip",
+        "otn-phy-topology:update-cross-connection",
+        "otn-phy-topology:get-ne-data",
+        "otn-phy-topology:update-termination-point",
+        "otn-phy-topology:remove-ne",
+        "otn-phy-topology:export-1524-telemetry-data",
+        "otn-phy-topology:test-connection-status",
+        "site-topology:update-sitelink-sync",
+        "site-topology:update-link",
+        "tunnel:update-tunnel-sync",
+        "tunnel:update-tunnel"
+      ]
+    },
+    {
+      "name": "schedule",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "schedule:create-schedule",
+        "schedule:get-schedule-resources",
+        "schedule:redo-schedule",
+        "schedule:get-schedules-by-type",
+        "schedule:get-schedules-by-link",
+        "schedule:mark-schedule-finish"
+      ]
+    },
+    {
+      "name": "schedule",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "schedule:create-schedule",
+        "schedule:get-schedule-resources",
+        "schedule:redo-schedule",
+        "schedule:get-schedules-by-type",
+        "schedule:get-schedules-by-link",
+        "schedule:mark-schedule-finish"
+      ]
+    },
+    {
+      "name": "ftpServer",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "ftp-server:create-ftp-server",
+        "ftp-server:update-ftp-server",
+        "ftp-server:delete-ftp-server",
+        "ftp-server:ftp-servers"
+      ]
+    },
+    {
+      "name": "status",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "alarm:generate-alarm",
+        "alarm:clear-alarm",
+        "alarm:get-alarm-statistics",
+        "alarm:get-alarm-detail",
+        "alarm:get-current-alarms",
+        "alarm:get-history-alarms",
+        "alarm:get-alarms",
+        "alarm:refresh-alarm"
+      ]
+    },
+    {
+      "name": "neDesigner",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "otn-phy-topology:create-ne"
+      ]
+    },
+    {
+      "name": "neMgr",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "eml-manager:registe-ne",
+        "eml-manager:unregiste-ne",
+        "eml-manager:config-ne",
+        "eml-manager:upload-ne",
+        "eml:get-ne-data",
+        "eml-manager:remove-resource",
+        "eml-manager:compare-ne",
+        "eml-manager:manage-ne",
+        "eml-manager:report-1524-telemetry-data"
+      ]
+    },
+    {
+      "name": "adaterMgr",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "eml-manager:delete-adapter",
+        "eml-manager:create-adapter"
+      ]
+    },
+    {
+      "name": "telemetryServerMgr",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "telemetry-manager:create-telemetry-server",
+        "telemetry-manager:delete-telemetry-server"
+      ]
+    },
+    {
+      "name": "discovery",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "tunnel:recover"
+      ]
+    },
+    {
+      "name": "idcManager",
+      "prefix": [
+        "/idc/**"
+      ]
+    },
+    {
+      "name": "taskInfo",
+      "prefix": [
+        "/taskinfo/**"
+      ]
+    },
+    {
+      "name": "oamTool",
+      "prefix": [
+        "/maintenance-tool/**",
+        "/maintenance/**"
+      ]
+    },
+    {
+      "name": "pm-stream",
+      "prefix": [
+        "/telemetry/stream/**",
+        "/pm-ws/**"
+      ]
+    },
+    {
+      "name": "alarmNotifier",
+      "prefix": [
+        "/alarm/**"
+      ]
+    },
+    {
+      "name": "notifier",
+      "prefix": [
+        "/create-notification-stream/**"
+      ],
+      "sub-path": [
+        "alarm:alarm-notification",
+        "notification:object-notification"
+      ]
+    },
+    {
+      "name": "pm-query",
+      "prefix": [
+        "/pmreport/**"
+      ]
+    },
+    {
+      "name": "user-manager",
+      "prefix": [
+        "/users/**",
+        "/roles/**",
+        "/permission/**"
+      ]
+    },
+    {
+      "name": "auth-service",
+      "prefix": [
+        "/oauth2/**"
+      ]
+    },
+    {
+      "name": "otdr-manager",
+      "prefix": [
+        "/restconf/operations/**"
+      ],
+      "sub-path": [
+        "otdr:start-otdr",
+        "otdr:get-otdr-monitor",
+        "otdr:get-otdr-result",
+        "otdr:get-otdr-res",
+        "otdr:get-otdr-results",
+        "otdr:get-otdr-detail"
+      ]
+    }
+  ]
+}

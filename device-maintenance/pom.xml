@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>net.flex.dci.otn</groupId>
+    <artifactId>controller</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+
+  <groupId>net.flex.dci.devicemaintenance</groupId>
+  <artifactId>device-maintenance</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+  <name>device-maintenance</name>
+  <description>Independent microservice for device maintenance operations</description>
+
+  <properties>
+    <java.version>1.8</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <!-- 从controller父POM中提取需要的端口配置 -->
+    <port.devicemaintenance>18008</port.devicemaintenance>
+
+    <!-- 依赖版本管理 -->
+    <curator.version>4.3.0</curator.version>
+    <mysql.version>8.0.28</mysql.version>
+    <yangVersion>v1.35</yangVersion>
+  </properties>
+
+  <dependencies>
+    <!-- Web -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- Actuator -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
+    <!-- Data JPA -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <!-- MySQL Driver -->
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>${mysql.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- Druid Connection Pool -->
+    <dependency>
+      <groupId>com.alibaba</groupId>
+      <artifactId>druid-spring-boot-starter</artifactId>
+      <version>1.2.6</version>
+    </dependency>
+
+    <!-- Kafka -->
+    <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka</artifactId>
+    </dependency>
+
+    <!-- Controller Kafka Tools -->
+    <dependency>
+      <groupId>net.flex.dci.otn.controller.tools</groupId>
+      <artifactId>kafka</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+      <exclusions>
+        <!-- 排除有网络问题的传递依赖 -->
+        <exclusion>
+          <groupId>net.flex.dci.otc</groupId>
+          <artifactId>netconf-serialization</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Common Model (for TaskInfoMessage) -->
+    <dependency>
+      <groupId>net.flex.dci.otc.common</groupId>
+      <artifactId>common-model</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+
+    <!-- RPC Client for microservice communication -->
+    <dependency>
+      <groupId>net.flex.dci.otn</groupId>
+      <artifactId>rpc-client</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+      <!-- 不排除netconf-serialization，使用本地仓库已有版本 -->
+    </dependency>
+
+    <!-- ZooKeeper Client (Curator) -->
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-framework</artifactId>
+      <version>4.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-recipes</artifactId>
+      <version>4.3.0</version>
+    </dependency>
+
+    <!-- Validation -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+
+    <!-- Lombok -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <!-- JSch for SFTP -->
+    <dependency>
+      <groupId>com.jcraft</groupId>
+      <artifactId>jsch</artifactId>
+      <version>0.1.55</version>
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- DCI Client for Zookeeper registration -->
+    <dependency>
+      <groupId>net.flex.dci.otc.zk</groupId>
+      <artifactId>zkclient4boot</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- MongoDB DAO for device information -->
+    <dependency>
+      <groupId>net.flex.dci.otc</groupId>
+      <artifactId>db-mongo</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+
+    <!-- FastJSON for JSON parsing -->
+    <dependency>
+      <groupId>com.alibaba</groupId>
+      <artifactId>fastjson</artifactId>
+      <version>1.2.76</version>
+    </dependency>
+  </dependencies>
+
+
+  <build>
+    <resources>
+      <!-- 需要Maven变量过滤的配置文件 -->
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/application*.yml</include>
+          <include>zkclient_conf.properties</include>
+          <include>logback-spring.xml</include>
+        </includes>
+      </resource>
+      <!-- 不需要过滤的配置文件（mysql.properties和mongodb.properties由部署脚本处理） -->
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>mysql.properties</include>
+          <include>mongodb.properties</include>
+          <include>tag-info</include>
+        </includes>
+      </resource>
+      <!-- 其他资源文件 -->
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>**/application*.yml</exclude>
+          <exclude>zkclient_conf.properties</exclude>
+          <exclude>logback-spring.xml</exclude>
+          <exclude>mysql.properties</exclude>
+          <exclude>mongodb.properties</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
+
+    <plugins>
+      <plugin>
+        <!-- curl http://localhost:8080/actuator/info to get git info-->
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>4.9.10</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>net.flex.dci.otc.plugin</groupId>
+        <artifactId>systemd-maven-plugin</artifactId>
+      </plugin>
+
+    </plugins>
+  </build>
+
+
+  <profiles>
+    <profile>
+      <id>product</id>
+      <build>
+        <plugins>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+          </plugin>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

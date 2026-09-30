@@ -1,0 +1,40 @@
+server:
+  port: @port.status@
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+sbi_version: @yangVersion@
+alarm.link.generate: true
+alarm.link.keywords: Loss of signal:LOS:Port_Failure:Card_Missing:OTU_TTI_Unexpect:Loss_of_Signal
+dci:
+  i18n:
+    lang: en_US
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+
+kafka:
+  bootstrap-servers: 10.242.111.32:9092
+  replication-factor: 1
+  consumer-group: status-test
+#logging.level.org.springframework.web: DEBUG
+logging.level.org.springframework.boot: DEBUG
+#logging.level.org.springframework.cloud.stream: DEBUG
+logging.level.org.apache.kafka.clients: OFF
+#logging.level.root: DEBUG
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+kafka:
+  bootstrap-servers: ${KAFKA_BROKER}
+  replication-factor: 1
+  consumer-group: status-monitor
+server:
+  address: ${myIp}
+logging.level.net.flex.dci.otn.controller.status: INFO

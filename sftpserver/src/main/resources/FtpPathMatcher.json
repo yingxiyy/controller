@@ -1,0 +1,12 @@
+{
+  "pathMatchers": [
+    {
+      "path": "/restconf/config/ftp-server:ftp-servers/ftp-server/{name}",
+      "pathVariable": "name"
+    },
+    {
+      "path": "/restconf/config/ftp-server:ftp-servers",
+      "pathVariable": ""
+    }
+  ]
+}

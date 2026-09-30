@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ehcache>
+  <diskStore path="java.io.tmpdir"/>
+  <defaultCache
+    maxElementsInMemory="500"
+    maxElementsOnDisk="0"
+    eternal="false"
+    timeToIdleSeconds="600"
+    timeToLiveSeconds="600"
+    overflowToDisk="true"
+    diskSpoolBufferSizeMB="50"
+    diskExpiryThreadIntervalSeconds="120"
+    memoryStoreEvictionPolicy="LRU"/>
+  <cache name="phyNodeCache"
+    maxElementsInMemory="1500"
+    maxElementsOnDisk="1500"
+    timeToIdleSeconds="10800"
+    eternal="false"
+    overflowToDisk="true"
+    diskPersistent="true"
+    clearOnFlush="true"
+    memoryStoreEvictionPolicy="LFU"
+  >
+  </cache>
+
+</ehcache>

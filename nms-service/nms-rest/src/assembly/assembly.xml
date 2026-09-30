@@ -1,0 +1,76 @@
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<assembly>
+  <fileSets>
+    <!-- 把配置文件，打包进zip文件的config目录 -->
+    <fileSet>
+      <directory>${project.basedir}/src/main/resources</directory>
+      <filtered>true</filtered>
+      <includes>
+        <include>**/*</include>
+        <include>*.xml</include>
+        <include>*.properties</include>
+        <include>*.yml</include>
+        <include>*.key</include>
+        <include>TelecomScanPortConfiguration.json</include>
+        <include>EquipTypesConfiguration.json</include>
+      </includes>
+      <lineEnding>lf</lineEnding>
+      <outputDirectory>config</outputDirectory>
+    </fileSet>
+
+    <fileSet>
+      <directory>${project.basedir}/src/main/resources</directory>
+      <includes>
+        <include>*.conf</include>
+      </includes>
+      <outputDirectory></outputDirectory>
+    </fileSet>
+
+    <!-- 把jar，打进zip文件的根目录 -->
+    <fileSet>
+      <directory>${project.build.directory}</directory>
+      <fileMode>0755</fileMode>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+      <outputDirectory></outputDirectory>
+    </fileSet>
+
+    <!-- Put generated systemd service file to /bin -->
+    <fileSet>
+      <directory>${project.build.directory}</directory>
+      <filtered>true</filtered>
+      <includes>
+        <include>*.service</include>
+      </includes>
+      <lineEnding>lf</lineEnding>
+      <outputDirectory>bin</outputDirectory>
+    </fileSet>
+
+    <!-- Put all generated script  to /bin -->
+    <fileSet>
+      <directory>${project.build.directory}</directory>
+      <fileMode>0755</fileMode>
+      <filtered>true</filtered>
+      <includes>
+        <include>*.sh</include>
+      </includes>
+      <lineEnding>lf</lineEnding>
+      <outputDirectory>bin</outputDirectory>
+    </fileSet>
+
+
+  </fileSets>
+  <formats>
+    <format>tar.gz</format>
+  </formats>
+
+  <id>bin</id>
+</assembly>

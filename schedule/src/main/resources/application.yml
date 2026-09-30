@@ -1,0 +1,77 @@
+#
+# /*
+#  * Copyright (c) 2021-2020 and others.  All rights reserved.
+#  *
+#  * This program and the accompanying materials are made available under the
+#  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+#  * and is available at http://www.eclipse.org/legal/epl-v10.html
+#  */
+#
+server:
+  port: 18819
+
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+backup:
+  localBackupDir: controller/db/backup
+  remoteBackupDir: controller/db/backup
+  ttl: 14
+  sftpServer: localhost
+  tools:
+    mongo:
+      dump: /usr/bin/mongodump
+      restore: /usr/bin/mongorestore
+    mysql:
+      dump: /usr/bin/mysqldump
+      restore: /usr/bin/mysql
+
+controller:
+  schedule:
+    sftpServerName: localhost
+    controllerDBBackupDir: upload/controllerDB
+    backupDir: upload/controllerDB/backup      # 备份文件存放目录
+    restoreDir: upload/controllerDB/restore    # 恢复时读取的目录（可选，默认与backupDir相同）
+    sftpFileTTL: 14 # days
+
+  tools:
+    mongodb:
+      dump: /usr/bin/mongodump
+      restore: /usr/bin/mongorestore
+    mysql:
+      dump: /usr/bin/mysqldump
+      restore: /usr/bin/mysql
+
+logging:
+  #  config: classpath:logback-spring.xml
+  level:
+    #    org.springframework.web: OFF
+    #    org.springframework.boot: OFF
+    #    org.apache.kafka.clients: OFF
+    #    net.flex.dci.otn.controller.schedule: DEBUG
+    net.flex.dci.otc.zkclient4boot: OFF
+
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+kafka:
+  bootstrap-servers: 127.0.0.1:9092
+  replication-factor: 1
+  consumer-group: schedule
+
+#logging.level.root: DEBUG
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+kafka:
+  bootstrap-servers: ${KAFKA_BROKER}
+  replication-factor: 1
+
+logging.level.net.flex.dci.otn.controller: DEBUG

@@ -1,0 +1,18 @@
+{
+  "alarm": {
+    "link": {
+      "keywords": [
+        "Loss of signal",
+        "LOS",
+        "Port_Failure",
+        "Card_Missing",
+        "OTU_TTI_Unexpect",
+        "Loss_of_Signal"
+      ],
+      "generate": true
+    },
+    "node": {
+    }
+  },
+  "filter": false
+}

@@ -1,0 +1,41 @@
+{
+  "description": "device equipment type configuration",
+  "version": "1.0",
+  "waveDivisionMultiplexing": {
+    "description": "分波功能涉及的设备类型配置",
+    "equipmentTypes": [
+      "CMUX64",
+      "WSS",
+      "MUX",
+      "MUXPANEL",
+      "IRA",
+      "DGE",
+      "MUX32CL"
+    ]
+  },
+  "mpoPortSupported": {
+    "description": "带MPO端口所涉及的设备配置",
+    "equipmentTypes": [
+      {
+        "name": "CMUX64",
+        "category": "MUX"
+      },
+      {
+        "name": "MUXPANEL",
+        "category": "MUX"
+      },
+      {
+        "name": "IRA",
+        "category": "OTHER"
+      },
+      {
+        "name": "MUX32CL",
+        "category": "MUX"
+      },
+      {
+        "name": "MUX",
+        "category": "MUX"
+      }
+    ]
+  }
+}

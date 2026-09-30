@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+  <localRepository>C:\work\.m2\repository</localRepository>
+
+  <!--
+    Keep Maven Central and OpenDaylight as separate repositories.
+    Do not mirror Central to Aliyun here: a Maven mirror replaces the original
+    repository and cannot fall back when the mirror stalls.
+  -->
+  <profiles>
+    <profile>
+      <id>platform-repositories</id>
+
+      <properties>
+        <maven.wagon.http.connectionTimeout>10000</maven.wagon.http.connectionTimeout>
+        <maven.wagon.http.readTimeout>60000</maven.wagon.http.readTimeout>
+        <maven.wagon.http.retryHandler.count>3</maven.wagon.http.retryHandler.count>
+      </properties>
+
+      <repositories>
+        <repository>
+          <id>central</id>
+          <name>Maven Central</name>
+          <url>https://repo.maven.apache.org/maven2</url>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>daily</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+
+        <repository>
+          <id>opendaylight-release</id>
+          <name>OpenDaylight Releases</name>
+          <url>https://nexus.opendaylight.org/content/repositories/opendaylight.release/</url>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>daily</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+
+        </repository>
+
+        <repository>
+          <id>opendaylight-snapshot</id>
+          <name>OpenDaylight Snapshots</name>
+          <url>https://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/</url>
+          <releases>
+            <enabled>false</enabled>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>daily</updatePolicy>
+          </snapshots>
+        </repository>
+      </repositories>
+
+      <pluginRepositories>
+        <pluginRepository>
+          <id>central</id>
+          <name>Maven Central Plugins</name>
+          <url>https://repo.maven.apache.org/maven2</url>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>daily</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </pluginRepository>
+
+        <pluginRepository>
+          <id>opendaylight-release</id>
+          <name>OpenDaylight Release Plugins</name>
+          <url>https://nexus.opendaylight.org/content/repositories/opendaylight.release/</url>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>daily</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </pluginRepository>
+
+        <pluginRepository>
+          <id>opendaylight-snapshot</id>
+          <name>OpenDaylight Snapshot Plugins</name>
+          <url>https://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/</url>
+          <releases>
+            <enabled>false</enabled>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>daily</updatePolicy>
+          </snapshots>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+
+  <activeProfiles>
+    <activeProfile>platform-repositories</activeProfile>
+  </activeProfiles>
+</settings>

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>neManager</artifactId>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/application*.yml</include>
+          <include>zkclient_conf.properties</include>
+          <include>logback-spring.xml</include>
+          <include>element-special.properties</include>
+          <include>telecom-model-ne.properties</include>
+          <include>**/*.json</include>
+          <include>tag-info</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>mongodb.properties</include>
+        </includes>
+      </resource>
+    </resources>
+
+
+    <plugins>
+      <plugin>
+        <!-- curl http://localhost:8080/actuator/info to get git info-->
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>4.9.10</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>net.flex.dci.otc.plugin</groupId>
+        <artifactId>systemd-maven-plugin</artifactId>
+      </plugin>
+
+    </plugins>
+  </build>
+
+
+  <profiles>
+    <profile>
+      <id>product</id>
+      <build>
+        <plugins>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+          </plugin>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <dependencies>
+    <dependency>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <artifactId>kafka</artifactId>
+      <groupId>net.flex.dci.otn.controller.tools</groupId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>webapp</artifactId>
+      <groupId>net.flex.dci.otn.controller.tools</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>netconf-serialization</artifactId>
+      <groupId>net.flex.dci.otc</groupId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <artifactId>db-mongo</artifactId>
+      <groupId>net.flex.dci.otc</groupId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <artifactId>common-util</artifactId>
+      <groupId>net.flex.dci.otc.common</groupId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <artifactId>common-model</artifactId>
+      <groupId>net.flex.dci.otc.common</groupId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <artifactId>spring-retry</artifactId>
+      <groupId>org.springframework.retry</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>aspectjweaver</artifactId>
+      <groupId>org.aspectj</groupId>
+    </dependency>
+
+    <!--    <dependency>-->
+    <!--      <artifactId>sdk</artifactId>-->
+    <!--      <groupId>net.flex.dci.otn.controller</groupId>-->
+    <!--      <version>${project.version}</version>-->
+    <!--    </dependency>-->
+    <dependency>
+      <artifactId>zkclient4boot</artifactId>
+      <groupId>net.flex.dci.otc.zk</groupId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <artifactId>rpc-client</artifactId>
+      <groupId>net.flex.dci.otn</groupId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <artifactId>distribution-lock</artifactId>
+      <groupId>net.flex.dci.otc</groupId>
+      <scope>compile</scope>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+      <version>2.9.3</version>
+    </dependency>
+  </dependencies>
+  <description>controller adapter manager</description>
+  <groupId>net.flex.dci.otn.controller</groupId>
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>neManager</name>
+
+  <parent>
+    <artifactId>controller</artifactId>
+    <groupId>net.flex.dci.otn</groupId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+
+  <properties>
+    <java.version>1.8</java.version>
+    <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
+</project>

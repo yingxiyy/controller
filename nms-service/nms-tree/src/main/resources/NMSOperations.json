@@ -1,0 +1,309 @@
+{
+  "desc": "nms operations relation handler map",
+  "nms": [
+    {
+      "operation": "nms:get-route",
+      "handler": "TopologyRoute"
+    },
+    {
+      "operation": "nms:get-route-paged",
+      "handler": "TopologyRoute"
+    },
+    {
+      "operation": "nms:get-tunnel",
+      "handler": "TopologyTunnel"
+    },
+    {
+      "operation": "nms:get-tunnel-paged",
+      "handler": "TopologyTunnel"
+    },
+    {
+      "operation": "nms:get-tunnel-between-site-paged",
+      "handler": "TopologyTunnel"
+    },
+    {
+      "operation": "nms:update-system-info",
+      "handler": "TopologySystemInfo"
+    },
+    {
+      "operation": "nms:get-phy-link",
+      "handler": "TopologyPhyLink"
+    },
+    {
+      "operation": "nms:get-phy-link-paged",
+      "handler": "TopologyPhyLink"
+    },
+    {
+      "operation": "nms:get-och-link",
+      "handler": "TopologyOCHLink"
+    },
+    {
+      "operation": "nms:get-och-link-paged",
+      "handler": "TopologyOCHLink"
+    },
+    {
+      "operation": "nms:get-site-link",
+      "handler": "TopologySiteLink"
+    },
+    {
+      "operation": "nms:get-site-link-paged",
+      "handler": "TopologySiteLink"
+    },
+    {
+      "operation": "nms:get-site-link-ots",
+      "handler": "TopologySiteLink"
+    },
+    {
+      "operation": "nms:get-site-link-by-nodeIp",
+      "handler": "TopologySiteLink"
+    },
+    {
+      "operation": "nms:get-site-links-between-two-sites",
+      "handler": "TopologySiteLink"
+    },
+    {
+      "operation": "nms:get-ops-connections",
+      "handler": "TopologyOPSConnections"
+    },
+    {
+      "operation": "nms:get-phy-node",
+      "handler": "TopologyPhyNode"
+    },
+    {
+      "operation": "nms:get-phy-node-paged",
+      "handler": "TopologyPhyNode"
+    },
+    {
+      "operation": "nms:get-phy-node-unstuffed",
+      "handler": "TopologyPhyNode"
+    },
+    {
+      "operation": "nms:get-frequency-map",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-unit-list",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-city-list",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-campus-list",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-zone-list",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-region-list",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-wss-channel",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-mux-spectrum",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-mux-spectrum-with-site-link",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-frequency-map-site-link",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:sync-equipment",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:sync-termination-point",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-version",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:resynchronize-ne",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-transceiver-by-tp",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:update-node-location",
+      "handler": "TopologyNe"
+    },
+    {
+      "operation": "nms:get-friendly-name",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-object-details",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-card-type",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:remove-resource-by-order-id",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-scan-tp",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:recycle-resource-by-order-id",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-resource-by-order-id",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-site-topo",
+      "handler": "TopologySite"
+    },
+    {
+      "operation": "nms:get-middle-sites-between-two-sites",
+      "handler": "TopologySite"
+    },
+    {
+      "operation": "nms:get-ne-unit-list",
+      "handler": "TopologyNe"
+    },
+    {
+      "operation": "nms:delete-schedules",
+      "handler": "TopologyScheduleJob"
+    },
+    {
+      "operation": "nms:get-schedule-paged",
+      "handler": "TopologyScheduleJob"
+    },
+    {
+      "operation": "nms:get-fiber-affection",
+      "handler": "TopologyFiber"
+    },
+    {
+      "operation": "nms:route-display",
+      "handler": "TopologyRoute"
+    },
+    {
+      "operation": "nms:get-rack",
+      "handler": "TopologyRack"
+    },
+    {
+      "operation": "nms:get-equipment",
+      "handler": "TopologyEquipment"
+    },
+    {
+      "operation": "nms:get-equipment-paged",
+      "handler": "TopologyEquipment"
+    },
+    {
+      "operation": "nms:get-board-lldp-info",
+      "handler": "TopologyEquipment"
+    },
+    {
+      "operation": "nms:get-rack-paged",
+      "handler": "TopologyRack"
+    },
+    {
+      "operation": "nms:get-PhyTp",
+      "handler": "TopologyPhyTp"
+    },
+    {
+      "operation": "nms:get-PhyTp-paged",
+      "handler": "TopologyPhyTp"
+    },
+    {
+      "operation": "nms:get-real-mpo-port",
+      "handler": "TopologyPhyTp"
+    },
+    {
+      "operation": "nms:get-card-ports",
+      "handler": "TopologyPhyTp"
+    },
+    {
+      "operation": "nms:get-site-node",
+      "handler": "TopologySiteNode"
+    },
+    {
+      "operation": "nms:get-site-node-paged",
+      "handler": "TopologySiteNode"
+    },
+    {
+      "operation": "nms:get-tunnel-id",
+      "handler": "TopologyTunnel"
+    },
+    {
+      "operation": "nms:get-env-property",
+      "handler": "TopologyResource"
+    },
+    {
+      "operation": "nms:get-view-link-groupby-plane",
+      "handler": "TopologyViewLink"
+    },
+    {
+      "operation": "nms:get-view-link-by-plane",
+      "handler": "TopologyViewLink"
+    },
+    {
+      "operation": "nms:get-view-link-by-plane-startwith",
+      "handler": "TopologyViewLink"
+    },
+    {
+      "operation": "nms:list-view-plane",
+      "handler": "TopologyViewLink"
+    },
+    {
+      "operation": "nms:get-simple-route",
+      "handler": "TopologyRoute"
+    },
+    {
+      "operation": "nms:get-design-simple-route",
+      "handler": "TopologyRoute"
+    },
+    {
+      "operation": "nms:get-tunnel-site-route",
+      "handler": "TopologyRoute"
+    },
+    {
+      "operation": "nms:locate-resources-by-alarm",
+      "handler": "TopologyAlarmResource"
+    },
+    {
+      "operation": "nms:get-ots-links-under-oms",
+      "handler": "TopologyPhyLink"
+    },
+    {
+      "operation": "nms:get-site-view-topology",
+      "handler": "TopologyView"
+    },
+    {
+      "operation": "nms:get-site-link-related-tunnels",
+      "handler": "TopologyTunnel"
+    },
+    {
+      "operation": "nms:get-related-site-links",
+      "handler": "TopologySiteLink"
+    },
+    {
+      "operation": "nms:get-subnet-dimensional-view",
+      "handler": "TopologyDimension"
+    },
+    {
+      "operation": "nms:get-site-reachability",
+      "handler": "TopologyDimension"
+    }
+  ]
+}

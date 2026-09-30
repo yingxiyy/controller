@@ -1,0 +1,1959 @@
+{
+  "vendorName": "II-VI",
+  "productType": "CHASSIS",
+  "yangModel": "ChinaTele",
+  "nodeType": "OD",
+  "cardClass": [
+    {
+      "name": "MUX",
+      "card": [
+        {
+          "cardType": "MUX96",
+          "vendorType": "MUX-96",
+          "width": 1,
+          "height": 1,
+          "possibleSlot": [
+            50,
+            51
+          ],
+          "ports": [
+            {
+              "name": "MUX",
+              "portType": "MUX-MUX",
+              "supportedSignal": [],
+              "biDirection": true
+            },
+            {
+              "name": "CH?,1,96,1",
+              "portType": "MUX-Channel",
+              "centralFrequency": "196100000,191350000,50000",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "SIG",
+              "portType": "MUXDEMUX",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "SIG",
+              "to": [
+                {
+                  "cardType": "OA",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "OP",
+                  "port": "1-APSC"
+                },
+                {
+                  "cardType": "WSS9",
+                  "port": "AD9"
+                },
+                {
+                  "cardType": "WSS5",
+                  "port": "AD5"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "type": "OCH",
+              "initiated": false,
+              "biDirection": true,
+              "existedOnNe": false,
+              "multiple": 48,
+              "description": "MUX-1-<slot>-<from>/<central-frequency>",
+              "centralFrequency": "196100000,193750000,50000",
+              "from": {
+                "port": "CH?,14,61,1"
+              },
+              "to": {
+                "port": "SIG"
+              }
+            },
+            {
+              "type": "OCH",
+              "initiated": false,
+              "biDirection": true,
+              "existedOnNe": false,
+              "multiple": 48,
+              "description": "MUX-1-<slot>-<from>/<central-frequency>",
+              "centralFrequency": "193700000,191350000,50000",
+              "from": {
+                "port": "CH?,135,605,10"
+              },
+              "to": {
+                "port": "SIG"
+              }
+            }
+          ]
+        },
+        {
+          "cardType": "MUX48",
+          "vendorType": "MUX-48",
+          "width": 1,
+          "height": 1,
+          "possibleSlot": [
+            50,
+            51
+          ],
+          "ports": [
+            {
+              "name": "MUX",
+              "portType": "MUX-MUX",
+              "supportedSignal": [],
+              "biDirection": true
+            },
+            {
+              "name": "CH?,1,48,1",
+              "portType": "MUX-Channel",
+              "centralFrequency": "196100000,191400000,100000",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "SIG",
+              "portType": "MUXDEMUX",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "SIG",
+              "to": [
+                {
+                  "cardType": "OA",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "OP",
+                  "port": "1-APSC"
+                },
+                {
+                  "cardType": "WSS9",
+                  "port": "AD9"
+                },
+                {
+                  "cardType": "WSS5",
+                  "port": "AD5"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "type": "OCH",
+              "initiated": false,
+              "biDirection": true,
+              "existedOnNe": false,
+              "multiple": 48,
+              "description": "MUX-1-<slot>-<from>/<central-frequency>",
+              "centralFrequency": "196100000,191400000,100000",
+              "from": {
+                "port": "CH?,14,61,1"
+              },
+              "to": {
+                "port": "SIG"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OA",
+      "card": [
+        {
+          "cardType": "OA",
+          "vendorType": "OA25",
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "SIG",
+              "portType": "OA-Sig",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "LINE",
+              "portType": "OA-Line",
+              "transceiver": {
+                "name": "OSC",
+                "initiated": true
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "OCM1",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OCM2",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR1",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR2",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "SIG",
+              "to": [
+                {
+                  "cardType": "MUX96",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "MUX48",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "OP",
+                  "port": "1-APSP,1-APSS"
+                },
+                {
+                  "cardType": "WSS9",
+                  "port": "LINE"
+                },
+                {
+                  "cardType": "WSS5",
+                  "port": "LINE"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "LINE",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "OA",
+                  "port": "LINE"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OP",
+                  "port": "1-APSC"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE1"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE2"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "initiated": true,
+              "type": "BA",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-BA",
+              "from": {
+                "port": "SIG"
+              },
+              "to": {
+                "port": "LINE"
+              }
+            },
+            {
+              "initiated": true,
+              "type": "PA",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-PA",
+              "from": {
+                "port": "LINE"
+              },
+              "to": {
+                "port": "SIG"
+              }
+            }
+          ]
+        },
+        {
+          "cardType": "OA",
+          "vendorType": "OA35",
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "SIG",
+              "portType": "OA-Sig",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "LINE",
+              "portType": "OA-Line",
+              "transceiver": {
+                "name": "OSC",
+                "initiated": true
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "OCM1",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OCM2",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR1",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR2",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "SIG",
+              "to": [
+                {
+                  "cardType": "MUX96",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "MUX48",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "OP",
+                  "port": "1-APSP,1-APSS"
+                },
+                {
+                  "cardType": "WSS9",
+                  "port": "LINE"
+                },
+                {
+                  "cardType": "WSS5",
+                  "port": "LINE"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "LINE",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "OA",
+                  "port": "LINE"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OP",
+                  "port": "1-APSC"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE1"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE2"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "initiated": true,
+              "type": "BA",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-BA",
+              "from": {
+                "port": "SIG"
+              },
+              "to": {
+                "port": "LINE"
+              }
+            },
+            {
+              "initiated": true,
+              "type": "PA",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-PA",
+              "from": {
+                "port": "LINE"
+              },
+              "to": {
+                "port": "SIG"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ILA",
+      "card": [
+        {
+          "cardType": "ILA",
+          "vendorType": "OLA25",
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "LINE1",
+              "portType": "ILA-LINE-A",
+              "transceiver": {
+                "name": "OSC1"
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "LINE2",
+              "portType": "ILA-LINE-B",
+              "transceiver": {
+                "name": "OSC2"
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "OCM1",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OCM2",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR1",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR2",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR3",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR4",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "LINE1",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE1"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE2"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OA",
+                  "port": "LINE"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "LINE2",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE1"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE2"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OA",
+                  "port": "LINE"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OP",
+                  "port": "1-APSP"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OP",
+                  "port": "1-APSS"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "type": "ILAA",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAA",
+              "from": {
+                "port": "LINE1"
+              },
+              "to": {
+                "port": "LINE2"
+              }
+            },
+            {
+              "type": "ILAB",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAB",
+              "from": {
+                "port": "LINE2"
+              },
+              "to": {
+                "port": "LINE1"
+              }
+            }
+          ]
+        },
+        {
+          "cardType": "ILA",
+          "vendorType": "OLA35A",
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "LINE1",
+              "portType": "ILA-LINE-A",
+              "transceiver": {
+                "name": "OSC1"
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "LINE2",
+              "portType": "ILA-LINE-B",
+              "transceiver": {
+                "name": "OSC2"
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "OCM1",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OCM2",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR1",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR2",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR3",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR4",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "LINE1",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE1"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE2"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OA",
+                  "port": "LINE"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "LINE2",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE1"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE2"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OA",
+                  "port": "LINE"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OP",
+                  "port": "1-APSP"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OP",
+                  "port": "1-APSS"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "type": "ILAA",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAA",
+              "from": {
+                "port": "LINE1"
+              },
+              "to": {
+                "port": "LINE2"
+              }
+            },
+            {
+              "type": "ILAB",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAB",
+              "from": {
+                "port": "LINE2"
+              },
+              "to": {
+                "port": "LINE1"
+              }
+            }
+          ]
+        },
+        {
+          "cardType": "ILA",
+          "vendorType": "OLA35B",
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "LINE1",
+              "portType": "ILA-LINE-A",
+              "transceiver": {
+                "name": "OSC1"
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "LINE2",
+              "portType": "ILA-LINE-B",
+              "transceiver": {
+                "name": "OSC2"
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "OCM1",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OCM2",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR1",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR2",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR3",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR4",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "LINE1",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE1"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE2"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OA",
+                  "port": "LINE"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "LINE2",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE1"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE2"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OA",
+                  "port": "LINE"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OP",
+                  "port": "1-APSP"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OP",
+                  "port": "1-APSS"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "type": "ILAA",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAA",
+              "from": {
+                "port": "LINE1"
+              },
+              "to": {
+                "port": "LINE2"
+              }
+            },
+            {
+              "type": "ILAB",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAB",
+              "from": {
+                "port": "LINE2"
+              },
+              "to": {
+                "port": "LINE1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OP",
+      "card": [
+        {
+          "cardType": "OP",
+          "vendorType": "OP1",
+          "width": 1,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "ports": [
+            {
+              "name": "1-APSC",
+              "portType": "OP-Sig",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "1-APSP",
+              "portType": "OP-A",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "1-APSS",
+              "portType": "OP-B",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "isSlave": true
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "1-APSC",
+              "to": [
+                {
+                  "cardType": "MUX96",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "MUX48",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "OA",
+                  "port": "LINE"
+                },
+                {
+                  "cardType": "WSS9",
+                  "port": "LINE"
+                },
+                {
+                  "cardType": "WSS5",
+                  "port": "LINE"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "1-APSP",
+              "to": [
+                {
+                  "cardType": "OA",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "OP",
+                  "port": "1-APSP"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE1"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE2"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "1-APSS",
+              "to": [
+                {
+                  "cardType": "OA",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "OP",
+                  "port": "1-APSS"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE1"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA",
+                  "port": "LINE2"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "type": "APS",
+              "biDirection": true,
+              "description": "APS-1-<slot>-1",
+              "from": {
+                "port": "1-APSC"
+              },
+              "to": {
+                "port": "1-APSP,1-APSS"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WSS",
+      "card": [
+        {
+          "cardType": "WSS9",
+          "vendorType": "TWS09OA25",
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "AD?,1,8,1",
+              "portType": "WSS-Mesh",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "LINE",
+              "portType": "WSS-Sig",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "transceiver": {
+                "name": "OSC",
+                "initiated": true
+              }
+            },
+            {
+              "name": "AD9",
+              "portType": "WSS-AddDrop",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "OCM1",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OCM2",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR1",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR2",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            }
+          ],
+          "crossConnections": [
+            {
+              "initiated": false,
+              "isFixed": false,
+              "type": "WSS",
+              "biDirection": true,
+              "description": "WSS-1-<slot>-<to>/<central-frequency>",
+              "from": {
+                "port": "AD9"
+              },
+              "to": {
+                "port": "LINE"
+              },
+              "wssChannel": {
+                "voaUpdateModel": "Manually",
+                "sourceToDestVoa": 0.00,
+                "destToSourceVoa": 0.00,
+                "lowerFrequency": "<lower-frequency>",
+                "upperFrequency": "<upper-frequency>"
+              }
+            },
+            {
+              "initiated": false,
+              "isFixed": false,
+              "type": "WSS",
+              "biDirection": true,
+              "description": "WSS-1-<slot>-<to>/<central-frequency>",
+              "from": {
+                "port": "AD?,1,8,1"
+              },
+              "to": {
+                "port": "LINE"
+              },
+              "wssChannel": {
+                "voaUpdateModel": "Manually",
+                "sourceToDestVoa": 0.00,
+                "destToSourceVoa": 0.00,
+                "lowerFrequency": "<lower-frequency>",
+                "upperFrequency": "<upper-frequency>"
+              }
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "LINE",
+              "to": [
+                {
+                  "cardType": "OA",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "WSS9",
+                  "port": "ad?,1,8,1"
+                },
+                {
+                  "cardType": "OP",
+                  "port": "1-APSC"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "AD9",
+              "to": [
+                {
+                  "cardType": "MUX96",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "MUX48",
+                  "port": "SIG"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "AD1",
+              "to": [
+                {
+                  "cardType": "WSS9",
+                  "port": "AD1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cardType": "WSS9",
+          "vendorType": "TWS09OA35",
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "AD?,1,8,1",
+              "portType": "WSS-Mesh",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "LINE",
+              "portType": "WSS-Sig",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "transceiver": {
+                "name": "OSC",
+                "initiated": true
+              }
+            },
+            {
+              "name": "AD9",
+              "portType": "WSS-AddDrop",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "OCM1",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OCM2",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR1",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR2",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            }
+          ],
+          "crossConnections": [
+            {
+              "initiated": false,
+              "isFixed": false,
+              "type": "WSS",
+              "biDirection": true,
+              "description": "WSS-1-<slot>-<to>/<central-frequency>",
+              "from": {
+                "port": "AD9"
+              },
+              "to": {
+                "port": "LINE"
+              },
+              "wssChannel": {
+                "voaUpdateModel": "Manually",
+                "sourceToDestVoa": 0.00,
+                "destToSourceVoa": 0.00,
+                "lowerFrequency": "<lower-frequency>",
+                "upperFrequency": "<upper-frequency>"
+              }
+            },
+            {
+              "initiated": false,
+              "isFixed": false,
+              "type": "WSS",
+              "biDirection": true,
+              "description": "WSS-1-<slot>-<to>/<central-frequency>",
+              "from": {
+                "port": "AD?,1,8,1"
+              },
+              "to": {
+                "port": "LINE"
+              },
+              "wssChannel": {
+                "voaUpdateModel": "Manually",
+                "sourceToDestVoa": 0.00,
+                "destToSourceVoa": 0.00,
+                "lowerFrequency": "<lower-frequency>",
+                "upperFrequency": "<upper-frequency>"
+              }
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "LINE",
+              "to": [
+                {
+                  "cardType": "OA",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "WSS9",
+                  "port": "ad?,1,8,1"
+                },
+                {
+                  "cardType": "OP",
+                  "port": "1-APSC"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "AD9",
+              "to": [
+                {
+                  "cardType": "MUX96",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "MUX48",
+                  "port": "SIG"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "AD1",
+              "to": [
+                {
+                  "cardType": "WSS9",
+                  "port": "AD1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cardType": "WSS5",
+          "vendorType": "TWS05OA25",
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "AD?,1,4,1",
+              "portType": "WSS-Mesh",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "LINE",
+              "portType": "WSS-Sig",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "transceiver": {
+                "name": "OSC",
+                "initiated": true
+              }
+            },
+            {
+              "name": "AD5",
+              "portType": "WSS-AddDrop",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "OCM1",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OCM2",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR1",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR2",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            }
+          ],
+          "crossConnections": [
+            {
+              "initiated": false,
+              "isFixed": false,
+              "type": "WSS",
+              "biDirection": true,
+              "description": "WSS-1-<slot>-<to>/<central-frequency>",
+              "from": {
+                "port": "AD5"
+              },
+              "to": {
+                "port": "LINE"
+              },
+              "wssChannel": {
+                "voaUpdateModel": "Manually",
+                "sourceToDestVoa": 0.00,
+                "destToSourceVoa": 0.00,
+                "lowerFrequency": "<lower-frequency>",
+                "upperFrequency": "<upper-frequency>"
+              }
+            },
+            {
+              "initiated": false,
+              "isFixed": false,
+              "type": "WSS",
+              "biDirection": true,
+              "description": "WSS-1-<slot>-<to>/<central-frequency>",
+              "from": {
+                "port": "AD?,1,4,1"
+              },
+              "to": {
+                "port": "LINE"
+              },
+              "wssChannel": {
+                "voaUpdateModel": "Manually",
+                "sourceToDestVoa": 0.00,
+                "destToSourceVoa": 0.00,
+                "lowerFrequency": "<lower-frequency>",
+                "upperFrequency": "<upper-frequency>"
+              }
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "LINE",
+              "to": [
+                {
+                  "cardType": "OA",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "WSS5",
+                  "port": "AD?,1,4,1"
+                },
+                {
+                  "cardType": "OP",
+                  "port": "1-APSC"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "AD5",
+              "to": [
+                {
+                  "cardType": "MUX96",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "MUX48",
+                  "port": "SIG"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "AD1",
+              "to": [
+                {
+                  "cardType": "WSS5",
+                  "port": "AD1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cardType": "WSS5",
+          "vendorType": "TWS05OA35",
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "AD?,1,4,1",
+              "portType": "WSS-Mesh",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "LINE",
+              "portType": "WSS-Sig",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "transceiver": {
+                "name": "OSC",
+                "initiated": true
+              }
+            },
+            {
+              "name": "AD5",
+              "portType": "WSS-AddDrop",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true
+            },
+            {
+              "name": "OCM1",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OCM2",
+              "portType": "MON",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR1",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            },
+            {
+              "name": "OTDR2",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": false
+            }
+          ],
+          "crossConnections": [
+            {
+              "initiated": false,
+              "isFixed": false,
+              "type": "WSS",
+              "biDirection": true,
+              "description": "WSS-1-<slot>-<to>/<central-frequency>",
+              "from": {
+                "port": "AD5"
+              },
+              "to": {
+                "port": "LINE"
+              },
+              "wssChannel": {
+                "voaUpdateModel": "Manually",
+                "sourceToDestVoa": 0.00,
+                "destToSourceVoa": 0.00,
+                "lowerFrequency": "<lower-frequency>",
+                "upperFrequency": "<upper-frequency>"
+              }
+            },
+            {
+              "initiated": false,
+              "isFixed": false,
+              "type": "WSS",
+              "biDirection": true,
+              "description": "WSS-1-<slot>-<to>/<central-frequency>",
+              "from": {
+                "port": "AD?,1,4,1"
+              },
+              "to": {
+                "port": "LINE"
+              },
+              "wssChannel": {
+                "voaUpdateModel": "Manually",
+                "sourceToDestVoa": 0.00,
+                "destToSourceVoa": 0.00,
+                "lowerFrequency": "<lower-frequency>",
+                "upperFrequency": "<upper-frequency>"
+              }
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "LINE",
+              "to": [
+                {
+                  "cardType": "OA",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "WSS5",
+                  "port": "AD?,1,4,1"
+                },
+                {
+                  "cardType": "OP",
+                  "port": "1-APSC"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "AD5",
+              "to": [
+                {
+                  "cardType": "MUX96",
+                  "port": "SIG"
+                },
+                {
+                  "cardType": "MUX48",
+                  "port": "SIG"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "AD1",
+              "to": [
+                {
+                  "cardType": "WSS5",
+                  "port": "AD1"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OCM",
+      "card": [
+        {
+          "cardType": "OCM",
+          "vendorType": "OCM",
+          "width": 1,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "ports": [
+            {
+              "name": "OCM?,1,8,1",
+              "portType": "OCM",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "OCM?,1,8,1",
+              "to": [
+                {
+                  "cardType": "OA",
+                  "port": "MON"
+                },
+                {
+                  "cardType": "OLA",
+                  "port": "MON"
+                },
+                {
+                  "cardType": "WSS",
+                  "port": "MON"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OTDR",
+      "card": [
+        {
+          "cardType": "OTDR",
+          "vendorType": "OTDR",
+          "width": 1,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "ports": [
+            {
+              "name": "OTDR?,1,8,1",
+              "portType": "OTDR",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "OTDR?,1,8,1",
+              "to": [
+                {
+                  "cardType": "OA",
+                  "port": "OTDR"
+                },
+                {
+                  "cardType": "OLA",
+                  "port": "OTDR"
+                },
+                {
+                  "cardType": "WSS",
+                  "port": "OTDR"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BLANK",
+      "card": [
+        {
+          "cardType": "BLANK",
+          "width": 1,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            50,
+            51
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PANEL",
+      "card": [
+        {
+          "cardType": "PANEL",
+          "vendorType": "PANEL",
+          "width": 1,
+          "height": 1,
+          "possibleSlot": [
+            40
+          ],
+          "ports": [
+            {
+              "name": "MUX",
+              "portType": "Panel-MUX",
+              "biDirection": true
+            },
+            {
+              "name": "CON",
+              "portType": "Panel-CON",
+              "biDirection": true
+            },
+            {
+              "name": "ETH",
+              "portType": "Panel-ETH",
+              "biDirection": true
+            },
+            {
+              "name": "NMS",
+              "portType": "Panel-NMS",
+              "biDirection": true
+            },
+            {
+              "name": "MUX1",
+              "portType": "Panel-MUX",
+              "biDirection": true
+            },
+            {
+              "name": "NMS1",
+              "portType": "Panel-NMS",
+              "biDirection": true
+            },
+            {
+              "name": "NMS2",
+              "portType": "Panel-NMS",
+              "biDirection": true
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "MUX",
+              "to": [
+                {
+                  "cardType": "MUX96",
+                  "port": "MUX"
+                },
+                {
+                  "cardType": "MUX48",
+                  "port": "MUX"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixEquipModel": [
+    {
+      "equipTypeConfiged": "PSU",
+      "name": "PSU-1-?,21,22,1"
+    },
+    {
+      "equipTypeConfiged": "FAN",
+      "name": "FAN-1-?,31,33,1"
+    },
+    {
+      "equipTypeConfiged": "CU",
+      "name": "CU-1-?,41,42,1"
+    },
+    {
+      "equipTypeConfiged": "CHASSIS",
+      "name": "CHASSIS-1"
+    }
+  ]
+}

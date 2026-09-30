@@ -1,0 +1,108 @@
+{
+  "telemetrySensorGroup": [
+    {
+      "version": "V1.0",
+      "sensorGroups": [
+        {
+          "sensorGroupName": "OD",
+          "sensorGroupPath": [
+            "/pm/linecard",
+            "/pm/transceiver",
+            "/pm/cu",
+            "/pm/fan",
+            "/pm/psu",
+            "/pm/panel",
+            "/pm/optical_channel",
+            "/pm/otn_channel",
+            "/pm/ethernet_channel",
+            "/pm/amplifier",
+            "/pm/aps",
+            "/pm/ocm_channel",
+            "/pm/supervisory_channel",
+            "/pm/wavelength_router",
+            "/pm/port"
+          ],
+          "sampleInterval": 1000,
+          "heartbeatInterval": 30000,
+          "suppressRedundant": false
+        },
+        {
+          "sensorGroupName": "TD",
+          "sensorGroupPath": [
+            "/pm/linecard",
+            "/pm/transceiver",
+            "/pm/cu",
+            "/pm/fan",
+            "/pm/psu",
+            "/pm/panel",
+            "/pm/optical_channel",
+            "/pm/otn_channel",
+            "/pm/ethernet_channel",
+            "/pm/amplifier",
+            "/pm/aps",
+            "/pm/ocm_channel",
+            "/pm/supervisory_channel",
+            "/pm/wavelength_router",
+            "/pm/interfaces",
+            "/pm/port"
+          ],
+          "sampleInterval": 1000,
+          "heartbeatInterval": 30000,
+          "suppressRedundant": false
+        }
+      ]
+    },
+    {
+      "version": "V2.0",
+      "sensorGroups": [
+        {
+          "sensorGroupName": "OD",
+          "sensorGroupPath": [
+            "/pm/linecard",
+            "/pm/transceiver",
+            "/pm/cu",
+            "/pm/fan",
+            "/pm/psu",
+            "/pm/panel",
+            "/pm/optical_channel",
+            "/pm/otn_channel",
+            "/pm/ethernet_channel",
+            "/pm/amplifier",
+            "/pm/aps",
+            "/pm/ocm_channel",
+            "/pm/supervisory_channel",
+            "/pm/wavelength_router",
+            "/pm/port"
+          ],
+          "sampleInterval": 1000,
+          "heartbeatInterval": 30000,
+          "suppressRedundant": false
+        },
+        {
+          "sensorGroupName": "TD",
+          "sensorGroupPath": [
+            "/pm/linecard",
+            "/pm/transceiver",
+            "/pm/cu",
+            "/pm/fan",
+            "/pm/psu",
+            "/pm/panel",
+            "/pm/optical_channel",
+            "/pm/otn_channel",
+            "/pm/ethernet_channel",
+            "/pm/amplifier",
+            "/pm/aps",
+            "/pm/ocm_channel",
+            "/pm/supervisory_channel",
+            "/pm/wavelength_router",
+            "/pm/interfaces",
+            "/pm/port"
+          ],
+          "sampleInterval": 1000,
+          "heartbeatInterval": 30000,
+          "suppressRedundant": false
+        }
+      ]
+    }
+  ]
+}

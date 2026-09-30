@@ -1,0 +1,1886 @@
+openapi: 3.0.0
+info:
+  title: Device Maintenance API
+  description: |
+    设备维护服务API，提供设备备份、恢复、软件下载、升级等维护操作接口。
+
+    ## 认证方式
+
+    所有接口需OAuth2.0认证。Gateway访问时自动处理认证，直接访问需要Bearer Token。
+
+    ## 统一批量接口设计
+
+    本服务采用统一的批量接口设计，支持单设备和多设备操作：
+    
+    - **批量模式**: 提供`batchName`参数，创建Batch对象，发送TaskInfo通知
+    - **单设备模式**: `batchName`设为null，不创建Batch对象，不发送TaskInfo通知
+    
+    适用接口：
+    - `batch-download-software`: 软件下载（批量/单设备）
+    - `batch-backup-devices`: 设备备份（批量/单设备）
+    - `batch-restore-devices`: 设备恢复（批量/单设备）
+    - `create-upgrade-batch`: 设备升级（仅批量，batchName必填）
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:18008/restconf/operations
+    description: 直接访问设备维护服务（开发测试）
+  - url: http://gateway-host:8088/restconf/operations
+    description: 通过Gateway访问（生产环境推荐）
+
+security:
+  - OAuth2: []
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /auth/token
+          scopes: {}
+
+  schemas:
+    DeviceTask:
+      type: object
+      properties:
+        taskId:
+          type: string
+          description: 任务ID
+        batchId:
+          type: string
+          description: 所属批次ID（批次任务时才有值）
+        taskType:
+          type: string
+          enum: [DOWNLOAD, BACKUP, RESTORE, UPGRADE, ROLLBACK, COMMIT]
+          description: 操作类型：DOWNLOAD-软件下载，BACKUP-设备备份，RESTORE-恢复数据，UPGRADE-执行升级，ROLLBACK-升级回滚，COMMIT-升级确认
+        deviceId:
+          type: string
+          description: 设备ID
+        deviceName:
+          type: string
+          description: 设备名称
+        sftpServerName:
+          type: string
+          description: SFTP服务器名称（可选，未指定时使用默认配置）
+        filePath:
+          type: string
+          description: 文件路径（升级文件路径或备份文件路径）
+        scheduledTime:
+          type: string
+          format: date-time
+          description: 计划执行时间（可选，为空则立即执行，有值则任务状态为SCHEDULED）
+        status:
+          type: string
+          enum:
+            [SCHEDULED, PENDING, RUNNING, COMPLETED, FAILED, CANCELLED, EXPIRED]
+          description: 任务状态：SCHEDULED-计划中（任务已创建，计划在之后执行），PENDING-待执行（已准备好，等待执行），RUNNING-执行中，COMPLETED-已完成，FAILED-失败，CANCELLED-已取消，EXPIRED-已过期（超过阈值未执行）
+
+    Batch:
+      type: object
+      description: |
+        统一批次实体，支持所有类型的批处理操作：
+        - BACKUP: 备份批次
+        - RESTORE: 恢复批次  
+        - UPGRADE: 升级批次（关联UpgradeWorkflow）
+      properties:
+        batchId:
+          type: string
+          description: 批次任务ID
+        batchName:
+          type: string
+          description: 批次任务名称
+        batchType:
+          type: string
+          enum: [BACKUP, RESTORE, UPGRADE, DOWNLOAD]
+          description: |
+            批次类型：
+            - BACKUP: 备份批次（多设备备份）
+            - RESTORE: 恢复批次（多设备恢复）
+            - UPGRADE: 升级批次（关联工作流，支持下载-备份-升级流程）
+        deviceCount:
+          type: integer
+          description: 设备数量
+        status:
+          type: string
+          enum:
+            [
+              NOT_STARTED,
+              SCHEDULED,
+              PENDING,
+              RUNNING,
+              COMPLETED,
+              COMPLETED_WITH_ERRORS,
+              FAILED,
+              CANCELLED,
+              READY_TO_BACKUP,
+              READY_TO_UPGRADE,
+              ONGOING,
+              PARTIAL_COMPLETE,
+            ]
+          description: |
+            批次状态：
+            - NOT_STARTED: 未开始
+            - SCHEDULED: 已调度（定时任务）
+            - PENDING: 待执行
+            - RUNNING: 执行中
+            - COMPLETED: 已完成（全部成功）
+            - COMPLETED_WITH_ERRORS: 已完成但有错误（部分失败）
+            - FAILED: 失败（全部失败）
+            - CANCELLED: 已取消
+            - READY_TO_BACKUP: 准备备份（升级批次手动模式）
+            - READY_TO_UPGRADE: 准备升级（升级批次手动模式）
+            - ONGOING: 进行中（有成功有失败有运行中）
+            - PARTIAL_COMPLETE: 部分完成
+        successCount:
+          type: integer
+          description: 成功设备数
+        failedCount:
+          type: integer
+          description: 失败设备数
+        runningCount:
+          type: integer
+          description: 运行中设备数
+        sftpServerName:
+          type: string
+          description: SFTP服务器名称（可选，未指定时使用默认配置）
+        remark:
+          type: string
+          description: 备注信息
+        debug:
+          type: boolean
+          description: 调试模式（是否在响应中包含debugPayload）
+          default: false
+        scheduledTime:
+          type: string
+          format: date-time
+          description: 定时执行时间（可选）
+        scheduledMode:
+          type: string
+          enum: [IMMEDIATE, SCHEDULED]
+          description: 启动时机：IMMEDIATE-立即执行，SCHEDULED-定时执行
+        createdTime:
+          type: string
+          format: date-time
+          description: 创建时间
+        updatedTime:
+          type: string
+          format: date-time
+          description: 更新时间
+        startedTime:
+          type: string
+          format: date-time
+          description: 开始时间
+        completedTime:
+          type: string
+          format: date-time
+          description: 完成时间
+        # 备份/恢复专用字段（升级批次时为null）
+        basePath:
+          type: string
+          description: 备份/恢复根路径（仅BACKUP/RESTORE类型）
+        # 升级专用字段（备份/恢复批次时为null）
+        filePath:
+          type: string
+          description: 升级包路径（仅UPGRADE类型）
+        backupRootPath:
+          type: string
+          description: 升级时备份根路径（仅UPGRADE类型）
+        executionMode:
+          type: string
+          enum: [MANUAL, AUTOMATIC]
+          description: |
+            执行模式（仅UPGRADE类型）：
+            - MANUAL: 手动模式，批次级别手动触发，所有设备当前步骤必须成功才能进入下一步
+            - AUTOMATIC: 自动模式，每个工作流独立自动流转，部分设备失败不影响其他设备继续执行
+        operationInterval:
+          type: integer
+          minimum: 1
+          maximum: 60
+          default: 1
+          description: 操作间隔时间（秒，仅UPGRADE类型）
+        maxRetryCount:
+          type: integer
+          description: 最大重试次数（仅UPGRADE类型）
+          default: 3
+        enableDownload:
+          type: boolean
+          description: 是否启用下载步骤（仅UPGRADE类型）
+          default: true
+        enableBackup:
+          type: boolean
+          description: 是否启用备份步骤（仅UPGRADE类型）
+          default: true
+        enableUpgrade:
+          type: boolean
+          description: 是否启用升级步骤（仅UPGRADE类型）
+          default: true
+        workflows:
+          type: array
+          items:
+            $ref: "#/components/schemas/UpgradeWorkflow"
+          description: 关联的工作流列表（仅UPGRADE类型）
+
+    # 兼容性：保留UpgradeBatch作为Batch的别名
+    UpgradeBatch:
+      allOf:
+        - $ref: "#/components/schemas/Batch"
+        - type: object
+          description: 升级批次（已废弃，请使用Batch并设置batchType=UPGRADE）
+          deprecated: true
+
+    UpgradeWorkflow:
+      type: object
+      properties:
+        workflowId:
+          type: string
+          description: 工作流ID
+        batchId:
+          type: string
+          description: 所属批次ID
+        deviceId:
+          type: string
+          description: 设备ID
+        deviceName:
+          type: string
+          description: 设备名称
+        deviceIp:
+          type: string
+          description: 设备IP地址
+        enableDownload:
+          type: boolean
+          description: 是否启用下载步骤
+        enableBackup:
+          type: boolean
+          description: 是否启用备份步骤
+        enableUpgrade:
+          type: boolean
+          description: 是否启用升级步骤
+        status:
+          type: string
+          enum: [PENDING, RUNNING, PAUSED, COMPLETED, FAILED, CANCELLED]
+          description: 工作流状态：PENDING-待执行，RUNNING-执行中，PAUSED-暂停（手动模式等待触发），COMPLETED-已完成，FAILED-失败，CANCELLED-已取消
+        currentStep:
+          type: string
+          enum: [DOWNLOAD, BACKUP, UPGRADE]
+          description: 当前执行的步骤
+        downloadStatus:
+          type: string
+          enum: [NOT_STARTED, SKIPPED, RUNNING, COMPLETED, FAILED]
+          description: 下载步骤状态
+        backupStatus:
+          type: string
+          enum: [NOT_STARTED, SKIPPED, RUNNING, COMPLETED, FAILED]
+          description: 备份步骤状态
+        upgradeStatus:
+          type: string
+          enum: [NOT_STARTED, SKIPPED, RUNNING, COMPLETED, FAILED]
+          description: 升级步骤状态
+        retryCount:
+          type: integer
+          description: 当前重试次数
+        maxRetryCount:
+          type: integer
+          description: 最大重试次数
+        errorMessage:
+          type: string
+          description: 错误信息
+        lastFailedStep:
+          type: string
+          description: 最后失败的步骤
+        createdTime:
+          type: string
+          format: date-time
+          description: 创建时间
+        updatedTime:
+          type: string
+          format: date-time
+          description: 更新时间
+        startedTime:
+          type: string
+          format: date-time
+          description: 开始时间
+        completedTime:
+          type: string
+          format: date-time
+          description: 完成时间
+
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 操作是否成功
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: object
+          description: 响应数据
+
+    BatchRestoreSummary:
+      type: object
+      description: 批量恢复任务摘要
+      properties:
+        batchId:
+          type: string
+          description: 批次ID
+        batchName:
+          type: string
+          description: 批次名称
+        basePath:
+          type: string
+          description: 备份根路径
+        dateDir:
+          type: string
+          nullable: true
+          description: 日期目录（yyyyMMdd格式，null表示自动查找最新）
+        sftpServerName:
+          type: string
+          description: SFTP服务器ID
+        totalDevices:
+          type: integer
+          description: 总设备数
+        successDevices:
+          type: integer
+          description: 成功设备数
+        failedDevices:
+          type: integer
+          description: 失败设备数
+        runningDevices:
+          type: integer
+          description: 执行中设备数
+        scheduledDevices:
+          type: integer
+          description: 已调度设备数
+        status:
+          type: string
+          enum: [SCHEDULED, RUNNING, COMPLETED, FAILED, PARTIAL_COMPLETE]
+          description: 批次状态
+        remark:
+          type: string
+          description: 备注信息
+        scheduledTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: 定时执行时间
+        createdTime:
+          type: string
+          format: date-time
+          description: 创建时间
+        updatedTime:
+          type: string
+          format: date-time
+          description: 更新时间
+        deviceResults:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeviceRestoreResult"
+          description: 各设备恢复结果
+
+    DeviceRestoreResult:
+      type: object
+      description: 单设备恢复结果
+      properties:
+        deviceId:
+          type: string
+          description: 设备ID
+        deviceName:
+          type: string
+          description: 设备名称
+        backupFilePath:
+          type: string
+          description: 备份文件完整路径
+        status:
+          type: string
+          enum: [SCHEDULED, RUNNING, SUCCESS, FAILED]
+          description: 设备恢复状态
+        message:
+          type: string
+          description: 状态消息
+        errorMessage:
+          type: string
+          nullable: true
+          description: 错误消息（失败时）
+
+    ApiError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 是否成功，错误场景为 false
+        message:
+          type: string
+          description: 错误描述
+        data:
+          type: object
+          nullable: true
+          description: 错误场景下一般为空
+
+    NotificationRecord:
+      type: object
+      properties:
+        receivedTime:
+          type: string
+          format: date-time
+          description: When the notification was received
+        topic:
+          type: string
+          description: Kafka topic name
+        key:
+          type: string
+          description: Message key
+        payload:
+          type: string
+          description: Raw message payload (JSON string)
+        payloadMap:
+          type: object
+          description: Parsed payload as JSON object
+
+paths:
+  /device-maintenance:create-upgrade-batch:
+    post:
+      summary: 创建升级批次任务
+      description: |
+        创建一个新的设备升级批次任务，支持配置化工作流（下载-备份-升级）
+        
+        **batchName必填** - 升级操作需要工作流管理，不支持单设备模式
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchName
+                - filePath
+                - targetVersion
+                - deviceIds
+                - executionMode
+                - sftpServerName
+              properties:
+                batchName:
+                  type: string
+                  description: 批次任务名称（必填）
+                filePath:
+                  type: string
+                  description: 升级文件路径
+                targetVersion:
+                  type: string
+                  description: 目标版本号
+                sftpServerName:
+                  type: string
+                  description: SFTP服务器名称
+                backupBasePath:
+                  type: string
+                  description: 备份基础路径（可选，启用备份步骤时使用）
+                  example: "/dbbackup"
+                deviceIds:
+                  type: array
+                  items:
+                    type: string
+                  description: 选择的设备ID列表
+                executionMode:
+                  type: string
+                  enum: [MANUAL, AUTOMATIC]
+                  description: |
+                    执行模式：
+                    - MANUAL: 手动模式，批次级别手动触发，所有设备当前步骤必须成功才能进入下一步
+                    - AUTOMATIC: 自动模式，每个工作流独立自动流转，部分设备失败不影响其他设备继续执行
+                scheduledMode:
+                  type: string
+                  enum: [IMMEDIATE, SCHEDULED]
+                  default: IMMEDIATE
+                  description: 启动时机：IMMEDIATE-立即执行，SCHEDULED-定时执行
+                scheduledTime:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: 定时执行时间（scheduledMode为SCHEDULED时必填）
+                enableDownload:
+                  type: boolean
+                  default: true
+                  description: 是否启用下载步骤
+                enableBackup:
+                  type: boolean
+                  default: true
+                  description: 是否启用备份步骤
+                enableUpgrade:
+                  type: boolean
+                  default: true
+                  description: 是否启用升级步骤
+                operationInterval:
+                  type: integer
+                  minimum: 1
+                  maximum: 60
+                  default: 1
+                  description: 操作间隔时间（分钟）
+                maxRetryCount:
+                  type: integer
+                  default: 3
+                  description: 最大重试次数（工作流级别）
+                debug:
+                  type: boolean
+                  default: false
+                  description: Debug模式（保存RPC payload）
+                remark:
+                  type: string
+                  description: 备注信息
+      responses:
+        "200":
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+  /device-maintenance:delete-upgrade-batch:
+    post:
+      summary: 删除升级批次任务
+      description: 删除指定的升级批次任务
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchId
+              properties:
+                batchId:
+                  type: string
+                  description: 批次任务ID
+      responses:
+        "200":
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:get-upgrade-batches:
+    post:
+      summary: 查询升级批次任务列表
+      description: 获取升级批次任务列表，支持状态过滤
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                    [
+                      SCHEDULED,
+                      PENDING,
+                      RUNNING,
+                      COMPLETED,
+                      FAILED,
+                      CANCELLED,
+                      EXPIRED,
+                    ]
+                  description: 状态过滤条件
+                batchName:
+                  type: string
+                  description: 批次名称过滤条件
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UpgradeBatch"
+
+  /device-maintenance:get-upgrade-tasks:
+    post:
+      summary: 查询升级任务列表
+      description: 根据批次ID获取升级任务列表
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchId
+              properties:
+                batchId:
+                  type: string
+                  description: 批次任务ID
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DeviceTask"
+
+  /device-maintenance:execute-upgrade-batch:
+    post:
+      summary: 执行升级批次任务
+      description: 手动执行升级批次任务（下载、备份、安装）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchId
+              properties:
+                batchId:
+                  type: string
+                  description: 批次任务ID
+      responses:
+        "200":
+          description: 执行成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:backup-all-devices:
+    post:
+      summary: 全设备数据备份
+      description: |
+        对所有设备执行数据备份操作。
+
+        **重要说明**：
+        - 此接口会为每个符合条件的设备创建独立的备份任务（非批次任务）
+        - 创建任务前会检查每个设备的维护状态
+        - 只为当前空闲（未执行其他任务）的设备创建备份任务
+        - 正在执行其他任务的设备会被跳过，并在响应中返回失败原因
+        - 可选择设备类型过滤和最大并发数控制
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                backupPath:
+                  type: string
+                  description: 备份目录路径（可选，默认使用系统配置的基础路径）
+                batchName:
+                  type: string
+                  description: 批次名称（可选，仅用于标识，默认自动生成）
+                sftpServerName:
+                  type: string
+                  description: SFTP服务器名称（可选，未指定时使用默认配置）
+                deviceTypeFilter:
+                  type: string
+                  description: 设备类型过滤（可选，如 Router、Switch）
+                maxConcurrent:
+                  type: integer
+                  description: 最大并发备份数（可选，默认10）
+                  minimum: 1
+                  maximum: 100
+      responses:
+        "200":
+          description: 全设备备份任务创建完成（部分或全部成功）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: 是否至少有一个设备成功创建备份任务
+                  message:
+                    type: string
+                    description: 响应消息
+                  data:
+                    type: object
+                    properties:
+                      batchId:
+                        type: string
+                        description: 批次ID（仅用于标识，非数据库批次）
+                      batchName:
+                        type: string
+                        description: 批次名称
+                      totalDevices:
+                        type: integer
+                        description: 总设备数
+                      pendingCount:
+                        type: integer
+                        description: 成功创建的任务数（待执行状态）
+                      failedCount:
+                        type: integer
+                        description: 创建失败的设备数
+                      status:
+                        type: string
+                        enum: [SUCCESS, PARTIAL_SUCCESS, FAILED]
+                        description: 整体状态
+                      remark:
+                        type: string
+                        description: 备注信息（包含失败设备及原因）
+                      tasks:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/DeviceTask"
+                        description: 成功创建的备份任务列表
+        "400":
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: 服务内部错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /device-maintenance:install-software:
+    post:
+      summary: 软件安装/升级
+      description: 通过SFTP下载软件文件并执行设备软件安装或升级操作
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceId
+                - softwareFilePath
+              properties:
+                deviceId:
+                  type: string
+                  description: 设备ID
+                softwareFilePath:
+                  type: string
+                  description: 软件文件路径
+                sftpServerName:
+                  type: string
+                  description: SFTP服务器名称（可选，未指定时使用默认配置）
+                scheduledTime:
+                  type: string
+                  format: date-time
+                  description: 计划执行时间（可选，为空则立即执行）
+      responses:
+        "200":
+          description: 安装任务启动成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:rollback-software:
+    post:
+      summary: 软件回滚
+      description: 执行软件回滚到上一个版本
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceId
+              properties:
+                deviceId:
+                  type: string
+                  description: 设备ID
+      responses:
+        "200":
+          description: 回滚任务启动成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+
+  /device-maintenance:batch-download-software:
+    post:
+      summary: 批量软件下载（支持单设备和多设备）
+      description: |
+        通过指定SFTP配置让设备下载软件，支持两种模式：
+        
+        **批量模式** (batchName提供):
+        - 创建Batch对象
+        - 发送TaskInfo通知
+        - DeviceTask.batchId有值
+        
+        **单设备模式** (batchName=null):
+        - 不创建Batch对象
+        - 不发送TaskInfo通知
+        - DeviceTask.batchId=null
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceIds
+                - softwarePackage
+                - sftpServerId
+              properties:
+                batchName:
+                  type: string
+                  nullable: true
+                  description: 批次名称（null=单设备模式，不创建Batch；提供值=批量模式，创建Batch）
+                deviceIds:
+                  type: array
+                  items:
+                    type: string
+                  description: 设备ID数组（单设备模式只需传入一个ID）
+                softwarePackage:
+                  type: string
+                  description: 软件包文件名
+                sftpServerName:
+                  type: string
+                  description: SFTP服务器名称
+                scheduledTime:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: 定时执行时间（null=立即执行）
+                remark:
+                  type: string
+                  description: 备注信息
+                debug:
+                  type: boolean
+                  default: false
+                  description: Debug模式（保存RPC payload到DeviceTask）
+      responses:
+        "200":
+          description: 下载任务启动成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+
+  /device-maintenance:batch-upgrade-software:
+    post:
+      summary: 批量设备升级（仅批量模式,batchName必填）
+      description: |
+        创建设备升级批次任务，支持下载-备份-升级工作流。
+        
+        **注意**: 升级操作需要工作流管理，batchName必填，不支持单设备模式。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceIds
+                - filePath
+                - targetVersion
+                - sftpServerName
+              properties:
+                deviceIds:
+                  type: array
+                  items:
+                    type: string
+                  description: 设备ID数组
+                filePath:
+                  type: string
+                  description: 升级包文件路径
+                targetVersion:
+                  type: string
+                  description: 目标版本号
+                sftpServerName:
+                  type: string
+                  description: SFTP服务器名称
+                autoBackup:
+                  type: boolean
+                  default: true
+                  description: 是否自动备份
+                forceUpgrade:
+                  type: boolean
+                  default: false
+                  description: 是否强制升级
+                autoRestart:
+                  type: boolean
+                  default: true
+                  description: 是否自动重启
+                timeoutMinutes:
+                  type: integer
+                  default: 30
+                  description: 超时时间（分钟）
+                scheduledTime:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: 定时执行时间
+                debug:
+                  type: boolean
+                  default: false
+                  description: Debug模式
+      responses:
+        "200":
+          description: 升级任务启动成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+
+  /device-maintenance:get-batch-detail:
+    post:
+      summary: 获取批次详情（统一接口）
+      description: |
+        获取批次详情，支持所有批次类型（BACKUP/RESTORE/UPGRADE/DOWNLOAD）
+        
+        返回内容包括：
+        - Batch基本信息
+        - DeviceTask列表（所有批次类型）
+        - UpgradeWorkflow列表（仅UPGRADE类型）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchId
+              properties:
+                batchId:
+                  type: string
+                  description: 批次ID
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+
+  /device-maintenance:get-batch-workflows:
+    post:
+      summary: 获取批次工作流列表（仅UPGRADE类型）
+      description: 获取升级批次的工作流列表
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchId
+              properties:
+                batchId:
+                  type: string
+                  description: 批次ID
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+
+  /device-maintenance:check-device-availability:
+    post:
+      summary: 检查单设备可用性
+      description: 检查设备是否可用于执行新的维护任务
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceId
+              properties:
+                deviceId:
+                  type: string
+                  description: 设备ID
+                taskType:
+                  type: string
+                  description: 任务类型（可选）
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+
+  /device-maintenance:batch-check-device-availability:
+    post:
+      summary: 批量检查设备可用性
+      description: 批量检查多个设备是否可用于执行新的维护任务
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceIds
+              properties:
+                deviceIds:
+                  type: array
+                  items:
+                    type: string
+                  description: 设备ID列表
+                taskType:
+                  type: string
+                  description: 任务类型（可选）
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:batch-backup-devices:
+    post:
+      summary: 批量设备备份（支持单设备和多设备）
+      description: |
+        执行设备数据备份操作，支持两种模式：
+        
+        **批量模式** (batchName提供):
+        - 创建Batch对象
+        - 发送TaskInfo通知
+        
+        **单设备模式** (batchName=null):
+        - 不创建Batch对象
+        - 不发送TaskInfo通知
+        
+        **备份文件路径规则**:
+        路径自动生成为: `basePath/[设备名]/[日期]/[时间戳].db`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceIds
+                - basePath
+                - sftpServerName
+              properties:
+                batchName:
+                  type: string
+                  nullable: true
+                  description: 批次名称（null=单设备模式）
+                deviceIds:
+                  type: array
+                  items:
+                    type: string
+                  description: 设备ID数组
+                basePath:
+                  type: string
+                  description: 备份基础路径（不是完整文件路径）
+                  example: "/dbbackup"
+                sftpServerName:
+                  type: string
+                  description: SFTP服务器名称
+                scheduledTime:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: 定时执行时间（null=立即执行）
+                remark:
+                  type: string
+                  description: 备注信息
+                debug:
+                  type: boolean
+                  default: false
+                  description: Debug模式
+      responses:
+        "200":
+          description: 备份任务启动成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:restore-device-data:
+    post:
+      summary: 设备数据恢复（已废弃）
+      deprecated: true
+      description: |
+        **已废弃** - 请使用 `/device-maintenance:batch-restore-devices` 接口
+
+        从SFTP下载备份文件并执行设备数据恢复操作（单设备）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceId
+                - filePath
+              properties:
+                deviceId:
+                  type: string
+                  description: 设备ID
+                filePath:
+                  type: string
+                  description: 备份文件完整路径（从SFTP根目录的相对路径，如 /dbbackup/backup_20250101.db）
+                sftpServerName:
+                  type: string
+                  description: SFTP服务器名称（可选，未指定时使用默认配置）
+                scheduledTime:
+                  type: string
+                  format: date-time
+                  description: 计划执行时间（可选，为空则立即执行）
+      responses:
+        "200":
+          description: 恢复任务启动成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:batch-restore-devices:
+    post:
+      summary: 批量设备数据恢复
+      description: |
+        批量恢复设备数据，支持：
+        - 单设备或多设备批量恢复
+        - 自动查找最新备份（dateDir为null时）
+        - 指定日期目录恢复（dateDir指定具体日期）
+        - 立即执行或定时执行
+        - Debug模式（记录RPC请求/响应详情）
+
+        **自动查找备份规则：**
+        1. 路径结构：`rootPath/[设备名]/[日期目录]/[备份文件].db`
+        2. dateDir为null时，自动查找最新日期目录
+        3. 在指定/最新日期目录下，自动选择最新时间戳的备份文件
+      tags:
+        - Batch Operations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceIds
+                - rootPath
+                - sftpServerName
+              properties:
+                batchName:
+                  type: string
+                  description: 批次名称（可选，未指定时自动生成）
+                  example: "批量恢复-20251027"
+                deviceIds:
+                  type: array
+                  items:
+                    type: string
+                  description: 设备ID数组（支持单设备或多设备）
+                  example: ["Site-xxx#Ne-yyy"]
+                basePath:
+                  type: string
+                  description: 备份根路径
+                  example: "/dbbackup"
+                dateDir:
+                  type: string
+                  nullable: true
+                  description: |
+                    日期目录（yyyyMMdd格式，可选）：
+                    - null或未提供：自动查找最新日期目录
+                    - 指定日期：在该日期目录下查找最新备份
+                  example: "20251027"
+                sftpServerName:
+                  type: string
+                  description: SFTP服务器ID
+                  example: "test-sftp-user1"
+                scheduledTime:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: 定时执行时间（可选，null=立即执行）
+                  example: "2025-10-30T10:30:00"
+                remark:
+                  type: string
+                  description: 备注信息
+                  example: "测试批量恢复"
+                debug:
+                  type: boolean
+                  description: Debug模式（启用后会记录RPC请求/响应详情）
+                  default: false
+      responses:
+        "200":
+          description: 批量恢复任务启动成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/BatchRestoreSummary"
+                  timestamp:
+                    type: integer
+                    format: int64
+
+  /device-maintenance:commit-upgrade:
+    post:
+      summary: 升级确认
+      description: 执行升级确认操作（commit）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceId
+              properties:
+                deviceId:
+                  type: string
+                  description: 设备ID
+                sftpServerName:
+                  type: string
+                  description: SFTP服务器名称（可选，未指定时使用默认配置）
+      responses:
+        "200":
+          description: 确认操作启动成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:get-device-tasks:
+    post:
+      summary: 查询设备任务列表
+      description: 获取设备任务列表，支持类型和状态过滤
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                taskType:
+                  type: string
+                  enum: [DOWNLOAD, BACKUP, RESTORE, UPGRADE, ROLLBACK, COMMIT]
+                  description: 任务类型过滤条件
+                status:
+                  type: string
+                  enum:
+                    [
+                      SCHEDULED,
+                      PENDING,
+                      RUNNING,
+                      COMPLETED,
+                      FAILED,
+                      CANCELLED,
+                      EXPIRED,
+                    ]
+                  description: 状态过滤条件
+                deviceId:
+                  type: string
+                  description: 设备ID过滤条件
+                page:
+                  type: integer
+                  minimum: 0
+                  description: 页码（从0开始，默认0）
+                  default: 0
+                size:
+                  type: integer
+                  minimum: 1
+                  description: 每页数量（默认20）
+                  default: 20
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DeviceTask"
+        "400":
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: 服务内部错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /device-maintenance:get-device-task-detail:
+    post:
+      summary: 查询设备任务详情
+      description: 根据任务ID获取设备任务详情
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - taskId
+              properties:
+                taskId:
+                  type: string
+                  description: 任务ID
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/DeviceTask"
+        "404":
+          description: 任务不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: 服务内部错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /device-maintenance:cancel-device-task:
+    post:
+      summary: 取消设备任务
+      description: |
+        取消指定的设备任务。
+
+        **取消规则**：
+        - 只能取消处于 SCHEDULED（计划中）、PENDING（待执行）或 RUNNING（执行中）状态的任务
+        - 取消后任务状态变为 CANCELLED（已取消）
+        - 已完成、已失败或已取消的任务不能再次取消
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - taskId
+              properties:
+                taskId:
+                  type: string
+                  description: 任务ID
+      responses:
+        "200":
+          description: 取消成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: string
+                    description: 被取消的任务ID
+        "400":
+          description: 任务状态不允许取消
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: 任务不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: 服务内部错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /device-maintenance:delete-device-task:
+    post:
+      summary: 删除设备任务
+      description: |
+        删除指定的设备任务。
+
+        **删除规则**：
+        - 只能删除处于 COMPLETED（已完成）、FAILED（失败）、CANCELLED（已取消）或 EXPIRED（已过期）状态的任务
+        - 正在执行、待执行或计划中的任务不能直接删除，需要先取消
+        - 删除操作会从数据库中永久移除任务记录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - taskId
+              properties:
+                taskId:
+                  type: string
+                  description: 任务ID
+      responses:
+        "200":
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: string
+                    description: 被删除的任务ID
+        "400":
+          description: 任务状态不允许删除
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: 任务不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: 服务内部错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /device-maintenance:cancel-upgrade-batch:
+    post:
+      summary: 取消升级批次
+      description: 取消指定的升级批次任务
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchId
+              properties:
+                batchId:
+                  type: string
+                  description: 批次ID
+      responses:
+        "200":
+          description: 取消成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:proceed-upgrade-batch:
+    post:
+      summary: 批次进入下一步（手动模式）
+      description: |
+        手动模式下，将批次从READY状态推进到下一步
+        - READY_TO_BACKUP → 执行备份步骤
+        - READY_TO_UPGRADE → 执行升级步骤
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchId
+              properties:
+                batchId:
+                  type: string
+                  description: 批次ID
+      responses:
+        "200":
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:retry-upgrade-workflow:
+    post:
+      summary: 重试工作流
+      description: 重试失败的工作流（单个设备）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - workflowId
+              properties:
+                workflowId:
+                  type: string
+                  description: 工作流ID
+      responses:
+        "200":
+          description: 重试成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:remove-upgrade-workflow:
+    post:
+      summary: 移除工作流
+      description: |
+        从批次中移除指定设备的工作流
+        - 删除UpgradeWorkflow实体
+        - 批次的deviceCount减1
+        - TaskInfo的detail中不再显示该设备
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - workflowId
+              properties:
+                workflowId:
+                  type: string
+                  description: 工作流ID
+      responses:
+        "200":
+          description: 移除成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:get-all-batch-upgrades:
+    get:
+      summary: 获取所有批次（所有类型）
+      description: |
+        获取所有批次列表，包括：
+        - UPGRADE批次
+        - BACKUP批次
+        - RESTORE批次
+        - DOWNLOAD批次
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Batch"
+
+  /device-maintenance:get-device-operations-status:
+    post:
+      summary: 获取设备维护状态
+      description: 从MongoDB查询设备的所有维护操作状态信息
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId:
+                  type: string
+                  description: 设备ID（deviceId和deviceName至少提供一个）
+                deviceName:
+                  type: string
+                  description: 设备名称（deviceId和deviceName至少提供一个）
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:get-all-device-operations-status:
+    post:
+      summary: 获取所有设备维护状态
+      description: |
+        获取所有设备的维护操作状态信息
+        支持可选的过滤条件
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: 状态过滤
+                operation:
+                  type: string
+                  description: 操作类型过滤
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:retry-upgrade-task:
+    post:
+      summary: 重试批次升级任务
+      description: 重试失败的批次升级任务
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchId
+              properties:
+                batchId:
+                  type: string
+                  description: 批次ID
+      responses:
+        "200":
+          description: 重试成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:commit-upgrade-task:
+    post:
+      summary: 确认批次升级任务
+      description: 确认批次升级任务
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchId
+              properties:
+                batchId:
+                  type: string
+                  description: 批次ID
+      responses:
+        "200":
+          description: 确认成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:rollback-upgrade-task:
+    post:
+      summary: 回滚批次升级任务
+      description: 回滚批次升级任务
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchId
+              properties:
+                batchId:
+                  type: string
+                  description: 批次ID
+      responses:
+        "200":
+          description: 回滚成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /device-maintenance:get-batch-backup-status:
+    post:
+      summary: 获取批量备份状态
+      description: 获取批量备份任务的状态信息
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batchId
+              properties:
+                batchId:
+                  type: string
+                  description: 批次ID
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /api/notifications/all:
+    get:
+      tags:
+        - Notifications (Auxiliary)
+      summary: Get all stored Kafka notifications
+      description: Returns all notifications received from Kafka topics (max 200). This is an auxiliary debugging interface.
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  total:
+                    type: integer
+                  notifications:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/NotificationRecord"
+
+  /api/notifications/recent:
+    get:
+      tags:
+        - Notifications (Auxiliary)
+      summary: Get recent N notifications
+      description: Returns the most recent notifications (newest first)
+      parameters:
+        - name: limit
+          in: query
+          description: Number of notifications to return
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  limit:
+                    type: integer
+                  total:
+                    type: integer
+                  notifications:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/NotificationRecord"
+
+  /api/notifications/by-topic/{topic}:
+    get:
+      tags:
+        - Notifications (Auxiliary)
+      summary: Get notifications by topic name
+      parameters:
+        - name: topic
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+
+  /api/notifications/search:
+    get:
+      tags:
+        - Notifications (Auxiliary)
+      summary: Search notifications by keyword
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+
+  /api/notifications/stats:
+    get:
+      tags:
+        - Notifications (Auxiliary)
+      summary: Get notification statistics
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  totalNotifications:
+                    type: integer
+                  maxCapacity:
+                    type: integer
+
+  /api/notifications/clear:
+    delete:
+      tags:
+        - Notifications (Auxiliary)
+      summary: Clear all stored notifications
+      responses:
+        "200":
+          description: Success

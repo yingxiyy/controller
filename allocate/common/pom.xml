@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>net.flex.dci.otn</groupId>
+    <artifactId>controller</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <groupId>net.flex.dci.otn.controller.allocate</groupId>
+  <artifactId>alloc-common</artifactId>
+  <name>alloc-common</name>
+  <description>provide common utilities for config topo</description>
+
+  <dependencies>
+    <dependency>
+      <artifactId>jackson-annotations</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <version>2.3.0</version>
+    </dependency>
+    <dependency>
+      <artifactId>jackson-databind</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <version>2.3.2</version>
+    </dependency>
+    <dependency>
+      <artifactId>gson</artifactId>
+      <groupId>com.google.code.gson</groupId>
+      <version>2.3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>net.flex.dci.otc</groupId>
+      <artifactId>netconf-serialization</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.flex.dci.otn.controller.tools</groupId>
+      <artifactId>kafka</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.flex.dci.otc.nbi</groupId>
+      <artifactId>nbi-api-phy</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>net.flex.dci.otn.controller.batchlock</groupId>-->
+<!--      <artifactId>batchlock-lib</artifactId>-->
+<!--      <version>${project.version}</version>-->
+<!--    </dependency>-->
+    <dependency>
+      <groupId>net.flex.dci.otc</groupId>
+      <artifactId>db-mongo</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>

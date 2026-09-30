@@ -1,0 +1,106 @@
+package net.flex.dci.otn.controller.implement.common.ase.ne.bytedance;
+
+import lombok.extern.slf4j.Slf4j;
+import net.flex.dci.otc.common.util.PropertyTool;
+import net.flex.dci.otc.common.util.RouteInfo;
+import net.flex.dci.otc.mongo.mdoel.ChangedObject;
+import net.flex.dci.otn.controller.implement.common.ase.ne.SpecificParamNode;
+import net.flex.dci.otn.controller.implement.common.ase.ne.SpecificalParam;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.common.otn.types.rev180515.PortType;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.common.otn.types.rev180515.properties.Properties;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPoint;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPointBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.Node1;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.Node1Builder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.TerminationPoint1;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.TerminationPoint1Builder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.cross.connections.CrossConnections;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.cross.connections.CrossConnectionsBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.tp.attributes.Physical;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.tp.attributes.PhysicalBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.wdm.attributes.WssChannelBuilder;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
+public class OdRoadmSpecfic extends SpecificParamNode implements SpecificalParam {
+    public OdRoadmSpecfic(ChangedObject changedObject, Node node, RouteInfo rInfo) {
+        super(changedObject, node, rInfo);
+    }
+
+    //change default value and stored in changedObject
+    public void set() {
+        //配置CHASSIS-1-1的子框类型为BONE_OPC
+//        changeChassisType();
+
+//        changeTpDefaultValue();
+        changeWssDefaultValue();
+
+        done();
+    }
+
+    private void changeTpDefaultValue() {
+        List<String> tpIds = rInfo.getTpIdList().stream().filter(x->x.contains(node.getNodeId().getValue())).collect(Collectors.toList());
+
+        List<TerminationPoint> newTpList = node.getTerminationPoint().stream().map(tp-> {
+            if (tpIds.contains(tp.getTpId().getValue())) {
+                Physical tpAttr = tp.getAugmentation(TerminationPoint1.class).getPhysical();
+                if (tpAttr.getPortType().equals(PortType.OALine)) {
+                    TerminationPoint newTp = new TerminationPointBuilder(tp)
+                            .addAugmentation(TerminationPoint1.class, new TerminationPoint1Builder()
+                                    .setPhysical(new PhysicalBuilder(tpAttr)
+                                            .setProperties(PropertyTool.addProperty(tpAttr.getProperties(),
+                                                    "channel-optical-power-adjustment.control-mode", "APC"))
+                                            .build())
+                                    .build())
+                            .build();
+
+                    return newTp;
+                }
+            }
+            return tp;
+        }).collect(Collectors.toList());
+
+        node = new NodeBuilder(node).setTerminationPoint(newTpList).build();
+    }
+
+    private void changeWssDefaultValue() {
+        log.debug("change roadm defalt param");
+
+        List<String> xcIds = rInfo.getXcIdList().stream().filter(x->x.contains(node.getNodeId().getValue())).collect(Collectors.toList());
+        nodeAttr = node.getAugmentation(Node1.class).getPhysical();
+
+        List<CrossConnections> newXcList = nodeAttr.getCrossConnections().stream().map(x->{
+            if (x.getWssChannel() != null && xcIds.contains(x.getCrossConnectionId().getValue())) {
+                Properties newProp = x.getWssChannel().getProperties();
+                //宿端功率自动控制门限
+                newProp = PropertyTool.addProperty(newProp, "auto-control-active-threshold-dest", "0.5");
+                //授权的功率自动控制范围
+                newProp = PropertyTool.addProperty(newProp, "auto-control-range", "15");
+                //源端to宿端的功率控制模式
+                newProp = PropertyTool.addProperty(newProp, "source-to-dest-power-control-mode", "APC");
+
+                CrossConnections newXc = new CrossConnectionsBuilder(x)
+                        .setWssChannel(new WssChannelBuilder(x.getWssChannel())
+                                .setProperties(newProp)
+                                .build())
+                        .build();
+                return newXc;
+            } else {
+                return x;
+            }
+        }).collect(Collectors.toList());
+
+        node = new NodeBuilder(node).addAugmentation(Node1.class,
+            new Node1Builder().setPhysical(
+                new org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.node.attributes.PhysicalBuilder(nodeAttr)
+                    .setCrossConnections(newXcList)
+                    .build())
+            .build())
+        .build();
+    }
+
+}

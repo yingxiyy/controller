@@ -1,0 +1,41 @@
+/*
+ * Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+
+package net.flex.dci.otn.controller.db.monitor.core.handler;
+
+import java.util.List;
+import net.flex.dci.otc.common.model.type.DataStoreType;
+import net.flex.dci.otn.controller.db.monitor.core.service.dto.ChangeObject;
+import org.bson.Document;
+
+/**
+ * @version 1.0
+ * @date 2021/11/11 10:35
+ */
+public interface IChangeBodyHandler {
+
+    default List<ChangeObject> extractSetChangeObject(Document sourceDocument,
+            Document updateDocument) {
+        return null;
+    }
+
+    default ChangeObject extractUNSETChangeObject(Document sourceDocument, Document unsetDocument) {
+        return null;
+    }
+
+
+    List<ChangeObject> extractCreateObject(String collectionName, Document document);
+
+
+    default List<ChangeObject> extractDeleteChangeObject(DataStoreType dataStoreType,
+            String collectionName,
+            Document sourceDocument,
+            Document updateDocument) {
+        return null;
+    }
+}

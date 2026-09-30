@@ -1,0 +1,21 @@
+[Unit]
+Description=Device Maintenance Microservice
+After=network.target
+
+[Service]
+Type=simple
+User=${SERVICE_USER}
+Group=${SERVICE_USER}
+ExecStart=/usr/bin/java -jar ${ROOT_DIR}/device-maintenance-1.0.0-SNAPSHOT.jar \
+  --spring.profiles.active=production \
+  --spring.config.additional-location=file:${ROOT_DIR}/config/
+WorkingDirectory=${ROOT_DIR}
+Environment="LOG_HOME=${ROOT_DIR}/logs"
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=20
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

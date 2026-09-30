@@ -1,0 +1,209 @@
+{
+  "desc": "operation lifecycle record handler map",
+  "modules": [
+    {
+      "module": "nms",
+      "operations": [
+        {
+          "operation": "",
+          "operation-name": ""
+        },
+        {
+        }
+      ],
+      "handler": "NMSLifecycleHandler"
+    },
+    {
+      "module": "telemetry-manager",
+      "operations": [
+        {
+          "operation": "create-telemetry-server",
+          "operation-name": "新增telemetry server"
+        },
+        {
+          "operation": "delete-telemetry-server",
+          "operation-name": "删除telemetry server"
+        }
+      ],
+      "handler": "DefaultLifecycleLogHandler"
+    },
+    {
+      "module": "alarm",
+      "operations": [
+        {
+          "operation": "generate-alarm",
+          "operation-name": "新增告警"
+        },
+        {
+          "operation": "clear-alarm",
+          "operation-name": "清除告警"
+        },
+        {
+          "operation": "get-alarm-statistics",
+          "operation-name": "告警统计"
+        },
+        {
+          "operation": "get-alarm-detail",
+          "operation-name": "获取告警详情"
+        },
+        {
+          "operation": "get-current-alarms",
+          "operation-name": "获取当前告警"
+        },
+        {
+          "operations": "get-history-alarms",
+          "operation-name": "获取历史告警"
+        },
+        {
+          "operations": "get-alarms",
+          "operation-name": "获取告警"
+        },
+        {
+          "operations": "refresh-alarm",
+          "operation-name": "同步告警"
+        }
+      ],
+      "handler": "AlarmLifecycleHandler"
+    },
+    {
+      "module": "tunnel",
+      "operations": [
+        {
+          "operation": "create-tunnel"
+        },
+        {
+          "operation": "update-tunnel"
+        },
+        {
+          "operation": "update-sitelink-sync"
+        },
+        {
+          "operation": "compute-tunnels"
+        },
+        {
+          "operation": "remove-tunnel"
+        },
+        {
+          "operation": "update-tunnel-sync"
+        }
+      ],
+      "handler": "TunnelLifecycleHandler"
+    },
+    {
+      "module": "site-topology",
+      "operations": [
+        {
+          "operation": "create-link"
+        },
+        {
+          "operation": "remove-sites"
+        },
+        {
+          "operation": "get-available-frequency"
+        },
+        {
+          "operation": "update-site"
+        },
+        {
+          "operation": "remove-site"
+        },
+        {
+          "operation": "update-link"
+        },
+        {
+          "operation": "create-sites"
+        }
+      ],
+      "handler": "SiteLinkLifecycleHandler"
+    },
+    {
+      "module": "schedule",
+      "operations": [
+        {
+          "operation": "get-schedule-resources"
+        },
+        {
+          "operation": "get-schedule"
+        },
+        {
+          "operation": "redo-schedule"
+        },
+        {
+          "operation": "get-schedules-by-link"
+        },
+        {
+          "operation": "create-schedule"
+        },
+        {
+          "operation": "get-schedules-by-type"
+        },
+        {
+          "operation": "mark-schedule-finish"
+        }
+      ],
+      "handler": "ScheduleLifecycleHandler"
+    },
+    {
+      "module": "pmc",
+      "operations": [
+        {
+          "operation": "get-system-info"
+        },
+        {
+          "operation": "get-version"
+        }
+      ]
+    },
+    {
+      "module": "otn-phy-topology",
+      "operations": [
+        {
+          "operation": "get-ne-data"
+        },
+        {
+          "operation": "remove-site"
+        },
+        {
+          "operation": "align-ne"
+        },
+        {
+          "operation": "remove-resource"
+        },
+        {
+          "operation": "update-node"
+        },
+        {
+          "operation": "get-LLDP-neighbor-info"
+        },
+        {
+          "operation": "update-equip"
+        },
+        {
+          "operation": "sync-alarm"
+        },
+        {
+          "operation": "update-link"
+        },
+        {
+          "operation": "remove-ip"
+        },
+        {
+          "operation": "update-termination-point"
+        },
+        {
+          "operation": "remove-ne"
+        },
+        {
+          "operation": "update-cross-connection"
+        },
+        {
+          "operation": "export-1524-telemetry-data"
+        },
+        {
+          "operation": "test-connection-status"
+        }
+      ],
+      "handler": "PhyNeLifecycleHandler"
+    }
+  ]
+}

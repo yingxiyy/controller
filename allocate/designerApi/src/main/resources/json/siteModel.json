@@ -1,0 +1,117 @@
+{
+  "grid": [
+    {
+      "value": 50,
+      "cards": [
+        "PANEL",
+        "MUX96"
+      ],
+      "ocmGridGroup": {
+        "index": 1,
+        "centralFrequency": "196050000,191300000,50000",
+        "length": 96,
+        "equipTypes": [
+          "OA",
+          "ILA"
+        ]
+      }
+    },
+    {
+      "value": 75,
+      "cards": [
+        "PANEL",
+        "MUX64"
+      ],
+      "ocmGridGroup": {
+        "index": 2,
+        "centralFrequency": "196087500,191362500,75000",
+        "length": 64,
+        "equipTypes": [
+          "OA",
+          "ILA"
+        ]
+      }
+    },
+    {
+      "value": 0,
+      "cards": [
+        "PANEL",
+        "MUXPANEL",
+        "CMUX64"
+      ],
+      "ocmGridGroup": {
+        "index": 3,
+        "equipTypes": [
+          "OA",
+          "ILA"
+        ]
+      }
+    }
+  ],
+  "type": [
+    {
+      "name": "T",
+      "hasMux": true,
+      "hasProtected": true,
+      "models": ["4"],
+      "cards": [
+        "OA"
+      ]
+    },
+    {
+      "name": "I",
+      "hasMux": false,
+      "hasProtected": false,
+      "cards": [
+        "PANEL",
+        "ILA"
+      ]
+    },
+    {
+      "name": "R",
+      "hasMux": true,
+      "hasProtected": true,
+      "models": [
+        "4"
+      ],
+      "cards": [
+        "WSS9",
+        "OA"
+      ]
+    },
+    {
+      "name": "D",
+      "hasMux": false,
+      "hasProtected": false,
+      "cards": [
+        "PANEL",
+        "OA",
+        "WSS9",
+        "WSS9",
+        "OA"
+      ]
+    }
+  ],
+  "protected": [
+    {
+      "model": "4",
+      "cards": [
+        "OP",
+        "OA"
+      ]
+    },
+    {
+      "model": "6",
+      "cards": [
+        "OA",
+        "OP"
+      ]
+    },
+    {
+      "model": "0",
+      "cards": [
+        "OA"
+      ]
+    }
+  ]
+}

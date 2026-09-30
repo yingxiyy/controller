@@ -1,0 +1,85 @@
+{
+    "support-business-card-type": [
+        "OA",
+        "ILA",
+        "WSS"
+    ],
+    "scan-card-type":[
+        "OTDR",
+        "OCM"
+    ],
+    "support-scan-port-type": [
+        "OALine",
+        "ILALINEA",
+        "ILALINEB",
+        "WSSSig"
+    ],
+    "scan-port-type": [
+        "OTDR",
+        "MON"
+    ],
+    "ocm": {
+        "OA": {
+            "OALine": "MON1",
+            "OASig": "MON2"
+        },
+        "WSS": {
+            "WSSSig": "MON1"
+        },
+        "ILA": {
+            "ILALINEA": "MON2",
+            "ILALINEB": "MON1"
+        },
+        "DEFAULT": {
+            "DEFAULT": "MON2"
+        }
+    },
+    "otdr": {
+        "OA": {
+            "IN": {
+                "default": "OTDR2"
+            },
+            "OUT": {
+                "default": "OTDR1"
+            }
+        },
+        "WSS": {
+            "IN": {
+                "default": "OTDR2",
+                "special": {}
+            },
+            "OUT": {
+                "default": "OTDR1",
+                "special": {}
+            }
+        },
+        "ILA": {
+            "IN": {
+                "default": "",
+                "special": {
+                    "ILALINEA": {
+                        "LINE1": "OTDR2",
+                        "LINE2": "OTDR4"
+                    },
+                    "ILALINEB": {
+                        "LINE1": "OTDR2",
+                        "LINE2": "OTDR4"
+                    }
+                }
+            },
+            "OUT": {
+                "default": "",
+                "special": {
+                    "ILALINEA": {
+                        "LINE1": "OTDR1",
+                        "LINE2": "OTDR1"
+                    },
+                    "ILALINEB": {
+                        "LINE1": "OTDR3",
+                        "LINE2": "OTDR3"
+                    }
+                }
+            }
+        }
+    }
+}

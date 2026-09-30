@@ -1,0 +1,781 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/NE",
+  "definitions": {
+    "NE": {
+      "additionalProperties": false,
+      "properties": {
+        "vendorName": {
+          "type": "string"
+        },
+        "yangModel": {
+          "type": "string"
+        },
+        "productType": {
+          "type": "string"
+        },
+        "nodeType": {
+          "type": "string",
+          "items": {
+            "$ref": "#/definitions/NodeType"
+          }
+        },
+        "cardClass": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CardClass"
+          }
+        },
+        "fixEquipModel": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FixEquipModel"
+          }
+        }
+      },
+      "required": [
+        "cardClass",
+        "vendorName",
+        "fixEquipModel"
+      ],
+      "title": "NE"
+    },
+    "FixEquipModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "equipTypeConfiged": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "chassisClass": {
+          "type": "string"
+        },
+        "tpModel": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TpModel"
+          }
+        }
+      },
+      "required": [
+        "equipTypeConfiged",
+        "name"
+      ],
+      "title": "FixEquipModel"
+    },
+    "TpModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tpFriendlyName": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tpInfo": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tpType": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tpFriendlyName",
+        "tpInfo",
+        "tpType"
+      ],
+      "title": "TpModel"
+    },
+    "CardClass": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "card": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Card"
+          }
+        }
+      },
+      "title": "CardClass"
+    },
+    "Card": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cardType": {
+          "type": "string"
+        },
+        "vendorType": {
+          "type": "string"
+        },
+        "comments": {
+          "type": "string"
+        },
+        "wdmBand": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "possibleSlot": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Port"
+          }
+        },
+        "regs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Reg"
+          }
+        },
+        "externalLinks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExternalLink"
+          }
+        },
+        "internalLinks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InternalLink"
+          }
+        },
+        "crossConnections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CrossConnection"
+          }
+        },
+        "externalCrossConnections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CrossConnection"
+          }
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Param"
+          }
+        },
+        "adminEnable": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": [
+        "cardType",
+        "height",
+        "possibleSlot",
+        "width"
+      ],
+      "title": "Card"
+    },
+    "CrossConnection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "biDirection": {
+          "type": "boolean"
+        },
+        "initiated": {
+          "type": "boolean",
+          "default": true
+        },
+        "additional": {
+          "type": "boolean",
+          "default": false
+        },
+        "isFixed": {
+          "type": "boolean",
+          "default": true
+        },
+        "existedOnNe": {
+          "type": "boolean",
+          "default": true
+        },
+        "multiple": {
+          "type": "integer",
+          "default": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "centralFrequency": {
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/definitions/CrossConnectionPoint"
+        },
+        "to": {
+          "$ref": "#/definitions/CrossConnectionPoint"
+        },
+        "supportedSignal": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SupportedSignal"
+          }
+        },
+        "wssChannel": {
+          "$ref": "#/definitions/WssChannel"
+        },
+        "amplifier": {
+          "$ref": "#/definitions/Amplifier"
+        },
+        "aps": {
+          "$ref": "#/definitions/Aps"
+        },
+        "serviceType": {
+          "type": "string"
+        },
+        "opModes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OpMode"
+          }
+        }
+      },
+      "required": [
+        "biDirection",
+        "from",
+        "to",
+        "type"
+      ],
+      "title": "CrossConnection"
+    },
+    "Param": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "name"
+      ],
+      "title": "Param"
+    },
+    "WssChannel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "voaUpdateModel": {
+          "$ref": "#/definitions/voaUpdateModelEnum"
+        },
+        "sourceToDestVoa": {
+          "type": "number",
+          "multipleOf": 0.01
+        },
+        "destToSourceVoa": {
+          "type": "number",
+          "multipleOf": 0.01
+        },
+        "lowerFrequency": {
+          "type": "string"
+        },
+        "upperFrequency": {
+          "type": "string"
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Param"
+          }
+        }
+      },
+      "required": [
+        "voaUpdateModel"
+      ],
+      "title": "WssChannel"
+    },
+    "Amplifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "targetGain": {
+          "type": "number",
+          "multipleOf": 0.01,
+          "default": 19.00
+        },
+        "gainRange": {
+          "$ref": "#/definitions/GainRange",
+          "default": "LOW_GAIN_RANGE"
+        },
+        "targetAttenuation": {
+          "type": "number",
+          "multipleOf": 0.01
+        },
+        "targetGainTilt": {
+          "type": "number",
+          "multipleOf": 0.01,
+          "default": 0
+        },
+        "voaRange": {
+          "type": "number",
+          "multipleOf": 0.01,
+          "default": 0
+        },
+        "autoPowerReduction": {
+          "type": "boolean",
+          "default": true
+        },
+        "enable": {
+          "type": "boolean",
+          "default": true
+        },
+        "ampMode": {
+          "$ref": "#/definitions/AmpMode",
+          "default": "CONSTANT_GAIN"
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Param"
+          },
+          "default": [
+            {
+              "name": "ase-injection",
+              "value": "NONE"
+            },
+            {
+              "name": "loss-shutdown-hold-off-time",
+              "value": "0"
+            }
+          ]
+        }
+      },
+      "required": [
+      ],
+      "title": "Amplifier"
+    },
+    "Aps": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "apsMode": {
+          "type": "string",
+          "default": "ABSOLUTE"
+        },
+        "revertive": {
+          "type": "boolean",
+          "default": false
+        },
+        "waitToRestoreTime": {
+          "type": "integer",
+          "default": 1800000
+        },
+        "holdOffTime": {
+          "type": "integer",
+          "default": 0
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Param"
+          }
+        }
+      },
+      "required": [
+      ],
+      "title": "Aps"
+    },
+    "CrossConnectionPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "port": {
+          "type": "string"
+        },
+        "portFriendlyName": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "cardType": {
+          "type": "string"
+        },
+        "supportedSignal": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SupportedSignal"
+          }
+        },
+        "transceiverSupportedSignal": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SupportedSignal"
+          }
+        }
+      },
+      "required": [
+        "port"
+      ],
+      "title": "CrossConnectionTo"
+    },
+    "InternalLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "biDirection": {
+          "type": "boolean"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "multiple": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "title": "InternalLink"
+    },
+    "ExternalLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "biDirection": {
+          "type": "boolean"
+        },
+        "initiated": {
+          "type": "boolean",
+          "default": true
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExternalLinkTo"
+          }
+        },
+        "multiple": {
+          "type": "integer"
+        },
+        "supportedSignal": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SupportedSignal"
+          }
+        },
+        "serviceType": {
+          "type": "string"
+        },
+        "mdPort": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "biDirection",
+        "from",
+        "to"
+      ],
+      "title": "ExternalLink"
+    },
+    "ExternalLinkTo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "neType": {
+          "type": "string"
+        },
+        "cardType": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "cardType",
+        "port"
+      ],
+      "title": "PurpleTo"
+    },
+    "Port": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "index": {
+          "type": "string"
+        },
+        "friendlyName": {
+          "type": "string"
+        },
+        "transceiver": {
+          "$ref": "#/definitions/Transceiver"
+        },
+        "centralFrequency": {
+          "type": "string"
+        },
+        "supportedSignal": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SupportedSignal"
+          }
+        },
+        "portType": {
+          "type": "string"
+        },
+        "biDirection": {
+          "type": "boolean"
+        },
+        "isSlave": {
+          "type": "boolean",
+          "default": false
+        },
+        "adminEnable": {
+          "type": "boolean",
+          "default": false
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Param"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "supportedSignal",
+        "portType",
+        "biDirection"
+      ],
+      "title": "Port"
+    },
+    "Reg": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serviceType": {
+          "type": "string"
+        },
+        "supportedSignal": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SupportedSignal"
+          }
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RegPort"
+          }
+        }
+      },
+      "required": [
+        "serviceType",
+        "supportedSignal"
+      ],
+      "title": "Reg"
+    },
+    "Transceiver": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "initiated": {
+          "type": "boolean",
+          "default": true
+        },
+        "supportedSignal": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SupportedSignal"
+          }
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Transceiver"
+    },
+    "SupportedSignal": {
+      "type": "string",
+      "enum": [
+        "OMS",
+        "OTS",
+        "OCH",
+        "100GbE",
+        "400GbE",
+        "OTU4",
+        "OTU4x2",
+        "OTU4x3",
+        "OTU4x4",
+        "OTU4x6",
+        "OTU4x8",
+        "ETH_100GBASE_FR1_2KM",
+        "ETH_100GBASE_CWDM4",
+        "ETH_100GBASE_SR10",
+        "ETH_100GBASE_SR4",
+        "ETH100GBASELR4",
+        "ETH_100GBASE_FR4",
+        "ETH_100GBASE_FR",
+        "ETH_100GBASE_DR",
+        "ETH_100GBASE_LR4",
+        "ETH_100GBASE_ER4L",
+        "ETH_100GBASE_ER4",
+        "ETH_10GBASE_CWDM4",
+        "ETH_100GBASE_PSM4",
+        "ETH_100GBASE_CLR4",
+        "ETH_100GBASE_CR4",
+        "ETH_200GBASE_FR4",
+        "ETH_400GBASE_ZR",
+        "ETH_400GBASE_FR4",
+        "ETH_400GBASE_LR4",
+        "ETH_400GBASE_LR8",
+        "ETH_400GBASE_DR4",
+        "ETH_400GMSA_PSM4",
+        "100GE FlexE",
+        "10GbE",
+        "OTU2",
+        "STM-64",
+        "10GE WAN",
+        "ETH_10GB-ZR",
+        "ETH_10GB-SR",
+        "ETH_10GB-LR",
+        "XI-64",
+        "XL-64",
+        "XS-64"
+      ],
+      "title": "SupportedSignal"
+    },
+    "NodeType": {
+      "type": "string",
+      "enum": [
+        "OD",
+        "TD"
+      ],
+      "title": "nodeType"
+    },
+    "voaUpdateModelEnum": {
+      "type": "string",
+      "enum": [
+        "Automatically",
+        "Manually"
+      ],
+      "title": "voaUpdateModelEnum"
+    },
+    "AmpMode": {
+      "type": "string",
+      "enum": [
+        "CONSTANT_POWER",
+        "CONSTANT_GAIN",
+        "DYNAMIC_GAIN",
+        "ASE_NOISE"
+      ],
+      "title": "AmpMode"
+    },
+    "GainRange": {
+      "type": "string",
+      "enum": [
+        "LOW_GAIN_RANGE",
+        "MID_GAIN_RANGE",
+        "HIGH_GAIN_RANGE",
+        "FIXED_GAIN_RANGE"
+      ],
+      "title": "AmpMode"
+    },
+    "ServiceType": {
+      "type": "string",
+      "enum": [
+        "MUX_8x100G",
+        "MUX_4x100G",
+        "MUX_6x100G",
+        "MUX_2x400G",
+        "MUX_1x400G",
+        "TR400G"
+      ],
+      "title": "serviceType"
+    },
+    "PortType": {
+      "type": "string",
+      "enum": [
+        "OP-Sig",
+        "OP-A",
+        "OP-B",
+        "OP-C"
+      ],
+      "title": "PortType"
+    },
+    "OpMode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "grid": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "grid",
+        "description"
+      ],
+      "title": "OpMode"
+    },
+    "RegPort": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "port": {
+          "type": "string"
+        },
+        "friendlyName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "port",
+        "friendlyName"
+      ],
+      "title": "OpMode"
+    }
+  }
+}

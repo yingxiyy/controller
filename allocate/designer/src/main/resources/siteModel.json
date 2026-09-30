@@ -1,0 +1,112 @@
+{
+  "grid": [
+    {
+      "value": 50,
+      "cards": [
+        "PANEL",
+        "MUX96"
+      ]
+    },
+    {
+      "value": 75,
+      "cards": [
+        "PANEL",
+        "MUX64"
+      ]
+    },
+    {
+      "value": 100,
+      "cards": [
+        "PANEL",
+        "MUX48"
+      ]
+    },
+    {
+      "value": 0,
+      "cards": [
+        "PANEL",
+        "MUXPANEL",
+        "IRA"
+      ]
+    }
+  ],
+  "type": [
+    {
+      "name": "T",
+      "hasMux": true,
+      "hasProtected": true,
+      "models": [
+        "6"
+      ],
+      "cards": [
+      ]
+    },
+    {
+      "name": "I",
+      "hasMux": false,
+      "hasProtected": false,
+      "cards": [
+        "PANEL",
+        "ILA"
+      ]
+    },
+    {
+      "name": "R",
+      "hasMux": false,
+      "hasProtected": true,
+      "models": [
+        "2",
+        "4"
+      ],
+      "cards": [
+        "PANEL",
+        "IRA"
+      ]
+    },
+    {
+      "name": "D",
+      "hasMux": false,
+      "hasProtected": false,
+      "cards": [
+        "PANEL",
+        "DGE"
+      ]
+    },
+    {
+      "name": "G",
+      "hasMux": true,
+      "hasProtected": false,
+      "cards": [
+        "PANEL",
+        "IRA"
+      ]
+    }
+  ],
+  "protected": [
+    {
+      "model": "4",
+      "cards": [
+        "OP",
+        "OA"
+      ]
+    },
+    {
+      "model": "6",
+      "cards": [
+        "OP"
+      ]
+    },
+    {
+      "model": "10",
+      "cards": [
+        "OP"
+      ]
+    },
+    {
+      "model": "0",
+      "cards": [
+        "OP"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>distribution</artifactId>
+
+ <!-- NOTE: These dependency declarations are only required to sort this project to the
+       end of the line in the multimodule build.
+
+       Since we only include the child1 module in our assembly, we only need to ensure this
+       distribution project builds AFTER that one...
+  -->
+  <parent>
+      <artifactId>controller</artifactId>
+      <groupId>net.flex.dci.otn</groupId>
+      <version>1.0.0-SNAPSHOT</version>
+    </parent>
+  <packaging>pom</packaging>
+  <modelVersion>4.0.0</modelVersion>
+
+
+
+  <dependencies>
+    <!--    <dependency>-->
+    <!--      <groupId>net.flex.dci.otn.controller</groupId>-->
+    <!--      <artifactId>adapterManager</artifactId>-->
+    <!--      <classifier>bin</classifier>-->
+    <!--      <type>tar.gz</type>-->
+    <!--      <version>${project.version}</version>-->
+    <!--    </dependency>-->
+    <dependency>
+      <artifactId>system-rest</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn.controller</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>allocate-app</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn.controller.allocate</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>app-monitor</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn.controller</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>gateway-rest</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn.controller</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>impl-app</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn.controller.implement</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>notifier</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn.controller</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>sftpserver</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn.controller</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>status</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn.controller.status</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <!--    <dependency>-->
+    <!--      <groupId>net.flex.dci.otn.controller</groupId>-->
+    <!--      <artifactId>telemetryMgr</artifactId>-->
+    <!--      <classifier>bin</classifier>-->
+    <!--      <type>tar.gz</type>-->
+    <!--      <version>${project.version}</version>-->
+    <!--    </dependency>-->
+    <!--    <dependency>-->
+    <!--      <artifactId>discover2</artifactId>-->
+    <!--      <classifier>bin</classifier>-->
+    <!--      <groupId>net.flex.dci.otn.controller</groupId>-->
+    <!--      <type>tar.gz</type>-->
+    <!--      <version>${project.version}</version>-->
+    <!--    </dependency>-->
+    <dependency>
+      <artifactId>idc-manager</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>db-monitor</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>taskinfo</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn.controller</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>nms-rest</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>auth-rest</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>user-manager</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>otdr-rest</artifactId>
+      <classifier>bin</classifier>
+      <groupId>net.flex.dci.otn</groupId>
+      <type>tar.gz</type>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+    <groupId>net.flex.dci.otn.controller</groupId>
+    <artifactId>devicelog</artifactId>
+    <classifier>bin</classifier>
+    <type>tar.gz</type>
+    <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.flex.dci.devicemaintenance</groupId>
+      <artifactId>device-maintenance</artifactId>
+      <version>${project.version}</version>
+      <classifier>bin</classifier>
+      <type>tar.gz</type>
+    </dependency>
+    <dependency>
+        <groupId>net.flex.dci.otn</groupId>
+        <artifactId>cli-service</artifactId>
+        <version>${project.version}</version>
+         <classifier>bin</classifier>
+         <type>tar.gz</type>
+    </dependency>
+    <dependency>
+    <groupId>net.flex.dci.otn.controller</groupId>
+    <artifactId>subnet-manager</artifactId>
+    <version>${project.version}</version>
+    <classifier>bin</classifier>
+     <type>tar.gz</type>
+    </dependency>
+    <dependency>
+      <groupId>net.flex.dci.otn.controller</groupId>
+      <artifactId>schedule</artifactId>
+      <version>${project.version}</version>
+      <classifier>bin</classifier>
+      <type>tar.gz</type>
+    </dependency>
+    <dependency>
+    <groupId>net.flex.dci.otn</groupId>
+    <artifactId>resource-statistic</artifactId>
+    <version>${project.version}</version>
+    <classifier>bin</classifier>
+    <type>tar.gz</type>
+    </dependency>
+  </dependencies>
+
+<build>
+    <finalName>${project.name}-${project.version}</finalName>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>none</phase>
+          </execution>
+          <execution>
+            <configuration>
+              <appendAssemblyId>false</appendAssemblyId>
+              <descriptors>
+                <descriptor>src/assembly/assembly.xml</descriptor>
+              </descriptors>
+            </configuration>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <id>make-bundles</id>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <version>3.3.0</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>product</id>
+      <build>
+        <finalName>${project.name}-${projectVersion}</finalName>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>2.6</version>
+            <executions>
+              <execution>
+                <id>make-bundles</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <!--                <configuration>-->
+                <!--                  <descriptors>-->
+                <!--                    <descriptor>src/assembly/assembly-product.xml</descriptor>-->
+                <!--                  </descriptors>-->
+                <!--                </configuration>-->
+              </execution>
+            </executions>
+          </plugin>
+
+
+
+
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <inherited>false</inherited>
+            <executions>
+              <execution>
+                <id>generate-tag</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>timestamp-property</goal>
+                </goals>
+                <configuration>
+                  <name>project.tag</name>
+                  <pattern>'AT'yyyyMMdd-HHmm</pattern>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- 2. 生成 tag-info -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <inherited>false</inherited>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <id>generate-project-tag-info</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <exportAntProperties>true</exportAntProperties>
+                  <target>
+                    <!-- 检查 platform.tag -->
+                    <condition property="hasPlatformTag">
+                      <and>
+                        <isset property="platform.tag"/>
+                        <not>
+                          <equals arg1="${platform.tag}" arg2=""/>
+                        </not>
+                      </and>
+                    </condition>
+                    <fail message="ERROR: platform.tag is required" unless="hasPlatformTag"/>
+
+                    <echo message="Debug: project.tag is ${project.tag}" />
+                    <property name="project.full.tag" value="${platform.tag}__${project.tag}_telemetry"/>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <inherited>false</inherited>
+            <executions>
+              <execution>
+                <id>create-project-git-tag</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <executable>git</executable>
+                  <workingDirectory>${project.basedir}</workingDirectory>
+                  <arguments>
+                    <argument>tag</argument>
+                    <argument>${project.full.tag}</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>
+

@@ -1,0 +1,1048 @@
+package devicemaintenance.listener;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import devicemaintenance.entity.DeviceTask;
+import devicemaintenance.entity.MaintenanceBatch;
+import devicemaintenance.integration.TaskInfoNotificationService;
+import devicemaintenance.repository.DeviceTaskRepository;
+import devicemaintenance.repository.MaintenanceBatchRepository;
+import devicemaintenance.service.SimpleNotificationListenerService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.PostConstruct;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+
+/**
+ * System-Change 通知监听器（重构版）
+ * 
+ * 核心变化：
+ * 1. ❌ 不再给单个设备任务发送 TaskInfo 通知
+ * 2. ✅ 更新任务时不限状态（不仅限 RUNNING）
+ * 3. ✅ 任务匹配：同设备 + 同类型 + 最近创建的未完成任务
+ * 4. ✅ 批次级防抖（3秒，按 batchId 合并）
+ * 5. ✅ 防抖触发时同步更新 dm_maintenance_batch 表
+ * 6. ✅ 完整的批次状态计算逻辑（6种状态）
+ */
+@Component
+@Slf4j
+@RequiredArgsConstructor
+public class SystemChangeNotificationListener {
+
+    private final DeviceTaskRepository deviceTaskRepository;
+    private final MaintenanceBatchRepository maintenanceBatchRepository;
+    private final ObjectMapper objectMapper;
+    private final SimpleNotificationListenerService debugService;
+    private final TaskInfoNotificationService taskInfoNotificationService;
+    private final TaskScheduler taskScheduler;
+    private final devicemaintenance.repository.UpgradeWorkflowRepository workflowRepository;
+    private final devicemaintenance.repository.UpgradeBatchRepository upgradeBatchRepository;
+    private final devicemaintenance.service.WorkflowManagementService workflowManagementService;
+    private final devicemaintenance.service.BatchUpgradeService batchUpgradeService;
+    
+    @Value("${kafka.notifications.debug:true}")
+    private boolean debugEnabled;
+    
+    /**
+     * 批次更新防抖调度器
+     * Key: batchId
+     * Value: ScheduledFuture（延迟任务）
+     */
+    private final Map<String, ScheduledFuture<?>> batchUpdateSchedulers = new ConcurrentHashMap<>();
+
+    @PostConstruct
+    public void init() {
+        log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        log.info("📡 System-Change 通知监听器已初始化");
+        log.info("  ✅ 批次级防抖：3秒");
+        log.info("  ✅ 任务匹配策略：同设备+同类型+最近未完成");
+        log.info("  ✅ 批次状态自动同步");
+        log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    }
+
+    /**
+     * 监听 system-change topic
+     */
+    @KafkaListener(topics = "system-change", groupId = "device-maintenance-consumer")
+    @Transactional
+    public void handleSystemChangeNotification(ConsumerRecord<String, String> record) {
+        try {
+            log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            log.info("📨 [Kafka通知] 接收到 system-change 通知");
+            log.debug("  Payload: {}", record.value());
+            
+            // 1. 存储到调试缓存
+            if (debugEnabled && debugService != null) {
+                debugService.storeNotification(record.topic(), record.key(), record.value());
+            }
+            
+            // 2. 解析通知
+            @SuppressWarnings("unchecked")
+            Map<String, String> notification = objectMapper.readValue(record.value(), Map.class);
+            
+            String deviceId = notification.get("neId");
+            if (deviceId == null || deviceId.isEmpty()) {
+                log.warn("⚠️ 通知中缺少设备ID (neId)，跳过处理");
+                log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                return;
+            }
+            
+            log.info("  设备ID: {}", deviceId);
+            
+            // 3. 处理不同类型的操作通知
+            processDownloadNotification(deviceId, notification);
+            processBackupNotification(deviceId, notification);
+            processRestoreNotification(deviceId, notification);
+            processUpgradeNotification(deviceId, notification);
+            
+            log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            
+        } catch (Exception e) {
+            log.error("❌ 处理 system-change 通知失败", e);
+            log.error("  原始消息: {}", record.value());
+            log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        }
+    }
+
+    /**
+     * 处理下载操作通知
+     */
+    private void processDownloadNotification(String deviceId, Map<String, String> notification) {
+        String downloadState = notification.get("download.download-state");
+        if (downloadState == null) {
+            return;
+        }
+        
+        log.info("🔽 处理下载操作通知: 状态={}", downloadState);
+        
+        // 查找任务：同设备 + 同类型 + 最近创建的未完成任务
+        DeviceTask task = findLatestIncompleteTask(deviceId, DeviceTask.TaskType.DOWNLOAD);
+        
+        if (task == null) {
+            log.debug("  未找到匹配的下载任务，跳过");
+            return;
+        }
+        
+        log.info("  ✅ 找到匹配任务: taskId={}, 当前状态={}", task.getTaskId(), task.getStatus());
+        
+        // 更新任务状态
+        boolean statusChanged = updateTaskStatusForDownload(task, notification);
+        
+        if (statusChanged) {
+            deviceTaskRepository.save(task);
+            log.info("  ✅ 任务状态已更新");
+            
+            // ⚠️ 下载任务不属于批次，不触发批次更新
+            
+            // ✅ 检查并更新升级工作流
+            checkAndUpdateUpgradeWorkflow(deviceId, "DOWNLOAD", downloadState);
+        }
+    }
+
+    /**
+     * 处理备份操作通知
+     */
+    private void processBackupNotification(String deviceId, Map<String, String> notification) {
+        String backupState = notification.get("backup.backup-state");
+        if (backupState == null) {
+            return;
+        }
+        
+        log.info("💾 处理备份操作通知: 状态={}", backupState);
+        
+        // 查找任务
+        DeviceTask task = findLatestIncompleteTask(deviceId, DeviceTask.TaskType.BACKUP);
+        
+        if (task == null) {
+            log.debug("  未找到匹配的备份任务，跳过");
+            return;
+        }
+        
+        log.info("  ✅ 找到匹配任务: taskId={}, 当前状态={}, batchId={}", 
+            task.getTaskId(), task.getStatus(), task.getBatchId());
+        
+        // 更新任务状态
+        boolean statusChanged = updateTaskStatusForBackup(task, notification);
+        
+        if (statusChanged) {
+            deviceTaskRepository.save(task);
+            log.info("  ✅ 任务状态已更新: {} → {}", task.getStatus(), statusChanged);
+            
+            // ⭐ 如果任务属于批次，触发批次更新（防抖）
+            if (task.getBatchId() != null) {
+                scheduleBatchUpdate(task.getBatchId());
+            }
+            
+            // ✅ 检查并更新升级工作流
+            checkAndUpdateUpgradeWorkflow(deviceId, "BACKUP", backupState);
+        }
+    }
+
+    /**
+     * 处理恢复操作通知
+     */
+    private void processRestoreNotification(String deviceId, Map<String, String> notification) {
+        String restoreState = notification.get("restore.restore-state");
+        if (restoreState == null) {
+            return;
+        }
+        
+        log.info("📥 处理恢复操作通知: 状态={}", restoreState);
+        
+        // 查找任务
+        DeviceTask task = findLatestIncompleteTask(deviceId, DeviceTask.TaskType.RESTORE);
+        
+        if (task == null) {
+            log.debug("  未找到匹配的恢复任务，跳过");
+            return;
+        }
+        
+        log.info("  ✅ 找到匹配任务: taskId={}, 当前状态={}, batchId={}", 
+            task.getTaskId(), task.getStatus(), task.getBatchId());
+        
+        // 更新任务状态
+        boolean statusChanged = updateTaskStatusForRestore(task, notification);
+        
+        if (statusChanged) {
+            deviceTaskRepository.save(task);
+            log.info("  ✅ 任务状态已更新");
+            
+            // ⭐ 如果任务属于批次，触发批次更新（防抖）
+            if (task.getBatchId() != null) {
+                scheduleBatchUpdate(task.getBatchId());
+            }
+            
+            // ✅ 检查并更新升级工作流（虽然恢复不在升级流程中，但保留接口一致性）
+            // checkAndUpdateUpgradeWorkflow(deviceId, "RESTORE", restoreState);
+        }
+    }
+
+    /**
+     * 处理升级操作通知
+     */
+    private void processUpgradeNotification(String deviceId, Map<String, String> notification) {
+        String upgradeState = notification.get("upgrade.upgrade-state");
+        if (upgradeState == null) {
+            return;
+        }
+        
+        log.info("⬆️ 处理升级操作通知: 状态={}", upgradeState);
+        
+        // 查找任务
+        DeviceTask task = findLatestIncompleteTask(deviceId, DeviceTask.TaskType.UPGRADE);
+        
+        if (task == null) {
+            log.debug("  未找到匹配的升级任务，跳过");
+            return;
+        }
+        
+        log.info("  ✅ 找到匹配任务: taskId={}, 当前状态={}", task.getTaskId(), task.getStatus());
+        
+        // 更新任务状态
+        boolean statusChanged = updateTaskStatusForUpgrade(task, notification);
+        
+        if (statusChanged) {
+            deviceTaskRepository.save(task);
+            log.info("  ✅ 任务状态已更新");
+            
+            // ⚠️ 升级任务暂不触发批次更新（如有需要可添加）
+            
+            // ✅ 检查并更新升级工作流
+            checkAndUpdateUpgradeWorkflow(deviceId, "UPGRADE", upgradeState);
+        }
+    }
+
+    /**
+     * 查找最近创建的未完成任务
+     * 
+     * 匹配条件：
+     * - 设备ID一致
+     * - 任务类型一致
+     * - 状态为未完成（PENDING, SCHEDULED, RUNNING）
+     * - 按创建时间倒序，取最新的
+     */
+    private DeviceTask findLatestIncompleteTask(String deviceId, DeviceTask.TaskType taskType) {
+        List<DeviceTask> tasks = deviceTaskRepository
+            .findIncompleteTasksByDeviceAndType(deviceId, taskType);
+        
+        return tasks.isEmpty() ? null : tasks.get(0);  // 已按 createdTime DESC 排序
+    }
+
+    /**
+     * 更新下载任务状态
+     */
+    private boolean updateTaskStatusForDownload(DeviceTask task, Map<String, String> notification) {
+        String downloadState = notification.get("download.download-state");
+        boolean changed = false;
+        
+        if ("COMPLETE".equals(downloadState)) {
+            task.setStatus(DeviceTask.TaskStatus.COMPLETED);
+            task.setCompletedTime(LocalDateTime.now());
+            changed = true;
+            log.info("  ✓ 任务状态: {} → COMPLETED", task.getStatus());
+        } else if ("FAIL".equals(downloadState)) {
+            task.setStatus(DeviceTask.TaskStatus.FAILED);
+            task.setCompletedTime(LocalDateTime.now());
+            task.setErrorMessage("下载失败");
+            changed = true;
+            log.info("  ✓ 任务状态: {} → FAILED", task.getStatus());
+        } else if ("DOWNLOADING".equals(downloadState)) {
+            if (task.getStatus() != DeviceTask.TaskStatus.RUNNING) {
+                task.setStatus(DeviceTask.TaskStatus.RUNNING);
+                task.setStartedTime(LocalDateTime.now());
+                changed = true;
+                log.info("  ✓ 任务状态: {} → RUNNING", task.getStatus());
+            }
+        }
+        
+        // 保存附加信息
+        String fileName = notification.get("download.file-name");
+        String version = notification.get("download.software-version");
+        if (fileName != null) {
+            task.setFilePath(fileName);
+            changed = true;
+        }
+        if (version != null) {
+            task.setTargetVersion(version);
+            changed = true;
+        }
+        
+        return changed;
+    }
+
+    /**
+     * 更新备份任务状态
+     */
+    private boolean updateTaskStatusForBackup(DeviceTask task, Map<String, String> notification) {
+        String backupState = notification.get("backup.backup-state");
+        boolean changed = false;
+        
+        if ("COMPLETE".equals(backupState)) {
+            task.setStatus(DeviceTask.TaskStatus.COMPLETED);
+            task.setCompletedTime(LocalDateTime.now());
+            changed = true;
+            log.info("  ✓ 任务状态: {} → COMPLETED", task.getStatus());
+        } else if ("FAIL".equals(backupState)) {
+            task.setStatus(DeviceTask.TaskStatus.FAILED);
+            task.setCompletedTime(LocalDateTime.now());
+            task.setErrorMessage("备份失败");
+            changed = true;
+            log.info("  ✓ 任务状态: {} → FAILED", task.getStatus());
+        }
+        
+        // 保存附加信息
+        String backupFile = notification.get("backup.backup-file");
+        if (backupFile != null) {
+            task.setBackupFileName(backupFile);
+            task.setBackupFilePath(backupFile);
+            changed = true;
+        }
+        
+        return changed;
+    }
+
+    /**
+     * 更新恢复任务状态
+     */
+    private boolean updateTaskStatusForRestore(DeviceTask task, Map<String, String> notification) {
+        String restoreState = notification.get("restore.restore-state");
+        boolean changed = false;
+        
+        if ("COMPLETE".equals(restoreState)) {
+            task.setStatus(DeviceTask.TaskStatus.COMPLETED);
+            task.setCompletedTime(LocalDateTime.now());
+            changed = true;
+            log.info("  ✓ 任务状态: {} → COMPLETED", task.getStatus());
+        } else if ("FAIL".equals(restoreState)) {
+            task.setStatus(DeviceTask.TaskStatus.FAILED);
+            task.setCompletedTime(LocalDateTime.now());
+            task.setErrorMessage("恢复失败");
+            changed = true;
+            log.info("  ✓ 任务状态: {} → FAILED", task.getStatus());
+        }
+        
+        // 保存附加信息
+        String restoreFile = notification.get("restore.restore-from-file");
+        if (restoreFile != null) {
+            task.setBackupFilePath(restoreFile);
+            changed = true;
+        }
+        
+        return changed;
+    }
+
+    /**
+     * 更新升级任务状态
+     */
+    private boolean updateTaskStatusForUpgrade(DeviceTask task, Map<String, String> notification) {
+        String upgradeState = notification.get("upgrade.upgrade-state");
+        boolean changed = false;
+        
+        if ("ACTIVE_COMPLETE".equals(upgradeState)) {
+            task.setStatus(DeviceTask.TaskStatus.COMPLETED);
+            task.setCompletedTime(LocalDateTime.now());
+            changed = true;
+            log.info("  ✓ 任务状态: {} → COMPLETED", task.getStatus());
+        } else if ("FAIL".equals(upgradeState)) {
+            task.setStatus(DeviceTask.TaskStatus.FAILED);
+            task.setCompletedTime(LocalDateTime.now());
+            task.setErrorMessage("升级失败");
+            changed = true;
+            log.info("  ✓ 任务状态: {} → FAILED", task.getStatus());
+        } else if ("ACTIVE".equals(upgradeState)) {
+            if (task.getStatus() != DeviceTask.TaskStatus.RUNNING) {
+                task.setStatus(DeviceTask.TaskStatus.RUNNING);
+                task.setStartedTime(LocalDateTime.now());
+                changed = true;
+                log.info("  ✓ 任务状态: {} → RUNNING", task.getStatus());
+            }
+        }
+        
+        // 保存附加信息
+        String rollbackFile = notification.get("upgrade.rollback-file");
+        String rollbackSoftware = notification.get("upgrade.rollback-software");
+        if (rollbackFile != null) {
+            task.setBackupFilePath(rollbackFile);
+            changed = true;
+        }
+        if (rollbackSoftware != null) {
+            task.setCurrentVersion(rollbackSoftware);
+            changed = true;
+        }
+        
+        return changed;
+    }
+
+    /**
+     * 调度批次更新（防抖）
+     * 
+     * 机制：
+     * - 每次调用时，取消之前的定时任务
+     * - 创建新的3秒延迟任务
+     * - 如果3秒内又有新的更新，则重新计时
+     * - 最终只执行一次批次更新
+     */
+    private void scheduleBatchUpdate(String batchId) {
+        synchronized (batchUpdateSchedulers) {
+            // 取消之前的任务
+            ScheduledFuture<?> oldTask = batchUpdateSchedulers.get(batchId);
+            if (oldTask != null && !oldTask.isDone()) {
+                oldTask.cancel(false);
+                log.debug("  🔄 取消之前的批次更新任务: batchId={}", batchId);
+            }
+            
+            // 创建新任务（3秒后执行）
+            ScheduledFuture<?> newTask = taskScheduler.schedule(
+                () -> {
+                    try {
+                        sendBatchUpdateNotification(batchId);
+                    } finally {
+                        batchUpdateSchedulers.remove(batchId);
+                    }
+                },
+                Instant.now().plusSeconds(3)
+            );
+            
+            batchUpdateSchedulers.put(batchId, newTask);
+            log.info("  ⏱️  已调度批次更新任务: batchId={}, 延迟=3秒", batchId);
+        }
+    }
+
+    /**
+     * 发送批次更新通知
+     * 
+     * 步骤：
+     * 1. 查询批次所有任务
+     * 2. 计算批次状态
+     * 3. 更新 dm_maintenance_batch 表
+     * 4. 发送 TaskInfo 通知
+     */
+    @Transactional
+    public void sendBatchUpdateNotification(String batchId) {
+        try {
+            log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            log.info("📤 [批次更新] 开始处理批次: {}", batchId);
+            
+            // 1. 查询批次所有任务
+            List<DeviceTask> batchTasks = deviceTaskRepository.findByBatchIdOrderByCreatedTimeAsc(batchId);
+            
+            if (batchTasks.isEmpty()) {
+                log.warn("  ⚠️ 批次 {} 中没有任务，跳过", batchId);
+                return;
+            }
+            
+            log.info("  批次包含 {} 个任务", batchTasks.size());
+            
+            // 2. 计算批次状态
+            BatchStatusResult statusResult = calculateBatchStatus(batchTasks);
+            
+            log.info("  批次状态: {}", statusResult.status);
+            log.info("  成功: {}, 失败: {}, 运行中: {}, 待执行: {}, 已取消: {}", 
+                statusResult.completedCount, 
+                statusResult.failedCount, 
+                statusResult.runningCount,
+                statusResult.pendingCount,
+                statusResult.cancelledCount);
+            
+            // 3. 更新 dm_maintenance_batch 表
+            updateMaintenanceBatchRecord(batchId, batchTasks, statusResult);
+            
+            // 4. 发送 TaskInfo 通知
+            DeviceTask firstTask = batchTasks.get(0);
+            String batchName = firstTask.getBatchName() != null 
+                ? firstTask.getBatchName() 
+                : "批次-" + batchId.substring(0, Math.min(8, batchId.length()));
+            
+            taskInfoNotificationService.notifyBatchTaskCompleted(
+                batchId,
+                batchName,
+                firstTask.getTaskType(),
+                batchTasks,
+                firstTask.getTaskInfoActionTime()
+            );
+            
+            log.info("  ✅ 批次更新通知已发送");
+            log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            
+        } catch (Exception e) {
+            log.error("❌ 发送批次更新通知失败: batchId={}", batchId, e);
+            log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        }
+    }
+
+    /**
+     * 计算批次状态
+     */
+    private BatchStatusResult calculateBatchStatus(List<DeviceTask> tasks) {
+        BatchStatusResult result = new BatchStatusResult();
+        
+        long total = tasks.size();
+        result.completedCount = tasks.stream().filter(t -> t.getStatus() == DeviceTask.TaskStatus.COMPLETED).count();
+        result.failedCount = tasks.stream().filter(t -> t.getStatus() == DeviceTask.TaskStatus.FAILED).count();
+        result.runningCount = tasks.stream().filter(t -> t.getStatus() == DeviceTask.TaskStatus.RUNNING).count();
+        result.cancelledCount = tasks.stream().filter(t -> t.getStatus() == DeviceTask.TaskStatus.CANCELLED).count();
+        result.pendingCount = tasks.stream().filter(t -> 
+            t.getStatus() == DeviceTask.TaskStatus.PENDING || 
+            t.getStatus() == DeviceTask.TaskStatus.SCHEDULED
+        ).count();
+        
+        // 状态判断逻辑
+        if (result.completedCount == total) {
+            // 全部成功
+            result.status = MaintenanceBatch.BatchStatus.COMPLETED;
+        } else if (result.failedCount == total) {
+            // 全部失败
+            result.status = MaintenanceBatch.BatchStatus.FAILED;
+        } else if (result.completedCount + result.failedCount == total && result.failedCount > 0) {
+            // 全部完成，但有失败
+            result.status = MaintenanceBatch.BatchStatus.COMPLETED_WITH_ERRORS;
+        } else if (result.cancelledCount > 0 && result.runningCount == 0 && result.pendingCount == 0) {
+            // 批次被取消
+            result.status = MaintenanceBatch.BatchStatus.CANCELLED;
+        } else if (result.runningCount > 0 || result.pendingCount > 0) {
+            // 还有任务在执行或待执行
+            result.status = MaintenanceBatch.BatchStatus.RUNNING;
+        } else {
+            // 兜底
+            result.status = MaintenanceBatch.BatchStatus.RUNNING;
+        }
+        
+        return result;
+    }
+
+    /**
+     * 更新 dm_maintenance_batch 表
+     */
+    private void updateMaintenanceBatchRecord(String batchId, List<DeviceTask> tasks, BatchStatusResult statusResult) {
+        try {
+            Optional<MaintenanceBatch> batchOpt = maintenanceBatchRepository.findById(batchId);
+            
+            if (!batchOpt.isPresent()) {
+                log.warn("  ⚠️ 批次 {} 在数据库中不存在，跳过更新", batchId);
+                return;
+            }
+            
+            MaintenanceBatch batch = batchOpt.get();
+            
+            // 更新状态
+            batch.updateBatchStatus(statusResult.status);
+            
+            // 更新统计数量
+            batch.updateCounts(
+                (int) statusResult.completedCount,
+                (int) statusResult.failedCount,
+                (int) statusResult.runningCount
+            );
+            
+            // 更新详情JSON（可选，包含设备列表）
+            String detailJson = buildBatchDetailJson(tasks);
+            batch.updateDetail(detailJson);
+            
+            maintenanceBatchRepository.save(batch);
+            
+            log.info("  ✅ dm_maintenance_batch 表已更新");
+            
+        } catch (Exception e) {
+            log.error("  ❌ 更新 dm_maintenance_batch 表失败: batchId={}", batchId, e);
+        }
+    }
+
+    /**
+     * 构建批次详情JSON
+     */
+    private String buildBatchDetailJson(List<DeviceTask> tasks) {
+        try {
+            List<Map<String, Object>> deviceSummaries = new ArrayList<>();
+            
+            for (DeviceTask task : tasks) {
+                Map<String, Object> deviceInfo = new HashMap<>();
+                deviceInfo.put("taskId", task.getTaskId());
+                deviceInfo.put("deviceId", task.getDeviceId());
+                deviceInfo.put("deviceName", task.getDeviceName());
+                deviceInfo.put("deviceIp", task.getDeviceIp());
+                deviceInfo.put("status", task.getStatus().name());
+                deviceInfo.put("updatedTime", task.getUpdatedTime() != null ? task.getUpdatedTime().toString() : null);
+                if (task.getErrorMessage() != null) {
+                    deviceInfo.put("errorMessage", task.getErrorMessage());
+                }
+                deviceSummaries.add(deviceInfo);
+            }
+            
+            return objectMapper.writeValueAsString(deviceSummaries);
+            
+        } catch (JsonProcessingException e) {
+            log.error("构建批次detail JSON失败", e);
+            return "[]";
+        }
+    }
+
+    /**
+     * 批次状态计算结果
+     */
+    private static class BatchStatusResult {
+        MaintenanceBatch.BatchStatus status;
+        long completedCount;
+        long failedCount;
+        long runningCount;
+        long pendingCount;
+        long cancelledCount;
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // UpgradeWorkflow 相关处理（新架构）
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    /**
+     * 检查并更新升级批次的工作流状态
+     * 当设备操作状态变更时调用
+     */
+    private void checkAndUpdateUpgradeWorkflow(String deviceId, String operationType, String operationStatus) {
+        try {
+            // 1. 查找该设备相关的未完成工作流
+            List<devicemaintenance.entity.UpgradeWorkflow> workflows = 
+                workflowRepository.findByDeviceIdAndStatusIn(
+                    deviceId, 
+                    Arrays.asList(
+                        devicemaintenance.entity.UpgradeWorkflow.WorkflowStatus.PENDING,
+                        devicemaintenance.entity.UpgradeWorkflow.WorkflowStatus.RUNNING,
+                        devicemaintenance.entity.UpgradeWorkflow.WorkflowStatus.PAUSED
+                    )
+                );
+
+            if (workflows.isEmpty()) {
+                return;
+            }
+
+            log.info("  发现 {} 个相关的升级工作流", workflows.size());
+
+            // 2. 更新工作流状态
+            Set<String> processedBatchIds = new HashSet<>();
+            for (devicemaintenance.entity.UpgradeWorkflow workflow : workflows) {
+                updateWorkflowStepStatus(workflow, operationType, operationStatus);
+                
+                // 3. 检查是否需要自动触发下一步（自动模式）- 每个批次只触发一次
+                if (processedBatchIds.add(workflow.getBatchId())) {
+                    checkAndAutoTriggerNextStep(workflow.getBatchId());
+                }
+                
+                // 4. 触发批次级通知（防抖）
+                scheduleUpgradeBatchNotification(workflow.getBatchId());
+            }
+
+        } catch (Exception e) {
+            log.error("更新升级工作流失败: deviceId={}", deviceId, e);
+        }
+    }
+
+    /**
+     * 更新工作流的步骤状态（通过更新关联的 DeviceTask）
+     */
+    private void updateWorkflowStepStatus(
+        devicemaintenance.entity.UpgradeWorkflow workflow,
+        String operationType,
+        String operationStatus
+    ) {
+        devicemaintenance.entity.DeviceTask.TaskStatus taskStatus = 
+            mapOperationStatusToTaskStatus(operationStatus);
+
+        devicemaintenance.entity.DeviceTask.TaskType taskType = 
+            mapOperationTypeToTaskType(operationType);
+        if (taskType == null) {
+            return;
+        }
+
+        log.info("  更新工作流关联任务: workflowId={}, taskType={}, status={}", 
+            workflow.getWorkflowId(), taskType, taskStatus);
+
+        // 查找并更新对应的 DeviceTask
+        List<devicemaintenance.entity.DeviceTask> tasks = 
+            deviceTaskRepository.findByWorkflowId(workflow.getWorkflowId());
+        
+        for (devicemaintenance.entity.DeviceTask task : tasks) {
+            if (task.getTaskType() == taskType) {
+                task.markStatus(taskStatus);
+                if (taskStatus == devicemaintenance.entity.DeviceTask.TaskStatus.FAILED) {
+                    task.setError("步骤执行失败");
+                }
+                deviceTaskRepository.save(task);
+                
+                // 更新工作流状态
+                workflowManagementService.updateWorkflowStatus(workflow.getWorkflowId());
+                break;
+            }
+        }
+    }
+
+    /**
+     * 映射操作类型到任务类型
+     */
+    private devicemaintenance.entity.DeviceTask.TaskType mapOperationTypeToTaskType(String operationType) {
+        if (operationType == null) return null;
+        
+        switch (operationType.toUpperCase()) {
+            case "DOWNLOAD":
+            case "SOFTWARE_DOWNLOAD":
+                return devicemaintenance.entity.DeviceTask.TaskType.DOWNLOAD;
+            case "BACKUP":
+            case "DATABASE_BACKUP":
+                return devicemaintenance.entity.DeviceTask.TaskType.BACKUP;
+            case "UPGRADE":
+            case "SOFTWARE_UPGRADE":
+            case "ACTIVATE":
+                return devicemaintenance.entity.DeviceTask.TaskType.UPGRADE;
+            case "RESTORE":
+            case "DATABASE_RESTORE":
+                return devicemaintenance.entity.DeviceTask.TaskType.RESTORE;
+            case "ROLLBACK":
+            case "SOFTWARE_ROLLBACK":
+                return devicemaintenance.entity.DeviceTask.TaskType.ROLLBACK;
+            case "COMMIT":
+            case "SOFTWARE_COMMIT":
+                return devicemaintenance.entity.DeviceTask.TaskType.COMMIT;
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * 映射操作状态到任务状态
+     */
+    private devicemaintenance.entity.DeviceTask.TaskStatus mapOperationStatusToTaskStatus(String operationStatus) {
+        if (operationStatus == null) {
+            return devicemaintenance.entity.DeviceTask.TaskStatus.PENDING;
+        }
+
+        switch (operationStatus.toUpperCase()) {
+            case "RUNNING":
+            case "IN_PROGRESS":
+            case "PROCESSING":
+                return devicemaintenance.entity.DeviceTask.TaskStatus.RUNNING;
+            case "SUCCESS":
+            case "COMPLETED":
+            case "DONE":
+                return devicemaintenance.entity.DeviceTask.TaskStatus.COMPLETED;
+            case "FAILED":
+            case "ERROR":
+                return devicemaintenance.entity.DeviceTask.TaskStatus.FAILED;
+            case "CANCELLED":
+            case "CANCELED":
+                return devicemaintenance.entity.DeviceTask.TaskStatus.CANCELLED;
+            case "SCHEDULED":
+                return devicemaintenance.entity.DeviceTask.TaskStatus.SCHEDULED;
+            default:
+                return devicemaintenance.entity.DeviceTask.TaskStatus.PENDING;
+        }
+    }
+
+    /**
+     * 调度升级批次通知（防抖）
+     */
+    private void scheduleUpgradeBatchNotification(String batchId) {
+        String key = "UPGRADE_" + batchId;
+
+        // 取消之前的调度
+        ScheduledFuture<?> existingTask = batchUpdateSchedulers.get(key);
+        if (existingTask != null && !existingTask.isDone()) {
+            existingTask.cancel(false);
+            log.debug("  ⏱️ 取消之前的批次通知调度: {}", key);
+        }
+
+        // 调度新的通知（3秒后）
+        ScheduledFuture<?> newTask = taskScheduler.schedule(
+            () -> sendUpgradeBatchNotification(batchId),
+            Instant.now().plus(Duration.ofSeconds(3))
+        );
+
+        batchUpdateSchedulers.put(key, newTask);
+        log.debug("  ⏱️ 已调度批次通知（3秒后）: {}", key);
+    }
+
+    /**
+     * 发送升级批次通知到 TaskInfo
+     */
+    private void sendUpgradeBatchNotification(String batchId) {
+        try {
+            log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            log.info("📤 [防抖触发] 发送升级批次通知: batchId={}", batchId);
+
+            // 1. 查询批次
+            Optional<devicemaintenance.entity.UpgradeBatch> batchOpt = upgradeBatchRepository.findById(batchId);
+            if (!batchOpt.isPresent()) {
+                log.warn("  批次不存在: {}", batchId);
+                return;
+            }
+
+            devicemaintenance.entity.UpgradeBatch batch = batchOpt.get();
+
+            // 2. 查询所有工作流
+            List<devicemaintenance.entity.UpgradeWorkflow> workflows = 
+                workflowManagementService.getWorkflowsByBatchId(batchId);
+
+            if (workflows.isEmpty()) {
+                log.warn("  批次没有工作流: {}", batchId);
+                return;
+            }
+
+            // 3. 计算批次状态
+            devicemaintenance.entity.UpgradeBatch.BatchStatus newStatus = calculateUpgradeBatchStatus(batch, workflows);
+            batch.updateBatchStatus(newStatus);
+            upgradeBatchRepository.save(batch);
+
+            log.info("  批次状态: {}", newStatus);
+
+            // 4. 构建 detail JSON
+            String detailJson = buildUpgradeWorkflowDetail(workflows);
+
+            // 5. 发送通知
+            // 注意：使用实际存在的方法，如果方法不存在，需要在 TaskInfoNotificationService 中添加
+            // taskInfoNotificationService.notifyBatchUpgradeUpdated(
+            //     batchId,
+            //     batch.getBatchName(),
+            //     batch.getBatchActionTime(),
+            //     newStatus.name(),
+            //     detailJson
+            // );
+            // 暂时使用通用的通知方法
+            log.info("  批次状态更新通知（方法待实现）: batchId={}, status={}", batchId, newStatus);
+
+            log.info("  ✅ 升级批次通知已发送");
+            log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+        } catch (Exception e) {
+            log.error("发送升级批次通知失败: batchId={}", batchId, e);
+        } finally {
+            batchUpdateSchedulers.remove("UPGRADE_" + batchId);
+        }
+    }
+
+    /**
+     * 计算升级批次状态
+     */
+    private devicemaintenance.entity.UpgradeBatch.BatchStatus calculateUpgradeBatchStatus(
+        devicemaintenance.entity.UpgradeBatch batch,
+        List<devicemaintenance.entity.UpgradeWorkflow> workflows
+    ) {
+        if (workflows.isEmpty()) {
+            return devicemaintenance.entity.UpgradeBatch.BatchStatus.CANCELLED;
+        }
+
+        long completedCount = workflows.stream()
+            .filter(wf -> wf.getStatus() == devicemaintenance.entity.UpgradeWorkflow.WorkflowStatus.COMPLETED)
+            .count();
+
+        long failedCount = workflows.stream()
+            .filter(wf -> wf.getStatus() == devicemaintenance.entity.UpgradeWorkflow.WorkflowStatus.FAILED)
+            .count();
+
+        long runningCount = workflows.stream()
+            .filter(wf -> wf.getStatus() == devicemaintenance.entity.UpgradeWorkflow.WorkflowStatus.RUNNING)
+            .count();
+
+        if (failedCount > 0) {
+            return devicemaintenance.entity.UpgradeBatch.BatchStatus.FAILED;
+        }
+
+        if (completedCount == workflows.size()) {
+            return devicemaintenance.entity.UpgradeBatch.BatchStatus.COMPLETED;
+        }
+
+        if (runningCount > 0) {
+            return devicemaintenance.entity.UpgradeBatch.BatchStatus.RUNNING;
+        }
+
+        // 手动模式：检查是否 READY_TO_XXX
+        if (batch.getExecutionMode() == devicemaintenance.entity.UpgradeBatch.ExecutionMode.MANUAL) {
+            boolean allCurrentStepCompleted = workflowManagementService.areAllCurrentStepsCompleted(workflows);
+
+            if (allCurrentStepCompleted && !workflows.isEmpty()) {
+                String nextStep = workflows.get(0).getNextEnabledStep();
+                if (nextStep != null) {
+                    switch (nextStep.toUpperCase()) {
+                        case "BACKUP":
+                            return devicemaintenance.entity.UpgradeBatch.BatchStatus.READY_TO_BACKUP;
+                        case "UPGRADE":
+                            return devicemaintenance.entity.UpgradeBatch.BatchStatus.READY_TO_UPGRADE;
+                    }
+                }
+            }
+        }
+
+        return devicemaintenance.entity.UpgradeBatch.BatchStatus.RUNNING;
+    }
+
+    /**
+     * 构建升级工作流的 detail JSON
+     * 注意：详细信息从 DeviceTask 中获取，Workflow 只提供流程控制信息
+     */
+    private String buildUpgradeWorkflowDetail(List<devicemaintenance.entity.UpgradeWorkflow> workflows) {
+        try {
+            List<Map<String, Object>> deviceSummaries = new ArrayList<>();
+
+            for (devicemaintenance.entity.UpgradeWorkflow workflow : workflows) {
+                Map<String, Object> deviceInfo = new HashMap<>();
+                deviceInfo.put("deviceId", workflow.getDeviceId());
+                deviceInfo.put("workflowStatus", workflow.getStatus().name());
+                deviceInfo.put("currentStep", workflow.getCurrentStep());
+                deviceInfo.put("retryCount", workflow.getRetryCount());
+                deviceInfo.put("maxRetryCount", workflow.getMaxRetryCount());
+                
+                // 从 DeviceTask 获取详细信息
+                List<devicemaintenance.entity.DeviceTask> tasks = 
+                    deviceTaskRepository.findByWorkflowId(workflow.getWorkflowId());
+                
+                if (!tasks.isEmpty()) {
+                    // 从第一个任务获取设备信息
+                    devicemaintenance.entity.DeviceTask firstTask = tasks.get(0);
+                    deviceInfo.put("deviceName", firstTask.getDeviceName());
+                    deviceInfo.put("deviceIp", firstTask.getDeviceIp());
+                    
+                    // 收集各步骤的状态和错误信息
+                    Map<String, String> stepStatuses = new HashMap<>();
+                    List<String> errorMessages = new ArrayList<>();
+                    
+                    for (devicemaintenance.entity.DeviceTask task : tasks) {
+                        String stepName = task.getTaskType().name().toLowerCase() + "Status";
+                        stepStatuses.put(stepName, task.getStatus().name());
+                        
+                        if (task.getErrorMessage() != null && !task.getErrorMessage().isEmpty()) {
+                            errorMessages.add(task.getTaskType().name() + ": " + task.getErrorMessage());
+                        }
+                    }
+                    
+                    deviceInfo.putAll(stepStatuses);
+                    
+                    if (!errorMessages.isEmpty()) {
+                        deviceInfo.put("errorMessage", String.join("; ", errorMessages));
+                    }
+                }
+                
+                deviceSummaries.add(deviceInfo);
+            }
+
+            return objectMapper.writeValueAsString(deviceSummaries);
+
+        } catch (JsonProcessingException e) {
+            log.error("构建升级工作流detail JSON失败", e);
+            return "[]";
+        }
+    }
+
+    /**
+     * 检查并自动触发下一步（仅自动模式）
+     */
+    private void checkAndAutoTriggerNextStep(String batchId) {
+        try {
+            // 1. 查询批次
+            Optional<devicemaintenance.entity.UpgradeBatch> batchOpt = upgradeBatchRepository.findById(batchId);
+            if (!batchOpt.isPresent()) {
+                return;
+            }
+
+            devicemaintenance.entity.UpgradeBatch batch = batchOpt.get();
+
+            // 2. 只处理自动模式
+            if (batch.getExecutionMode() != devicemaintenance.entity.UpgradeBatch.ExecutionMode.AUTO) {
+                return;
+            }
+
+            // 3. 查询所有工作流
+            List<devicemaintenance.entity.UpgradeWorkflow> workflows = 
+                workflowManagementService.getWorkflowsByBatchId(batchId);
+
+            if (workflows.isEmpty()) {
+                return;
+            }
+
+            // 4. 筛选出当前步骤已完成且可以继续的工作流（排除失败的）
+            List<devicemaintenance.entity.UpgradeWorkflow> readyWorkflows = workflows.stream()
+                .filter(wf -> wf.getStatus() != devicemaintenance.entity.UpgradeWorkflow.WorkflowStatus.FAILED)
+                .filter(wf -> wf.isCurrentStepCompleted())
+                .filter(wf -> wf.getNextEnabledStep() != null)
+                .collect(java.util.stream.Collectors.toList());
+
+            if (readyWorkflows.isEmpty()) {
+                log.debug("  没有可以继续的工作流: batchId={}", batchId);
+                return;
+            }
+
+            // 5. 获取下一步（所有就绪工作流的下一步应该一致）
+            String nextStep = readyWorkflows.get(0).getNextEnabledStep();
+            if (nextStep == null) {
+                log.info("  所有步骤已完成，无需继续: batchId={}", batchId);
+                return;
+            }
+
+            log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            log.info("🤖 [自动模式] 触发下一步: batchId={}, nextStep={}, readyCount={}/{}", 
+                batchId, nextStep, readyWorkflows.size(), workflows.size());
+
+            // 6. 异步触发下一步（仅对就绪的工作流）
+            // 注意：自动模式下，每个工作流独立流转，失败的工作流不影响其他工作流
+            CompletableFuture.runAsync(() -> {
+                try {
+                    batchUpgradeService.triggerNextStepForWorkflows(batchId, readyWorkflows);
+                    log.info("  ✅ 自动触发下一步成功: {} 个工作流", readyWorkflows.size());
+                    
+                } catch (Exception e) {
+                    log.error("自动触发下一步失败: batchId={}, nextStep={}", batchId, nextStep, e);
+                }
+            });
+
+        } catch (Exception e) {
+            log.error("检查自动触发失败: batchId={}", batchId, e);
+        }
+    }
+}

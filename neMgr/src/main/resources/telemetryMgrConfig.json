@@ -1,0 +1,14 @@
+{
+  "telemetry-manager": {
+    "mixed": false,
+    "ipArea": {
+      "private": "192.168.110.0/24",
+      "public": ""
+    },
+    "ntp": {
+      "private": "192.168.110.1",
+      "public": "118.195.196.82"
+    },
+    "timezone": "Asia/Shanghai"
+  }
+}

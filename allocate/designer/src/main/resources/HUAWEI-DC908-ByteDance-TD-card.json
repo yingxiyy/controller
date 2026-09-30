@@ -1,0 +1,1586 @@
+{
+  "vendorName": "HUAWEI",
+  "productType": "DC908",
+  "yangModel": "ByteDance",
+  "nodeType": "TD",
+  "cardClass": [
+    {
+      "name": "OT",
+      "card": [
+        {
+          "cardType": "L2X4C8",
+          "vendorType": "L2X4C8",
+          "wdmBand": "C",
+          "comments": "Line : 400G; Client : 100G~400G",
+          "externalLinks": [
+          ],
+          "crossConnections": [
+            {
+              "serviceType": "MUX_4x100G",
+              "opModes": [
+                {
+                  "name": "1",
+                  "grid": 75,
+                  "description": "{\"mode-id\":1}"
+                }
+              ],
+              "supportedSignal": [
+                "OTU4x4"
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 4,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "100GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_100GBASE_SR4",
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_CWDM4"
+                ],
+                "port": "C?,1,4,1",
+                "layer": "/odu4=1"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/odu4x4=1/odu4=?,1,4,1"
+              }
+            },
+            {
+              "serviceType": "MUX_4x100G",
+              "opModes": [
+                {
+                  "name": "1",
+                  "grid": 75,
+                  "description": "{\"mode-id\":1}"
+                }
+              ],
+              "supportedSignal": [
+                "OTU4x4"
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 4,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "100GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_100GBASE_SR4",
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_CWDM4"
+                ],
+                "port": "C?,5,8,1",
+                "layer": "/odu4=1"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/odu4x4=1/odu4=?,1,4,1"
+              }
+            },
+            {
+              "serviceType": "TR_400G",
+              "supportedSignal": [
+                "OTU4x4"
+              ],
+              "opModes": [
+                {
+                  "name": "1",
+                  "grid": 75,
+                  "description": "{\"mode-id\":1}"
+                }
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 1,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "400GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_400GBASE_FR4"
+                ],
+                "port": "C1",
+                "layer": "/odu4x4=1"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/odu4x4=1/odu4x4=1"
+              }
+            },
+            {
+              "serviceType": "TR_400G",
+              "supportedSignal": [
+                "OTU4x4"
+              ],
+              "opModes": [
+                {
+                  "name": "1",
+                  "grid": 75,
+                  "description": "{\"mode-id\":1}"
+                }
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 1,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "400GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_400GBASE_FR4"
+                ],
+                "port": "C5",
+                "layer": "/odu4x4=1"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/odu4x4=1/odu4x4=1"
+              }
+            },
+            {
+              "serviceType": "REGEN_400G",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "initiated": false,
+              "type": "OCH",
+              "biDirection": false,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "OCH"
+                ],
+                "port": "L1",
+                "layer": "/OCH"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/OCH"
+              }
+            },
+            {
+              "serviceType": "REGEN_400G",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "initiated": false,
+              "type": "OCH",
+              "biDirection": false,
+              "multiple": 1,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "OCH"
+                ],
+                "port": "L2",
+                "layer": "/OCH"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/OCH"
+              }
+            }
+          ],
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "C?,1,8,1",
+              "portType": "OTU-Client",
+              "transceiver": {
+                "name": "TRANSCEIVER?",
+                "initiated": false,
+                "supportedSignal": [
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_CWDM4",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_FR4"
+                ]
+              },
+              "supportedSignal": [
+                "100GbE",
+                "OTU4"
+              ],
+              "biDirection": true,
+              "index": "?,2,9,1"
+            },
+            {
+              "name": "L?,1,2,1",
+              "portType": "OTU-Line",
+              "transceiver": {
+                "name": "TRANSCEIVER?",
+                "initiated": false
+              },
+              "supportedSignal": [
+                "OTU4x4",
+                "OTU4x6",
+                "OTU4x8"
+              ],
+              "biDirection": true,
+              "index": "?,0,1,1"
+            }
+          ],
+          "regs": [
+            {
+              "serviceType": "REGEN_400G",
+              "supportedSignal": [
+                "OTU4x4"
+              ],
+              "ports": [
+                {
+                  "port": "L1",
+                  "friendlyName": "L1"
+                },
+                {
+                  "port": "L2",
+                  "friendlyName": "L2"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cardType": "L2X8C16",
+          "vendorType": "L2X8C16",
+          "wdmBand": "C",
+          "comments": "Line : 800G ; Client : 100G~400G",
+          "externalLinks": [
+          ],
+          "crossConnections": [
+            {
+              "serviceType": "MUX_8x100G",
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "opModes": [
+                {
+                  "name": "8",
+                  "grid": 150,
+                  "description": "{\"mode-id\":8}"
+                }
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 8,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "100GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_100GBASE_SR4",
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_CWDM4"
+                ],
+                "port": "C?,1,8,1",
+                "layer": "/odu4=1"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/odu4x8=1/odu4=?,1,8,1"
+              }
+            },
+            {
+              "serviceType": "MUX_8x100G",
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "opModes": [
+                {
+                  "name": "8",
+                  "grid": 150,
+                  "description": "{\"mode-id\":8}"
+                }
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 8,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "100GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_100GBASE_SR4",
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_CWDM4"
+                ],
+                "port": "C?,9,16,1",
+                "layer": "/odu4=1"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/odu4x8=1/odu4=?,1,8,1"
+              }
+            },
+            {
+              "serviceType": "MUX_2x400G",
+              "opModes": [
+                {
+                  "name": "8",
+                  "grid": 150,
+                  "description": "{\"mode-id\":8}"
+                }
+              ],
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "400GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_400GBASE_FR4"
+                ],
+                "port": "C?,5,7,2",
+                "layer": "/odu4x4=1"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/odu4x8=1/odu4x4=?,1,2,1"
+              }
+            },
+            {
+              "serviceType": "MUX_2x400G",
+              "opModes": [
+                {
+                  "name": "8",
+                  "grid": 150,
+                  "description": "{\"mode-id\":8}"
+                }
+              ],
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "400GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_400GBASE_FR4"
+                ],
+                "port": "C?,9,11,2",
+                "layer": "/odu4x4=1"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/odu4x8=1/odu4x4=?,1,2,1"
+              }
+            },
+            {
+              "serviceType": "REGEN_800G",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "initiated": false,
+              "type": "OCH",
+              "biDirection": false,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "OCH"
+                ],
+                "port": "L1",
+                "layer": "/OCH"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/OCH"
+              }
+            },
+            {
+              "serviceType": "REGEN_800G",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "initiated": false,
+              "type": "OCH",
+              "biDirection": false,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "OCH"
+                ],
+                "port": "L2",
+                "layer": "/OCH"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/OCH"
+              }
+            }
+          ],
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "C?,1,16,1",
+              "portType": "OTU-Client",
+              "transceiver": {
+                "name": "TRANSCEIVER?",
+                "initiated": false,
+                "supportedSignal": [
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_CWDM4",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_FR4"
+                ]
+              },
+              "supportedSignal": [
+                "100GbE",
+                "OTU4"
+              ],
+              "biDirection": true,
+              "index": "?,2,17,1"
+            },
+            {
+              "name": "L?,1,2,1",
+              "portType": "OTU-Line",
+              "transceiver": {
+                "name": "TRANSCEIVER?",
+                "initiated": false
+              },
+              "supportedSignal": [
+                "OTU4x4",
+                "OTU4x8"
+              ],
+              "biDirection": true,
+              "index": "?,0,1,1"
+            }
+          ],
+          "regs": [
+            {
+              "serviceType": "REGEN_800G",
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "ports": [
+                {
+                  "port": "L1",
+                  "friendlyName": "L1"
+                },
+                {
+                  "port": "L2",
+                  "friendlyName": "L2"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cardType": "L2X8C16_L",
+          "vendorType": "L2X8C16_L",
+          "wdmBand": "L",
+          "comments": "Line : 800G ; Client : 100G~400G",
+          "externalLinks": [
+          ],
+          "crossConnections": [
+            {
+              "serviceType": "MUX_8x100G",
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "opModes": [
+                {
+                  "name": "8",
+                  "grid": 150,
+                  "description": "{\"mode-id\":8}"
+                }
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 8,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "100GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_100GBASE_SR4",
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_CWDM4"
+                ],
+                "port": "C?,1,8,1",
+                "layer": "/odu4=1"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/odu4x8=1/odu4=?,1,8,1"
+              }
+            },
+            {
+              "serviceType": "MUX_8x100G",
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "opModes": [
+                {
+                  "name": "8",
+                  "grid": 150,
+                  "description": "{\"mode-id\":8}"
+                }
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 8,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "100GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_100GBASE_SR4",
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_CWDM4"
+                ],
+                "port": "C?,9,16,1",
+                "layer": "/odu4=1"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/odu4x8=1/odu4=?,1,8,1"
+              }
+            },
+            {
+              "serviceType": "MUX_2x400G",
+              "opModes": [
+                {
+                  "name": "8",
+                  "grid": 150,
+                  "description": "{\"mode-id\":8}"
+                }
+              ],
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "400GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_400GBASE_FR4"
+                ],
+                "port": "C?,5,7,2",
+                "layer": "/odu4x4=1"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/odu4x8=1/odu4x4=?,1,2,1"
+              }
+            },
+            {
+              "serviceType": "MUX_2x400G",
+              "opModes": [
+                {
+                  "name": "8",
+                  "grid": 150,
+                  "description": "{\"mode-id\":8}"
+                }
+              ],
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "400GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_400GBASE_FR4"
+                ],
+                "port": "C?,9,11,2",
+                "layer": "/odu4x4=1"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/odu4x8=1/odu4x4=?,1,2,1"
+              }
+            },
+            {
+              "serviceType": "REGEN_800G",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "initiated": false,
+              "type": "OCH",
+              "biDirection": false,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "OCH"
+                ],
+                "port": "L1",
+                "layer": "/OCH"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/OCH"
+              }
+            },
+            {
+              "serviceType": "REGEN_800G",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "initiated": false,
+              "type": "OCH",
+              "biDirection": false,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "OCH"
+                ],
+                "port": "L2",
+                "layer": "/OCH"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/OCH"
+              }
+            }
+          ],
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "C?,1,16,1",
+              "portType": "OTU-Client",
+              "transceiver": {
+                "name": "TRANSCEIVER?",
+                "initiated": false,
+                "supportedSignal": [
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_CWDM4",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_FR4"
+                ]
+              },
+              "supportedSignal": [
+                "100GbE",
+                "OTU4"
+              ],
+              "biDirection": true,
+              "index": "?,2,17,1"
+            },
+            {
+              "name": "L?,1,2,1",
+              "portType": "OTU-Line",
+              "transceiver": {
+                "name": "TRANSCEIVER?",
+                "initiated": false
+              },
+              "supportedSignal": [
+                "OTU4x4",
+                "OTU4x8"
+              ],
+              "biDirection": true,
+              "index": "?,0,1,1"
+            }
+          ],
+          "regs": [
+            {
+              "serviceType": "REGEN_800G",
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "ports": [
+                {
+                  "port": "L1",
+                  "friendlyName": "L1"
+                },
+                {
+                  "port": "L2",
+                  "friendlyName": "L2"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cardType": "RL2X8C16",
+          "vendorType": "RL2X8C16",
+          "wdmBand": "C",
+          "comments": "Line : 400G~1200G ; Client : 100G~400G",
+          "externalLinks": [
+          ],
+          "crossConnections": [
+            {
+              "serviceType": "MUX_4x100G",
+              "opModes": [
+                {
+                  "name": "9",
+                  "grid": 100,
+                  "description": "{\"mode-id\":9}"
+                }
+              ],
+              "supportedSignal": [
+                "OTU4x4"
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 4,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "100GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_100GBASE_SR4",
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_CWDM4"
+                ],
+                "port": "C?,1,7,2",
+                "layer": "/odu4=1"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/odu4x4=1/odu4=?,1,4,1"
+              }
+            },
+            {
+              "serviceType": "MUX_4x100G",
+              "opModes": [
+                {
+                  "name": "9",
+                  "grid": 100,
+                  "description": "{\"mode-id\":9}"
+                }
+              ],
+              "supportedSignal": [
+                "OTU4x4"
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 4,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "100GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_100GBASE_SR4",
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_CWDM4"
+                ],
+                "port": "C?,9,15,2",
+                "layer": "/odu4=1"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/odu4x4=1/odu4=?,1,4,1"
+              }
+            },
+            {
+              "serviceType": "TR_400G",
+              "supportedSignal": [
+                "OTU4x4"
+              ],
+              "opModes": [
+                {
+                  "name": "9",
+                  "grid": 100,
+                  "description": "{\"mode-id\":9}"
+                }
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 1,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "400GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_400GBASE_FR4"
+                ],
+                "port": "C1",
+                "layer": "/odu4x4=1"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/odu4x4=1/odu4x4=1"
+              }
+            },
+            {
+              "serviceType": "TR_400G",
+              "supportedSignal": [
+                "OTU4x4"
+              ],
+              "opModes": [
+                {
+                  "name": "9",
+                  "grid": 100,
+                  "description": "{\"mode-id\":9}"
+                }
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 1,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "400GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_400GBASE_FR4"
+                ],
+                "port": "C9",
+                "layer": "/odu4x4=1"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/odu4x4=1/odu4x4=1"
+              }
+            },
+            {
+              "serviceType": "MUX_8x100G",
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "opModes": [
+                {
+                  "name": "10",
+                  "grid": 150,
+                  "description": "{\"mode-id\":10}"
+                }
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 8,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "100GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_100GBASE_SR4",
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_CWDM4"
+                ],
+                "port": "C?,1,8,1",
+                "layer": "/odu4=1"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/odu4x8=1/odu4=?,1,8,1"
+              }
+            },
+            {
+              "serviceType": "MUX_8x100G",
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "opModes": [
+                {
+                  "name": "10",
+                  "grid": 150,
+                  "description": "{\"mode-id\":10}"
+                }
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 8,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "100GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_100GBASE_SR4",
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_CWDM4"
+                ],
+                "port": "C?,9,16,1",
+                "layer": "/odu4=1"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/odu4x8=1/odu4=?,1,8,1"
+              }
+            },
+            {
+              "serviceType": "MUX_2x400G",
+              "opModes": [
+                {
+                  "name": "10",
+                  "grid": 150,
+                  "description": "{\"mode-id\":10}"
+                }
+              ],
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "400GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_400GBASE_FR4"
+                ],
+                "port": "C?,1,7,6",
+                "layer": "/odu4x4=1"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/odu4x8=1/odu4x4=?,1,2,1"
+              }
+            },
+            {
+              "serviceType": "MUX_2x400G",
+              "opModes": [
+                {
+                  "name": "10",
+                  "grid": 150,
+                  "description": "{\"mode-id\":10}"
+                }
+              ],
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "initiated": false,
+              "type": "ODU",
+              "biDirection": true,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "400GbE"
+                ],
+                "transceiverSupportedSignal": [
+                  "ETH_400GBASE_FR4"
+                ],
+                "port": "C?,9,15,6",
+                "layer": "/odu4x4=1"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/odu4x8=1/odu4x4=?,1,2,1"
+              }
+            },
+            {
+              "serviceType": "REGEN_400G",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "initiated": false,
+              "type": "OCH",
+              "biDirection": false,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "OCH"
+                ],
+                "port": "L1",
+                "layer": "/OCH"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/OCH"
+              }
+            },
+            {
+              "serviceType": "REGEN_400G",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "initiated": false,
+              "type": "OCH",
+              "biDirection": false,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "OCH"
+                ],
+                "port": "L2",
+                "layer": "/OCH"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/OCH"
+              }
+            },
+            {
+              "serviceType": "REGEN_800G",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "initiated": false,
+              "type": "OCH",
+              "biDirection": false,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "OCH"
+                ],
+                "port": "L1",
+                "layer": "/OCH"
+              },
+              "to": {
+                "port": "L1",
+                "layer": "/OCH"
+              }
+            },
+            {
+              "serviceType": "REGEN_800G",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "initiated": false,
+              "type": "OCH",
+              "biDirection": false,
+              "multiple": 2,
+              "description": "PORT-1-<slot>-<from>/<to>",
+              "from": {
+                "supportedSignal": [
+                  "OCH"
+                ],
+                "port": "L2",
+                "layer": "/OCH"
+              },
+              "to": {
+                "port": "L2",
+                "layer": "/OCH"
+              }
+            }
+          ],
+          "width": 2,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "C?,1,16,1",
+              "portType": "OTU-Client",
+              "transceiver": {
+                "name": "TRANSCEIVER?",
+                "initiated": false,
+                "supportedSignal": [
+                  "ETH_100GBASE_FR1_2KM",
+                  "ETH_100GBASE_CWDM4",
+                  "ETH_100GBASE_LR4",
+                  "ETH_100GBASE_DR",
+                  "ETH_100GBASE_FR4"
+                ]
+              },
+              "supportedSignal": [
+                "100GbE",
+                "OTU4"
+              ],
+              "biDirection": true,
+              "index": "?,2,17,1"
+            },
+            {
+              "name": "L?,1,2,1",
+              "portType": "OTU-Line",
+              "transceiver": {
+                "name": "TRANSCEIVER?",
+                "initiated": false
+              },
+              "supportedSignal": [
+                "OTU4x4",
+                "OTU4x8"
+              ],
+              "biDirection": true,
+              "index": "?,0,1,1"
+            }
+          ],
+          "regs": [
+            {
+              "serviceType": "REGEN_800G",
+              "supportedSignal": [
+                "OTU4x8"
+              ],
+              "ports": [
+                {
+                  "port": "L1",
+                  "friendlyName": "L1"
+                },
+                {
+                  "port": "L2",
+                  "friendlyName": "L2"
+                }
+              ]
+            },
+            {
+              "serviceType": "REGEN_400G",
+              "supportedSignal": [
+                "OTU4x4"
+              ],
+              "ports": [
+                {
+                  "port": "L1",
+                  "friendlyName": "L1"
+                },
+                {
+                  "port": "L2",
+                  "friendlyName": "L2"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OP",
+      "card": [
+        {
+          "cardType": "OLP3_3",
+          "vendorType": "OLP3_3",
+          "width": 1,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            5
+          ],
+          "ports": [
+            {
+              "name": "?SIG,1,3,1",
+              "portType": "OP-Sig",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "index": "?,0,9,4"
+            },
+            {
+              "name": "?A,1,3,1",
+              "portType": "OP-A",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "index": "?,1,10,4"
+            },
+            {
+              "name": "?B,1,3,1",
+              "portType": "OP-B",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "isSlave": true,
+              "index": "?,2,11,4"
+            },
+            {
+              "name": "?C,1,3,1",
+              "portType": "OP-C",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "isSlave": true,
+              "index": "?,3,12,4"
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "?SIG,1,3,1",
+              "to": [
+                {
+                  "neType": "TD",
+                  "cardType": "L1X12C8",
+                  "port": "L1"
+                },
+                {
+                  "neType": "TD",
+                  "cardType": "L1X12C8-L",
+                  "port": "L1"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "?A,1,3,1",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "MUXPANEL",
+                  "port": "M?D?,1,64,1"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "?B,1,3,1",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "MUXPANEL",
+                  "port": "M?D?,1,64,1"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "type": "APS",
+              "biDirection": true,
+              "description": "APS-1-<slot>-1",
+              "from": {
+                "port": "1SIG"
+              },
+              "to": {
+                "port": "1A,1B,1C"
+              },
+              "aps": {
+                "params": [
+                  {
+                    "name": "absolute-switch-hysteresis",
+                    "value": "0.5"
+                  },
+                  {
+                    "name": "relative-switch-threshold",
+                    "value": "3"
+                  },
+                  {
+                    "name": "relative-switch-hysteresis",
+                    "value": "0.5"
+                  },
+                  {
+                    "name": "och-ber-switch-mode",
+                    "value": "true"
+                  },
+                  {
+                    "name": "och-ber-switch-threshold",
+                    "value": "0.021"
+                  },
+                  {
+                    "name": "digital-diagnosis-auto-wait-to-restore-time",
+                    "value": "600"
+                  },
+                  {
+                    "name": "initial-digital-diagnosis-auto-downgrade-time",
+                    "value": "100"
+                  },
+                  {
+                    "name": "uncertain-digital-diagnosis-auto-downgrade-time",
+                    "value": "600"
+                  },
+                  {
+                    "name": "initial-digital-diagnosis-auto-restore-times",
+                    "value": "5"
+                  },
+                  {
+                    "name": "initial-digital-diagnosis-auto-restore-times",
+                    "value": "5"
+                  },
+                  {
+                    "name": "1A.absolute-switch-threshold",
+                    "value": "-10"
+                  },
+                  {
+                    "name": "1B.absolute-switch-threshold",
+                    "value": "-10"
+                  },
+                  {
+                    "name": "1C.absolute-switch-threshold",
+                    "value": "-10"
+                  },
+                  {
+                    "name": "1A.relative-switch-threshold-offset",
+                    "value": "0"
+                  },
+                  {
+                    "name": "1B.relative-switch-threshold-offset",
+                    "value": "0"
+                  },
+                  {
+                    "name": "1C.relative-switch-threshold-offset",
+                    "value": "0"
+                  },
+                  {
+                    "name": "1SIG.enabled",
+                    "value": "true"
+                  },
+                  {
+                    "name": "1A.enabled",
+                    "value": "true"
+                  },
+                  {
+                    "name": "1B.enabled",
+                    "value": "true"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "APS",
+              "biDirection": true,
+              "description": "APS-1-<slot>-2",
+              "from": {
+                "port": "2SIG"
+              },
+              "to": {
+                "port": "2A,2B,2C"
+              },
+              "aps": {
+                "params": [
+                  {
+                    "name": "absolute-switch-hysteresis",
+                    "value": "0.5"
+                  },
+                  {
+                    "name": "relative-switch-threshold",
+                    "value": "3"
+                  },
+                  {
+                    "name": "relative-switch-hysteresis",
+                    "value": "0.5"
+                  },
+                  {
+                    "name": "och-ber-switch-mode",
+                    "value": "true"
+                  },
+                  {
+                    "name": "och-ber-switch-threshold",
+                    "value": "0.021"
+                  },
+                  {
+                    "name": "digital-diagnosis-auto-wait-to-restore-time",
+                    "value": "600"
+                  },
+                  {
+                    "name": "initial-digital-diagnosis-auto-downgrade-time",
+                    "value": "100"
+                  },
+                  {
+                    "name": "uncertain-digital-diagnosis-auto-downgrade-time",
+                    "value": "600"
+                  },
+                  {
+                    "name": "initial-digital-diagnosis-auto-restore-times",
+                    "value": "5"
+                  },
+                  {
+                    "name": "initial-digital-diagnosis-auto-restore-times",
+                    "value": "5"
+                  },
+                  {
+                    "name": "2A.absolute-switch-threshold",
+                    "value": "-10"
+                  },
+                  {
+                    "name": "2B.absolute-switch-threshold",
+                    "value": "-10"
+                  },
+                  {
+                    "name": "2C.absolute-switch-threshold",
+                    "value": "-10"
+                  },
+                  {
+                    "name": "2A.relative-switch-threshold-offset",
+                    "value": "0"
+                  },
+                  {
+                    "name": "2B.relative-switch-threshold-offset",
+                    "value": "0"
+                  },
+                  {
+                    "name": "2C.relative-switch-threshold-offset",
+                    "value": "0"
+                  },
+                  {
+                    "name": "2SIG.enabled",
+                    "value": "true"
+                  },
+                  {
+                    "name": "2A.enabled",
+                    "value": "true"
+                  },
+                  {
+                    "name": "2B.enabled",
+                    "value": "true"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BLANK",
+      "card": [
+        {
+          "cardType": "BLANK",
+          "width": 1,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ]
+        }
+      ]
+    }
+  ],
+  "fixEquipModel": [
+    {
+      "equipTypeConfiged": "PANEL",
+      "name": "PANEL-1-40",
+      "tpModel": [
+        {
+          "tpFriendlyName": [
+            "PORT-1-40-CON"
+          ],
+          "tpInfo": [
+            "PORT-1-40-CON"
+          ],
+          "tpType": "PanelCON"
+        },
+        {
+          "tpFriendlyName": [
+            "PORT-1-40-MUX"
+          ],
+          "tpInfo": [
+            "PORT-1-40-MUX"
+          ],
+          "tpType": "PanelMUX"
+        },
+        {
+          "tpFriendlyName": [
+            "PORT-1-40-ETH"
+          ],
+          "tpInfo": [
+            "PORT-1-40-ETH"
+          ],
+          "tpType": "PanelETH"
+        },
+        {
+          "tpFriendlyName": [
+            "PORT-1-40-NMS",
+            "PORT-1-40-NMS1",
+            "PORT-1-40-NMS2"
+          ],
+          "tpInfo": [
+            "PORT-1-40-NMS",
+            "PORT-1-40-NMS1",
+            "PORT-1-40-NMS2"
+          ],
+          "tpType": "PanelNMS"
+        }
+      ]
+    },
+    {
+      "equipTypeConfiged": "PSU",
+      "name": "PSU-1-?,21,22,1"
+    },
+    {
+      "equipTypeConfiged": "FAN",
+      "name": "FAN-1-?,31,33,1"
+    },
+    {
+      "equipTypeConfiged": "CU",
+      "name": "CU-1-?,41,41,1"
+    },
+    {
+      "equipTypeConfiged": "CHASSIS",
+      "name": "CHASSIS-1",
+      "chassisClass": "BONE_EPC"
+    }
+  ]
+}

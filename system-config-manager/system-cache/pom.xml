@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>system-config-manager</artifactId>
+        <groupId>net.flex.dci.otn.controller</groupId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>jar</packaging>
+    <artifactId>system-cache</artifactId>
+    <description>alarm-notifier cache manager</description>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <dependency>
+            <artifactId>ehcache</artifactId>
+            <groupId>net.sf.ehcache</groupId>
+        </dependency>
+        <dependency>
+            <groupId>net.flex.dci.otn.controller.system</groupId>
+            <artifactId>system-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.flex.dci.otc</groupId>
+            <artifactId>netconf-serialization</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>net.flex.dci.otc.cache</groupId>
+            <artifactId>dci-cache</artifactId>
+        </dependency>
+    </dependencies>
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+
+</project>

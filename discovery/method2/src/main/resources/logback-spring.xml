@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<configuration>
+
+  <property name="LOG" value="./log"/>
+
+  <appender name="Console"
+    class="ch.qos.logback.core.ConsoleAppender">
+    <layout class="ch.qos.logback.classic.PatternLayout">
+      <Pattern>
+        %black(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1.}): %msg%n%throwable
+      </Pattern>
+    </layout>
+  </appender>
+
+  <appender name="@project.artifactId@Log"
+    class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG}/@project.artifactId@.log</file>
+    <encoder
+      class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
+    </encoder>
+
+    <rollingPolicy
+      class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- rollover daily and when the file reaches 10 MegaBytes -->
+      <fileNamePattern>${LOG}/@project.artifactId@-%d{yyyy-MM-dd}.%i.log
+      </fileNamePattern>
+      <maxHistory>10</maxHistory>
+      <timeBasedFileNamingAndTriggeringPolicy
+        class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <maxFileSize>50MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <totalSizeCap>2GB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
+
+  <!-- LOG everything at INFO level -->
+  <root level="info">
+    <appender-ref ref="@project.artifactId@Log"/>
+    <appender-ref ref="Console"/>
+  </root>
+
+  <!-- LOG "com.baeldung*" at TRACE level -->
+  <logger name="org.springframework.we" level="error" additivity="false">
+    <appender-ref ref="@project.artifactId@Log"/>
+  </logger>
+  <logger name="org.mongodb.driver" level="OFF" additivity="false">
+  </logger>
+</configuration>

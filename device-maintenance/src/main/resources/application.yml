@@ -1,0 +1,193 @@
+# ============================================================================
+# Device Maintenance Service - 统一配置文件
+# ============================================================================
+#
+# 配置说明：
+#   - 本配置文件支持环境变量占位符（${VAR_NAME}）
+#   - 生产环境通过 install.sh 脚本自动替换环境变量
+#   - 本地开发时可直接使用默认值（或通过IDE设置环境变量）
+# ============================================================================
+
+server:
+  port: 18008
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: device-maintenance
+
+  # MongoDB 配置（生产环境通过 mongodb.properties 覆盖）
+  data:
+    mongodb:
+      # 默认值用于本地开发，生产环境由 mongodb.properties 提供
+      uri: mongodb://dci:dciworld%40iivi@127.0.0.1:27010,127.0.0.1:27011,127.0.0.1:27012/sotn?authSource=admin&replicaSet=rs01
+      socket-timeout: 30000
+      connect-timeout: 30000
+
+  # 数据库配置由 mysql.properties 管理（通过 MySQLPropertiesConfig 加载）
+  # 不在此处配置 datasource，避免覆盖 mysql.properties 的配置
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: false
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        use_sql_comments: true
+
+# ZooKeeper配置由 zkclient_conf.properties 管理（通过 @EnableDciClient 自动加载）
+# 不需要在此处配置 namespace，与其他微服务（neMgr, taskInfo等）保持一致
+
+# 设备维护配置
+device-maintenance:
+  version: 1.0.0
+  # 升级/回滚任务状态轮询配置（容错机制）
+  polling:
+    enabled: true # 是否启用轮询（默认true）
+    fixed-rate-ms: 300000 # 轮询频率（毫秒，5分钟=300000）
+    task-timeout-minutes: 5 # 首次轮询阈值（分钟，任务超过此时间开始轮询）
+    max-wait-minutes: 60 # 最大等待时间（分钟，超过则标记失败）
+  # 全网设备自动备份配置
+  network-backup:
+    enabled: true # 是否启用全网自动备份
+    cron: 0 0 1 * * ? # 执行时间：每天凌晨1点
+    sftp-server: "device" # SFTP服务器名称（需在ftpServer服务中存在）
+    base-path: "/upload/deviceDB" # 备份根路径
+    # 分批下发配置（避免设备端处理不过来）
+    batch-size: 20 # 每批下发的设备数量（默认20，设为0或负数表示不分批）
+    batch-interval-seconds: 30 # 批次间隔时间（秒，默认30秒，下发完一批后等待此时间再下发下一批）
+    # 过期备份清理配置
+    cleanup:
+      enabled: true # 是否启用过期备份清理（默认true）
+      retention-days: 7 # 备份保留天数（默认7天，超过此天数的备份将被清理）
+  external-services: neMgr,taskInfo,ftpServer,notifier,allocator
+  external-service-health-path: /actuator/health
+  service-health-path-overrides:
+    device-maintenance: /device-maintenance/actuator/health
+  zk:
+    base-path: /dciworld/${NAMESPACE}/STATE
+    search-paths:
+      - "/dciworld/${NAMESPACE}/STATE/{service}"
+      - "/dciworld/${NAMESPACE}/STATE/{service_lower}"
+      - "/dciworld/${NAMESPACE}/STATE/{service_upper}"
+      - "/STATE/{service}"
+      - "/STATE/{service_lower}"
+      - "/STATE/{service_upper}"
+      - "/services/{service}"
+      - "/services/{service_lower}"
+      - "/services/{service_upper}"
+
+# SFTP服务器配置（Shanghai）
+sftp-server:
+  base-url: http://127.0.0.1:18280
+
+# Mock服务配置 - 设置为false使用真实服务
+app:
+  mock:
+    services:
+      nemgr: false # false=使用真实neMgr RPC调用，true=使用Mock模拟
+      adapter: true
+      scheduler: true
+    delays:
+      download: 30
+      backup: 45
+      upgrade: 60
+      rollback: 20
+      commit: 15
+      restore: 35
+    success-rates:
+      download: 90
+      backup: 95
+      upgrade: 85
+      rollback: 95
+      commit: 98
+      restore: 80
+    thread-pool:
+      maxConcurrentBackups: 20
+      corePoolSize: 10
+      maxPoolSize: 50
+      queueCapacity: 100
+    devices:
+      totalCount: 5
+      enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+
+kafka:
+  bootstrap-servers: 127.0.0.1:9092,127.0.0.1:9093,127.0.0.1:9094
+  consumer:
+    group-id: ops-tool
+    auto-offset-reset: latest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  topic:
+    element: element-change
+    broadcast: broadcastMessageTopic
+    object-update: objectUpdateTopic
+  notifications:
+    debug: true # 启用调试存储功能，将接收到的通知存储到内存供 /api/notifications/* 接口查询
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mongo:
+      enabled: false # 禁用 MongoDB 健康检查（本地调试时避免连接超时）
+
+# 定时任务调度器配置
+task:
+  scheduler:
+    # 线程池配置
+    core-pool-size: 10 # 核心线程数
+    max-pool-size: 20 # 最大线程数
+    queue-capacity: 100 # 队列容量
+    # 过期任务阈值
+    expiry-threshold-hours: 1 # 超过1小时未执行的任务标记为EXPIRED
+
+# 批次操作线程池配置（统一线程池）
+# 注意：线程数是总体计数，不按命令分别计数
+# download、backup、upgrade、commit、rollback 都使用这个线程池
+batch:
+  executor:
+    core-pool-size: 10 # 核心线程数（始终存活）
+    max-pool-size: 20 # 最大线程数（所有 RPC 操作的总并发数）
+    queue-capacity: 10000 # 队列容量（超过核心线程数的任务进入队列）
+    thread-name-prefix: "batch-rpc-" # 线程名称前缀（日志追踪）
+    await-termination-seconds: 60 # 等待终止时间（秒）
+
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    org.springframework.web: INFO
+    org.springframework.kafka: INFO
+    net.flex.dci.devicemaintenance: INFO
+    devicemaintenance.integration.ServiceDiscoveryClient: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+kafka:
+  bootstrap-servers: ${KAFKA_BROKER}
+server:
+  address: ${myIp}

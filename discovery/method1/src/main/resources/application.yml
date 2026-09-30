@@ -1,0 +1,36 @@
+server:
+  port: @port.discover@
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+logging:
+  level:
+    net.flex.dci: debug
+    org.springframework: OFF
+    com.mongodb: OFF
+    org.apache: OFF
+    org.mongodb: OFF
+    org.opendaylight: OFF
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+logging:
+  level:
+    net.flex.dci: info
+    org.springframework: OFF
+    com.mongodb: OFF
+    org.apache: OFF
+    org.mongodb: OFF
+    org.opendaylight: OFF
+   

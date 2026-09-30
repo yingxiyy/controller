@@ -1,0 +1,2017 @@
+{
+  "info": {
+    "_postman_id": "ext-services-001",
+    "name": "External Services (TaskInfo & Others)",
+    "description": "测试其他微服务提供的接口，如TaskInfo、Gateway等",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get OAuth2 Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.access_token).to.exist;",
+                  "    pm.environment.set(\"access_token\", jsonData.access_token);",
+                  "    pm.environment.set(\"token_type\", jsonData.token_type);",
+                  "});",
+                  "",
+                  "console.log(\"Token获取成功，有效期:\", pm.response.json().expires_in, \"秒\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{auth_base}}/oauth2/token?username={{oauth_username}}&password={{oauth_password}}&client_id={{oauth_client_id}}&client_secret={{oauth_client_secret}}&scope={{oauth_scope}}&grant_type={{oauth_grant_type}}",
+              "host": [
+                "{{auth_base}}"
+              ],
+              "path": [
+                "oauth2",
+                "token"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{oauth_username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{oauth_password}}"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{oauth_client_id}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{oauth_client_secret}}"
+                },
+                {
+                  "key": "scope",
+                  "value": "{{oauth_scope}}"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "{{oauth_grant_type}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "TaskInfo Service",
+      "item": [
+        {
+          "name": "查询所有任务",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has task list\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.content).to.exist;",
+                  "    pm.expect(jsonData.content.taskInfoList).to.be.an('array');",
+                  "    console.log(\"查询到任务数:\", jsonData.content.taskInfoList.length);",
+                  "    console.log(\"总任务数:\", jsonData.content.totalElements);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{taskinfo_base}}/taskinfo?page=0&limit=20&sort=desc&order=id",
+              "host": [
+                "{{taskinfo_base}}"
+              ],
+              "path": [
+                "taskinfo"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "页码"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "每页数量"
+                },
+                {
+                  "key": "sort",
+                  "value": "desc",
+                  "description": "排序方向"
+                },
+                {
+                  "key": "order",
+                  "value": "id",
+                  "description": "排序字段"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "按资源类型查询 (device)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All tasks are device type\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.content.taskInfoList.length > 0) {",
+                  "        jsonData.content.taskInfoList.forEach(function(task) {",
+                  "            pm.expect(task.resourceType).to.eql('device');",
+                  "        });",
+                  "    }",
+                  "    console.log(\"设备类型任务数:\", jsonData.content.taskInfoList.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{taskinfo_base}}/taskinfo?page=0&limit=20&resourceType=device",
+              "host": [
+                "{{taskinfo_base}}"
+              ],
+              "path": [
+                "taskinfo"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "resourceType",
+                  "value": "device",
+                  "description": "筛选设备类型任务"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "按操作类型查询 (updateDevice)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All tasks are updateDevice type\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.content.taskInfoList.length > 0) {",
+                  "        jsonData.content.taskInfoList.forEach(function(task) {",
+                  "            pm.expect(task.actionType).to.eql('updateDevice');",
+                  "        });",
+                  "    }",
+                  "    console.log(\"设备更新任务数:\", jsonData.content.taskInfoList.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{taskinfo_base}}/taskinfo?page=0&limit=20&actionType=updateDevice",
+              "host": [
+                "{{taskinfo_base}}"
+              ],
+              "path": [
+                "taskinfo"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "actionType",
+                  "value": "updateDevice"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "查询任务详情 (by ID)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has task detail\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.content).to.exist;",
+                  "    console.log(\"任务ID:\", jsonData.content.id);",
+                  "    console.log(\"资源ID:\", jsonData.content.resourceId);",
+                  "    console.log(\"任务状态:\", jsonData.content.successfully ? \"成功\" : \"失败\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{taskinfo_base}}/taskinfo/:taskId",
+              "host": [
+                "{{taskinfo_base}}"
+              ],
+              "path": [
+                "taskinfo",
+                ":taskId"
+              ],
+              "variable": [
+                {
+                  "key": "taskId",
+                  "value": "1",
+                  "description": "任务ID (请替换为实际ID)"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "查询任务detail字段 (JSON)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Detail contains device-maintenance fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.content) {",
+                  "        pm.expect(jsonData.content.taskId).to.exist;",
+                  "        pm.expect(jsonData.content.taskType).to.exist;",
+                  "        pm.expect(jsonData.content.deviceId).to.exist;",
+                  "        console.log(\"任务类型:\", jsonData.content.taskType);",
+                  "        console.log(\"设备ID:\", jsonData.content.deviceId);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{taskinfo_base}}/taskinfo/detail/:taskId",
+              "host": [
+                "{{taskinfo_base}}"
+              ],
+              "path": [
+                "taskinfo",
+                "detail",
+                ":taskId"
+              ],
+              "variable": [
+                {
+                  "key": "taskId",
+                  "value": "1",
+                  "description": "任务ID (请替换为实际ID)"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "删除任务",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Task deleted successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include(\"success\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{taskinfo_base}}/taskinfo/delete/:taskId",
+              "host": [
+                "{{taskinfo_base}}"
+              ],
+              "path": [
+                "taskinfo",
+                "delete",
+                ":taskId"
+              ],
+              "variable": [
+                {
+                  "key": "taskId",
+                  "value": "1",
+                  "description": "任务ID (请替换为实际ID)"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Device Management (NMS)",
+      "item": [
+        {
+          "name": "分页获取设备列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has device nodes\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    pm.expect(jsonData.output.node).to.be.an('array');",
+                  "    console.log(\"设备总数:\", jsonData.output['total-records']);",
+                  "    console.log(\"当前页设备数:\", jsonData.output.node.length);",
+                  "    ",
+                  "    // 保存第一个设备的node-id用于后续测试",
+                  "    if (jsonData.output.node.length > 0) {",
+                  "        pm.environment.set(\"test_node_id\", jsonData.output.node[0]['node-id']);",
+                  "        pm.environment.set(\"test_device_ip\", jsonData.output.node[0].physical.ip);",
+                  "        console.log(\"测试设备ID:\", jsonData.output.node[0]['node-id']);",
+                  "        console.log(\"测试设备IP:\", jsonData.output.node[0].physical.ip);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"topology-ref\": \"otn-phy-topology\",\n    \"start-pos\": 0,\n    \"how-many\": 20,\n    \"sort-infos\": [],\n    \"filter\": \"\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nms_base}}/restconf/operations/nms:get-phy-node-paged",
+              "host": [
+                "{{nms_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "nms:get-phy-node-paged"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "获取单个设备信息 (使用分页接口)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has device node\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    pm.expect(jsonData.output.node).to.be.an('array');",
+                  "    ",
+                  "    // 从返回的设备列表中找到目标设备",
+                  "    var targetNodeId = pm.environment.get(\"test_node_id\");",
+                  "    var targetDevice = jsonData.output.node.find(function(node) {",
+                  "        return node['node-id'] === targetNodeId;",
+                  "    });",
+                  "    ",
+                  "    if (targetDevice) {",
+                  "        console.log(\"✅ 找到目标设备:\", targetNodeId);",
+                  "        console.log(\"  设备名称:\", targetDevice.physical['friendly-name']);",
+                  "        console.log(\"  设备IP:\", targetDevice.physical.ip);",
+                  "        console.log(\"  通信状态:\", targetDevice.physical['communication-status']);",
+                  "        console.log(\"  运行状态:\", targetDevice.physical['operational-state']);",
+                  "    } else {",
+                  "        console.log(\"⚠️  未找到设备:\", targetNodeId, \"(共返回\", jsonData.output.node.length, \"个设备)\");",
+                  "    }",
+                  "});",
+                  "",
+                  "// 注意: nms:get-phy-node接口存在输入解析问题，无法正常工作",
+                  "// 因此改用 nms:get-phy-node-paged 接口并在客户端过滤目标设备"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"topology-ref\": \"otn-phy-topology\",\n    \"start-pos\": 0,\n    \"how-many\": 1000,\n    \"sort-infos\": [],\n    \"filter\": \"\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "description": "使用get-phy-node-paged接口获取所有设备，然后在测试脚本中过滤目标设备。\n注意: get-phy-node接口存在输入验证问题，在NMS服务中无法正常工作 (报错: JSONParseException - invalid input)"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{nms_base}}/restconf/operations/nms:get-phy-node-paged",
+              "host": [
+                "{{nms_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "nms:get-phy-node-paged"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "获取单个设备的详细信息。\n\n⚠️ 注意: 原本应使用 nms:get-phy-node 接口，但该接口在当前NMS版本中存在输入解析问题（BaseRpc.parseInput失败），因此改用 nms:get-phy-node-paged 接口获取所有设备，然后在客户端过滤目标设备。\n\n已验证可用: get-phy-node-paged ✅\n已知问题: get-phy-node ❌ (JSONParseException)"
+          },
+          "response": []
+        },
+        {
+          "name": "获取非填充设备列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All devices are not stuffed\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.output && jsonData.output.node) {",
+                  "        jsonData.output.node.forEach(function(node) {",
+                  "            pm.expect(node.physical.stuffed).to.be.false;",
+                  "        });",
+                  "        console.log(\"非填充设备数:\", jsonData.output.node.length);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"topology-ref\": \"otn-phy-topology\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nms_base}}/restconf/operations/nms:get-phy-node-unstuffed",
+              "host": [
+                "{{nms_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "nms:get-phy-node-unstuffed"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "筛选COHERENT厂商设备",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All devices are COHERENT\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.output && jsonData.output.node) {",
+                  "        var coherentCount = 0;",
+                  "        jsonData.output.node.forEach(function(node) {",
+                  "            if (node.physical['vendor-name'] === 'COHERENT') {",
+                  "                coherentCount++;",
+                  "            }",
+                  "        });",
+                  "        console.log(\"COHERENT设备数:\", coherentCount);",
+                  "        console.log(\"总设备数:\", jsonData.output.node.length);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"topology-ref\": \"otn-phy-topology\",\n    \"start-pos\": 0,\n    \"how-many\": 50,\n    \"sort-infos\": [],\n    \"filter\": \"vendor-name:COHERENT\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nms_base}}/restconf/operations/nms:get-phy-node-paged",
+              "host": [
+                "{{nms_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "nms:get-phy-node-paged"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "筛选在线设备",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Filter online devices\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.output && jsonData.output.node) {",
+                  "        var upCount = 0;",
+                  "        jsonData.output.node.forEach(function(node) {",
+                  "            if (node.physical['operational-state'] === 'up') {",
+                  "                upCount++;",
+                  "            }",
+                  "        });",
+                  "        console.log(\"在线设备数:\", upCount);",
+                  "        console.log(\"总设备数:\", jsonData.output.node.length);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"topology-ref\": \"otn-phy-topology\",\n    \"start-pos\": 0,\n    \"how-many\": 50,\n    \"sort-infos\": [],\n    \"filter\": \"operational-state:up\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nms_base}}/restconf/operations/nms:get-phy-node-paged",
+              "host": [
+                "{{nms_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "nms:get-phy-node-paged"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "按友好名称排序",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Devices are sorted\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.output && jsonData.output.node && jsonData.output.node.length > 1) {",
+                  "        console.log(\"前5个设备名称:\");",
+                  "        for (var i = 0; i < Math.min(5, jsonData.output.node.length); i++) {",
+                  "            console.log((i+1) + \". \" + jsonData.output.node[i].physical['friendly-name']);",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"topology-ref\": \"otn-phy-topology\",\n    \"start-pos\": 0,\n    \"how-many\": 20,\n    \"sort-infos\": [\n      {\n        \"sort-order\": \"ascending\",\n        \"sort-key\": \"friendly-name\"\n      }\n    ],\n    \"filter\": \"\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nms_base}}/restconf/operations/nms:get-phy-node-paged",
+              "host": [
+                "{{nms_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "nms:get-phy-node-paged"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Device Management Operations (neMgr)",
+      "item": [
+        {
+          "name": "获取设备数据",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has device data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    console.log(\"设备数据:\", JSON.stringify(jsonData.output, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"node-id\": \"{{test_node_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nemgr_base}}/restconf/operations/eml:get-ne-data",
+              "host": [
+                "{{nemgr_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "eml:get-ne-data"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "开始监控设备",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Supervision started\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    console.log(\"监控启动结果:\", JSON.stringify(jsonData, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"node-id\": \"{{test_node_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nemgr_base}}/restconf/operations/eml-manager:start-supervise-ne",
+              "host": [
+                "{{nemgr_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "eml-manager:start-supervise-ne"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "停止监控设备",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Supervision stopped\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    console.log(\"监控停止结果:\", JSON.stringify(jsonData, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"node-id\": \"{{test_node_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nemgr_base}}/restconf/operations/eml-manager:stop-supervise-ne",
+              "host": [
+                "{{nemgr_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "eml-manager:stop-supervise-ne"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "软件下载 (Software Download)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Software download initiated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    console.log(\"软件下载结果:\", JSON.stringify(jsonData.output, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"node-id\": \"{{test_node_id}}\",\n    \"vendor-type\": \"{{test_device_vendor}}\",\n    \"file-name\": \"{{test_software_package}}\",\n    \"software-operation\": \"SWOP_DOWNLOAD\",\n    \"sftp-server\": {\n      \"address\": \"{{default_sftp_address}}\",\n      \"port\": {{default_sftp_port}},\n      \"user\": \"{{default_sftp_user}}\",\n      \"password\": \"{{default_sftp_password}}\",\n      \"download-path\": \"{{software_source_path}}\"\n    },\n    \"telnet-info\": {\n      \"address\": \"{{test_device_ip}}\",\n      \"port\": {{test_device_port}},\n      \"type\": \"{{telnet_type}}\",\n      \"user\": \"{{test_device_username}}\",\n      \"password\": \"{{test_device_password}}\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nemgr_base}}/restconf/operations/eml-manager:ne-software-operate",
+              "host": [
+                "{{nemgr_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "eml-manager:ne-software-operate"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "软件激活 (Software Activate)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Software activation initiated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    console.log(\"软件激活结果:\", JSON.stringify(jsonData.output, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"node-id\": \"{{test_node_id}}\",\n    \"vendor-type\": \"{{test_device_vendor}}\",\n    \"file-name\": \"{{test_software_package}}\",\n    \"software-operation\": \"SWOP_ACTIVATE\",\n    \"sftp-server\": {\n      \"address\": \"{{default_sftp_address}}\",\n      \"port\": {{default_sftp_port}},\n      \"user\": \"{{default_sftp_user}}\",\n      \"password\": \"{{default_sftp_password}}\"\n    },\n    \"telnet-info\": {\n      \"address\": \"{{test_device_ip}}\",\n      \"port\": {{test_device_port}},\n      \"type\": \"{{telnet_type}}\",\n      \"user\": \"{{test_device_username}}\",\n      \"password\": \"{{test_device_password}}\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nemgr_base}}/restconf/operations/eml-manager:ne-software-operate",
+              "host": [
+                "{{nemgr_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "eml-manager:ne-software-operate"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "软件升级确认 (Software Commit)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Software commit successful\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    console.log(\"软件确认结果:\", JSON.stringify(jsonData.output, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"node-id\": \"{{test_node_id}}\",\n    \"vendor-type\": \"{{test_device_vendor}}\",\n    \"software-operation\": \"SWOP_COMMIT\",\n    \"sftp-server\": {\n      \"address\": \"{{default_sftp_address}}\",\n      \"port\": {{default_sftp_port}},\n      \"user\": \"{{default_sftp_user}}\",\n      \"password\": \"{{default_sftp_password}}\"\n    },\n    \"telnet-info\": {\n      \"address\": \"{{test_device_ip}}\",\n      \"port\": {{test_device_port}},\n      \"type\": \"{{telnet_type}}\",\n      \"user\": \"{{test_device_username}}\",\n      \"password\": \"{{test_device_password}}\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nemgr_base}}/restconf/operations/eml-manager:ne-software-operate",
+              "host": [
+                "{{nemgr_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "eml-manager:ne-software-operate"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "软件回滚 (Software Rollback)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Software rollback successful\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    console.log(\"软件回滚结果:\", JSON.stringify(jsonData.output, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"node-id\": \"{{test_node_id}}\",\n    \"vendor-type\": \"{{test_device_vendor}}\",\n    \"software-operation\": \"SWOP_ROLLBACK\",\n    \"sftp-server\": {\n      \"address\": \"{{default_sftp_address}}\",\n      \"port\": {{default_sftp_port}},\n      \"user\": \"{{default_sftp_user}}\",\n      \"password\": \"{{default_sftp_password}}\"\n    },\n    \"telnet-info\": {\n      \"address\": \"{{test_device_ip}}\",\n      \"port\": {{test_device_port}},\n      \"type\": \"{{telnet_type}}\",\n      \"user\": \"{{test_device_username}}\",\n      \"password\": \"{{test_device_password}}\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nemgr_base}}/restconf/operations/eml-manager:ne-software-operate",
+              "host": [
+                "{{nemgr_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "eml-manager:ne-software-operate"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "数据库备份 (Database Backup)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Database backup initiated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    console.log(\"数据库备份结果:\", JSON.stringify(jsonData.output, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"node-id\": \"{{test_node_id}}\",\n    \"vendor-type\": \"{{test_device_vendor}}\",\n    \"file-name\": \"device_backup_{{$timestamp}}.db\",\n    \"db-operation\": \"DBOP_BACKUP\",\n    \"sftp-server\": {\n      \"address\": \"{{default_sftp_address}}\",\n      \"port\": {{default_sftp_port}},\n      \"user\": \"{{default_sftp_user}}\",\n      \"password\": \"{{default_sftp_password}}\",\n      \"upload-path\": \"{{backup_target_path}}\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nemgr_base}}/restconf/operations/eml-manager:ne-database-operate",
+              "host": [
+                "{{nemgr_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "eml-manager:ne-database-operate"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "数据库恢复 (Database Restore)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Database restore initiated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    console.log(\"数据库恢复结果:\", JSON.stringify(jsonData.output, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"node-id\": \"{{test_node_id}}\",\n    \"vendor-type\": \"{{test_device_vendor}}\",\n    \"file-name\": \"device_backup_20250930.db\",\n    \"db-operation\": \"DBOP_RESTORE\",\n    \"sftp-server\": {\n      \"address\": \"{{default_sftp_address}}\",\n      \"port\": {{default_sftp_port}},\n      \"user\": \"{{default_sftp_user}}\",\n      \"password\": \"{{default_sftp_password}}\",\n      \"download-path\": \"{{backup_target_path}}\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{nemgr_base}}/restconf/operations/eml-manager:ne-database-operate",
+              "host": [
+                "{{nemgr_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "eml-manager:ne-database-operate"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "SFTP Server Management",
+      "item": [
+        {
+          "name": "获取SFTP服务器列表 (List All Servers)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"SFTP servers retrieved successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData['ftp-servers']).to.exist;",
+                  "    pm.expect(jsonData['ftp-servers']['ftp-server']).to.be.an('array');",
+                  "    ",
+                  "    var servers = jsonData['ftp-servers']['ftp-server'];",
+                  "    console.log(\"═══════════════════════════════════════════\");",
+                  "    console.log(\"📋 SFTP服务器列表 (共\", servers.length, \"个)\");",
+                  "    console.log(\"═══════════════════════════════════════════\");",
+                  "    ",
+                  "    servers.forEach(function(server, index) {",
+                  "        console.log((index + 1) + \". \" + server.name);",
+                  "        console.log(\"   ID:       \" + server.id);",
+                  "        console.log(\"   地址:     \" + server.address + \":\" + server.port);",
+                  "        console.log(\"   类型:     \" + server.type);",
+                  "        console.log(\"   用户:     \" + server.user);",
+                  "        console.log(\"   ---\");",
+                  "    });",
+                  "    ",
+                  "    // 保存第一个服务器名称供后续测试使用",
+                  "    if (servers.length > 0) {",
+                  "        pm.environment.set(\"default_sftp_server_name\", servers[0].name);",
+                  "        pm.environment.set(\"default_sftp_server_id\", servers[0].id);",
+                  "        console.log(\"✅ 已保存默认SFTP服务器:\");",
+                  "        console.log(\"   名称: \" + servers[0].name);",
+                  "        console.log(\"   ID: \" + servers[0].id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{sftpserver_config_base}}",
+              "host": [
+                "{{sftpserver_config_base}}"
+              ],
+              "path": [
+                "restconf",
+                "config",
+                "ftp-server:ftp-servers"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "创建SFTP服务器 (Create Server)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"SFTP server created successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    console.log(\"创建SFTP服务器结果:\", JSON.stringify(jsonData.output, null, 2));",
+                  "    ",
+                  "    // 保存服务器名称供后续测试使用",
+                  "    pm.environment.set(\"test_sftp_server_name\", \"test-sftp-server\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"id\": \"test-sftp-001\",\n    \"name\": \"test-sftp-server\",\n    \"address\": \"{{default_sftp_address}}\",\n    \"port\": {{default_sftp_port}},\n    \"type\": \"SFTP\",\n    \"user\": \"{{default_sftp_user}}\",\n    \"password\": \"{{default_sftp_password}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{sftpserver_base}}/restconf/operations/ftp-server:create-ftp-server",
+              "host": [
+                "{{sftpserver_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "ftp-server:create-ftp-server"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "更新SFTP服务器 (Update Server)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"SFTP server updated successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    console.log(\"更新SFTP服务器结果:\", JSON.stringify(jsonData.output, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"id\": \"test-sftp-001\",\n    \"name\": \"{{test_sftp_server_name}}\",\n    \"address\": \"{{default_sftp_address}}\",\n    \"port\": {{default_sftp_port}},\n    \"type\": \"SFTP\",\n    \"user\": \"{{default_sftp_user}}\",\n    \"password\": \"new_password_123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{sftpserver_base}}/restconf/operations/ftp-server:update-ftp-server",
+              "host": [
+                "{{sftpserver_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "ftp-server:update-ftp-server"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "列出目录文件 (List Files)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Files listed successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    if (jsonData.output.file) {",
+                  "        console.log(\"文件总数:\", jsonData.output.file.length);",
+                  "        console.log(\"文件列表:\");",
+                  "        jsonData.output.file.forEach(function(file) {",
+                  "            console.log(\"  - \" + file.name + \" (\" + file.type + \", \" + file.size + \" bytes)\");",
+                  "        });",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"server-name\": \"{{default_sftp_server_name}}\",\n    \"folder-name\": \"{{software_source_path}}/\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{sftpserver_base}}/restconf/operations/ftp-server:list",
+              "host": [
+                "{{sftpserver_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "ftp-server:list"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "创建目录 (Make Directory)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Directory created successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    pm.expect(jsonData.output.result).to.exist;",
+                  "    console.log(\"创建目录结果:\", jsonData.output.result);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"server-name\": \"{{default_sftp_server_name}}\",\n    \"remote-folder\": \"{{backup_target_path}}/test-{{$timestamp}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{sftpserver_base}}/restconf/operations/ftp-server:mkdir",
+              "host": [
+                "{{sftpserver_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "ftp-server:mkdir"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "上传文件 (Upload File)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"File uploaded successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    pm.expect(jsonData.output.result).to.exist;",
+                  "    console.log(\"上传文件结果:\", jsonData.output.result);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"server-name\": \"{{default_sftp_server_name}}\",\n    \"remote-folder\": \"{{backup_target_path}}/\",\n    \"file-name\": \"/tmp/local-test-file.txt\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{sftpserver_base}}/restconf/operations/ftp-server:put",
+              "host": [
+                "{{sftpserver_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "ftp-server:put"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "下载文件 (Download File)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"File downloaded successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    pm.expect(jsonData.output.result).to.exist;",
+                  "    console.log(\"下载文件结果:\", jsonData.output.result);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"server-name\": \"{{default_sftp_server_name}}\",\n    \"remote-folder\": \"{{backup_target_path}}/\",\n    \"file-name\": \"/tmp/downloaded-file.txt\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{sftpserver_base}}/restconf/operations/ftp-server:get",
+              "host": [
+                "{{sftpserver_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "ftp-server:get"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "删除SFTP服务器 (Delete Server)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"SFTP server deleted successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.output).to.exist;",
+                  "    console.log(\"删除SFTP服务器结果:\", JSON.stringify(jsonData.output, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"id\": \"test-sftp-001\",\n    \"name\": \"{{test_sftp_server_name}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{sftpserver_base}}/restconf/operations/ftp-server:delete-ftp-server",
+              "host": [
+                "{{sftpserver_base}}"
+              ],
+              "path": [
+                "restconf",
+                "operations",
+                "ftp-server:delete-ftp-server"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Integration Tests",
+      "item": [
+        {
+          "name": "端到端测试: 创建任务并查询TaskInfo",
+          "item": [
+            {
+              "name": "Step 1: 创建备份任务",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Task created\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.environment.set(\"test_task_id\", jsonData.data.taskId);",
+                      "    console.log(\"任务已创建:\", jsonData.data.taskId);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"input\": {\n    \"deviceId\": \"test-device-001\",\n    \"filePath\": \"/backup/integration-test\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{device_api_base}}/device-maintenance:backup-device-data",
+                  "host": [
+                    "{{device_api_base}}"
+                  ],
+                  "path": [
+                    "device-maintenance:backup-device-data"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 2: 等待5秒 (任务开始执行)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "console.log(\"等待5秒，让任务开始执行...\");",
+                      "setTimeout(function(){}, 5000);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{taskinfo_base}}/taskinfo?resourceType=device&limit=1",
+                  "host": [
+                    "{{taskinfo_base}}"
+                  ],
+                  "path": [
+                    "taskinfo"
+                  ],
+                  "query": [
+                    {
+                      "key": "resourceType",
+                      "value": "device"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 3: 在TaskInfo中查询任务",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Task found in TaskInfo\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.content.taskInfoList.length).to.be.above(0);",
+                      "    ",
+                      "    // 查找我们创建的任务",
+                      "    var ourTask = jsonData.content.taskInfoList.find(t => ",
+                      "        t.resourceId === 'test-device-001'",
+                      "    );",
+                      "    ",
+                      "    if (ourTask) {",
+                      "        console.log(\"✅ 在TaskInfo中找到任务:\", ourTask.id);",
+                      "        console.log(\"  资源ID:\", ourTask.resourceId);",
+                      "        console.log(\"  资源类型:\", ourTask.resourceType);",
+                      "        console.log(\"  操作类型:\", ourTask.actionType);",
+                      "        console.log(\"  成功状态:\", ourTask.successfully);",
+                      "    } else {",
+                      "        console.log(\"⚠️ 未找到任务，可能还未同步到TaskInfo\");",
+                      "    }",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{taskinfo_base}}/taskinfo?resourceType=device&limit=10",
+                  "host": [
+                    "{{taskinfo_base}}"
+                  ],
+                  "path": [
+                    "taskinfo"
+                  ],
+                  "query": [
+                    {
+                      "key": "resourceType",
+                      "value": "device"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

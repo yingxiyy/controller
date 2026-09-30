@@ -1,0 +1,1040 @@
+{
+  "vendorName": "accelink",
+  "productType": "O2-F-1",
+  "yangModel": "ByteDance",
+  "nodeType": "OD",
+  "cardClass": [
+    {
+      "name": "MUXPANEL",
+      "card": [
+        {
+          "cardType": "MUXPANEL_32C32L",
+          "vendorType": "MUXPANEL_32C32L",
+          "wdmBand": "C+L",
+          "width": 1,
+          "height": 1,
+          "possibleSlot": [
+            50,
+            51
+          ],
+          "ports": [
+            {
+              "name": "MUX",
+              "portType": "MUX-MUX",
+              "supportedSignal": [],
+              "biDirection": true,
+              "index": "0"
+            },
+            {
+              "name": "M?D?,1,64,1",
+              "portType": "MUX-Channel",
+              "supportedSignal": [
+                "OCH"
+              ],
+              "biDirection": true,
+              "index": "?,5,69,1"
+            },
+            {
+              "name": "MPO?,1,4,1",
+              "portType": "OPC-MPO",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "adminEnable": true,
+              "index": "?,1,4,1"
+            },
+            {
+              "name": "AUX",
+              "portType": "Other",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "index": "70"
+            }
+          ],
+          "internalLinks": [
+            {
+              "biDirection": true,
+              "from": "M?D?,1,8,1",
+              "to": "MPO1"
+            },
+            {
+              "biDirection": true,
+              "from": "M?D?,33,40,1",
+              "to": "MPO1"
+            },
+            {
+              "biDirection": true,
+              "from": "M?D?,9,16,1",
+              "to": "MPO2"
+            },
+            {
+              "biDirection": true,
+              "from": "M?D?,41,48,1",
+              "to": "MPO2"
+            },
+            {
+              "biDirection": true,
+              "from": "M?D?,17,24,1",
+              "to": "MPO3"
+            },
+            {
+              "biDirection": true,
+              "from": "M?D?,49,56,1",
+              "to": "MPO3"
+            },
+            {
+              "biDirection": true,
+              "from": "M?D?,25,32,1",
+              "to": "MPO4"
+            },
+            {
+              "biDirection": true,
+              "from": "M?D?,57,64,1",
+              "to": "MPO4"
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "multiple": 3,
+              "from": "MPO?,1,3,1",
+              "to": [
+                {
+                  "cardType": "IRA_CL",
+                  "port": "MPO?,1,3,1"
+                }
+              ]
+            },
+            {
+              "initiated": false,
+              "biDirection": true,
+              "from": "MPO4",
+              "multiple": 8,
+              "mdPort": "M?D?,25,32,1",
+              "to": [
+                {
+                  "cardType": "IRA_CL",
+                  "port": "EXP?,1,8,1"
+                }
+              ]
+            },
+            {
+              "initiated": false,
+              "biDirection": true,
+              "from": "MPO4",
+              "multiple": 8,
+              "mdPort": "M?D?,57,64,1",
+              "to": [
+                {
+                  "cardType": "IRA_CL",
+                  "port": "EXP?,1,8,1"
+                }
+              ]
+            }
+          ],
+          "externalCrossConnections": [
+            {
+              "initiated": false,
+              "isFixed": false,
+              "type": "OCH",
+              "biDirection": true,
+              "multiple": 64,
+              "description": "MUXPANEL-1-<slot>-<from>/<central-frequency>",
+              "from": {
+                "port": "M?D?,1,64,1"
+              },
+              "to": {
+                "cardType": "IRA_CL",
+                "port": "LINE"
+              },
+              "wssChannel": {
+                "voaUpdateModel": "Manually",
+                "sourceToDestVoa": 3.00,
+                "destToSourceVoa": 3.00,
+                "lowerFrequency": "<lower-frequency>",
+                "upperFrequency": "<upper-frequency>",
+                "params": [
+                  {
+                    "name": "ase-control-mode",
+                    "value": "ASE_AUTO"
+                  },
+                  {
+                    "name": "ase-injection-threshold",
+                    "value": "-10.00"
+                  },
+                  {
+                    "name": "source-to-dest-power-control-mode",
+                    "value": "APC"
+                  },
+                  {
+                    "name": "auto-control-active-threshold-dest",
+                    "value": "0.5"
+                  },
+                  {
+                    "name": "auto-control-range",
+                    "value": "6"
+                  },
+                  {
+                    "name": "slice-type",
+                    "value": "NORMAL"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IRA",
+      "card": [
+        {
+          "cardType": "IRA_CL",
+          "vendorType": "IRA_CL",
+          "wdmBand": "C+L",
+          "width": 4,
+          "height": 1,
+          "possibleSlot": [
+            1,
+            5
+          ],
+          "ports": [
+            {
+              "name": "MPO?,1,3,1",
+              "portType": "WSS-Mesh",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "adminEnable": true,
+              "index": "?,3,5,1"
+            },
+            {
+              "name": "LINE",
+              "portType": "OA-Line",
+              "transceiver": {
+                "name": "TRANSCEIVER?OSC",
+                "initiated": true
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true,
+              "adminEnable": true,
+              "index": "0"
+            },
+            {
+              "name": "SIG",
+              "portType": "OA-Sig",
+              "transceiver": {
+                "name": "TRANSCEIVER?OSC",
+                "initiated": true
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true,
+              "adminEnable": true,
+              "index": "1"
+            },
+            {
+              "name": "AUX",
+              "portType": "Other",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "index": "15"
+            },
+            {
+              "name": "EXP?,1,8,1",
+              "portType": "WSS-Mesh",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "index": "?,6,13,1"
+            },
+            {
+              "name": "EXP33",
+              "portType": "WSS-Sig",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "adminEnable": true,
+              "index": "2"
+            },
+            {
+              "name": "MF",
+              "portType": "Other",
+              "supportedSignal": [
+                "OMS"
+              ],
+              "biDirection": true,
+              "index": "14"
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "multiple": 3,
+              "from": "MPO?,1,3,1",
+              "to": [
+                {
+                  "cardType": "MUXPANEL_32C32L",
+                  "port": "MPO?,1,3,1"
+                }
+              ]
+            },
+            {
+              "biDirection": true,
+              "from": "LINE",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "IRA_CL",
+                  "port": "LINE"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "OLP3_3",
+                  "port": "?SIG,1,3,1"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA_CL",
+                  "port": "LINE_WEST"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "DGE_CL",
+                  "port": "LINE_WEST"
+                }
+              ]
+            },
+            {
+              "initiated": false,
+              "biDirection": true,
+              "from": "EXP1",
+              "to": [
+                {
+                  "cardType": "IRA_CL",
+                  "port": "EXP1"
+                }
+              ]
+            },
+            {
+              "initiated": false,
+              "biDirection": true,
+              "multiple": 8,
+              "from": "EXP?,1,8,1",
+              "to": [
+                {
+                  "cardType": "MUXPANEL_32C32L",
+                  "port": "MPO4"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "initiated": true,
+              "type": "BA",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-BAC",
+              "from": {
+                "port": "SIG",
+                "layer": "C"
+              },
+              "to": {
+                "port": "LINE",
+                "layer": "C"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "initiated": true,
+              "type": "PA",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-PAC",
+              "from": {
+                "port": "LINE",
+                "layer": "C"
+              },
+              "to": {
+                "port": "SIG",
+                "layer": "C"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "initiated": true,
+              "type": "BA",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-BAL",
+              "from": {
+                "port": "SIG",
+                "layer": "L"
+              },
+              "to": {
+                "port": "LINE",
+                "layer": "L"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "initiated": true,
+              "type": "PA",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-PAL",
+              "from": {
+                "port": "LINE",
+                "layer": "L"
+              },
+              "to": {
+                "port": "SIG",
+                "layer": "L"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "initiated": false,
+              "isFixed": false,
+              "type": "OCH",
+              "biDirection": true,
+              "multiple": 8,
+              "description": "WSS-1-<slot>-<from>/<central-frequency>",
+              "from": {
+                "port": "EXP?,1,8,1"
+              },
+              "to": {
+                "port": "LINE"
+              },
+              "wssChannel": {
+                "voaUpdateModel": "Manually",
+                "sourceToDestVoa": 3.00,
+                "destToSourceVoa": 3.00,
+                "lowerFrequency": "<lower-frequency>",
+                "upperFrequency": "<upper-frequency>",
+                "params": [
+                  {
+                    "name": "ase-control-mode",
+                    "value": "ASE_AUTO"
+                  },
+                  {
+                    "name": "ase-injection-threshold",
+                    "value": "-10.00"
+                  },
+                  {
+                    "name": "source-to-dest-power-control-mode",
+                    "value": "APC"
+                  },
+                  {
+                    "name": "auto-control-active-threshold-dest",
+                    "value": "0.5"
+                  },
+                  {
+                    "name": "auto-control-range",
+                    "value": "15"
+                  },
+                  {
+                    "name": "slice-type",
+                    "value": "NORMAL"
+                  }
+                ]
+              }
+            }
+          ],
+          "params": [
+            {
+              "name": "ASEC.enabled",
+              "value": "false"
+            },
+            {
+              "name": "ASEL.enabled",
+              "value": "false"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ILA",
+      "card": [
+        {
+          "cardType": "ILA_CL",
+          "vendorType": "ILA_CL",
+          "width": 2,
+          "height": 1,
+          "wdmBand": "C+L",
+          "possibleSlot": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "ports": [
+            {
+              "name": "LINE_EAST",
+              "portType": "ILA-LINE-A",
+              "transceiver": {
+                "name": "TRANSCEIVER?OSC"
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true,
+              "adminEnable": true,
+              "index": "1"
+            },
+            {
+              "name": "LINE_WEST",
+              "portType": "ILA-LINE-B",
+              "transceiver": {
+                "name": "TRANSCEIVER?OSC"
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true,
+              "adminEnable": true,
+              "index": "0"
+            },
+            {
+              "name": "AUX",
+              "portType": "Other",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true,
+              "index": "2"
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "LINE_EAST",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "DGE_CL",
+                  "port": "LINE_WEST"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "ILA_CL",
+                  "port": "LINE_WEST"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "IRA_CL",
+                  "port": "LINE"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "type": "ILAL_EAST",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAL_EAST",
+              "from": {
+                "port": "LINE_EAST",
+                "layer": "L"
+              },
+              "to": {
+                "port": "LINE_WEST"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "ILAL_WEST",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAL_WEST",
+              "from": {
+                "port": "LINE_WEST",
+                "layer": "L"
+              },
+              "to": {
+                "port": "LINE_EAST"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "ILAC_EAST",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAC_EAST",
+              "from": {
+                "port": "LINE_EAST",
+                "layer": "C"
+              },
+              "to": {
+                "port": "LINE_WEST"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "ILAC_WEST",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAC_WEST",
+              "from": {
+                "port": "LINE_WEST",
+                "layer": "C"
+              },
+              "to": {
+                "port": "LINE_EAST"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DGE",
+      "card": [
+        {
+          "cardType": "DGE_CL",
+          "vendorType": "DGE_CL",
+          "width": 4,
+          "height": 1,
+          "wdmBand": "C+L",
+          "possibleSlot": [
+            1,
+            5
+          ],
+          "ports": [
+            {
+              "name": "LINE_EAST",
+              "portType": "ILA-LINE-A",
+              "transceiver": {
+                "name": "TRANSCEIVER?OSC"
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true,
+              "adminEnable": true,
+              "index": "1"
+            },
+            {
+              "name": "LINE_WEST",
+              "portType": "ILA-LINE-B",
+              "transceiver": {
+                "name": "TRANSCEIVER?OSC"
+              },
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true,
+              "adminEnable": true,
+              "index": "0"
+            },
+            {
+              "name": "AUX",
+              "portType": "Other",
+              "supportedSignal": [
+                "OTS"
+              ],
+              "biDirection": true,
+              "index": "2"
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "LINE_EAST",
+              "to": [
+                {
+                  "neType": "OD",
+                  "cardType": "ILA_CL",
+                  "port": "LINE_WEST"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "DGE_CL",
+                  "port": "LINE_WEST"
+                },
+                {
+                  "neType": "OD",
+                  "cardType": "IRA_CL",
+                  "port": "LINE"
+                }
+              ]
+            }
+          ],
+          "crossConnections": [
+            {
+              "type": "OCH",
+              "biDirection": true,
+              "initiated": false,
+              "isFixed": false,
+              "description": "WSS-1-<slot>-<from>/<central-frequency>",
+              "from": {
+                "port": "LINE_EAST"
+              },
+              "to": {
+                "port": "LINE_WEST"
+              },
+              "wssChannel": {
+                "voaUpdateModel": "Manually",
+                "sourceToDestVoa": 3.00,
+                "destToSourceVoa": 3.00,
+                "lowerFrequency": "<lower-frequency>",
+                "upperFrequency": "<upper-frequency>",
+                "params": [
+                  {
+                    "name": "ase-control-mode",
+                    "value": "ASE_DISABLED"
+                  },
+                  {
+                    "name": "source-to-dest-power-control-mode",
+                    "value": "APC"
+                  },
+                  {
+                    "name": "dest-to-source-power-control-mode",
+                    "value": "APC"
+                  },
+                  {
+                    "name": "auto-control-active-threshold-dest",
+                    "value": "0.5"
+                  },
+                  {
+                    "name": "auto-control-active-threshold-source",
+                    "value": "0.5"
+                  },
+                  {
+                    "name": "auto-control-range",
+                    "value": "6"
+                  },
+                  {
+                    "name": "source-to-dest-voa",
+                    "value": "3.00"
+                  },
+                  {
+                    "name": "dest-to-source-voa",
+                    "value": "3.00"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "ILAL_EAST",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAL_EAST",
+              "from": {
+                "port": "LINE_EAST",
+                "layer": "L"
+              },
+              "to": {
+                "port": "LINE_WEST",
+                "layer": "L"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "ILAL_WEST",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAL_WEST",
+              "from": {
+                "port": "LINE_WEST",
+                "layer": "L"
+              },
+              "to": {
+                "port": "LINE_EAST",
+                "layer": "L"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "ILAC_EAST",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAC_EAST",
+              "from": {
+                "port": "LINE_EAST",
+                "layer": "C"
+              },
+              "to": {
+                "port": "LINE_WEST",
+                "layer": "C"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "ILAC_WEST",
+              "biDirection": false,
+              "description": "AMPLIFIER-1-<slot>-ILAC_WEST",
+              "from": {
+                "port": "LINE_WEST",
+                "layer": "C"
+              },
+              "to": {
+                "port": "LINE_EAST",
+                "layer": "C"
+              },
+              "amplifier": {
+                "params": [
+                  {
+                    "name": "ase-injection",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "loss-shutdown-hold-off-time",
+                    "value": "0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BLANK",
+      "card": [
+        {
+          "cardType": "BLANK",
+          "width": 1,
+          "height": 1,
+          "adminEnable": false,
+          "possibleSlot": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PANEL",
+      "card": [
+        {
+          "cardType": "PANEL",
+          "vendorType": "PANEL",
+          "width": 1,
+          "height": 1,
+          "possibleSlot": [
+            40
+          ],
+          "ports": [
+            {
+              "name": "MUX",
+              "portType": "Panel-MUX",
+              "biDirection": true,
+              "index": "2"
+            },
+            {
+              "name": "MUX1",
+              "portType": "Panel-MUX",
+              "biDirection": true,
+              "index": "3"
+            },
+            {
+              "name": "CON",
+              "portType": "Panel-CON",
+              "biDirection": true,
+              "index": "0"
+            },
+            {
+              "name": "ETH",
+              "portType": "Panel-ETH",
+              "biDirection": true,
+              "index": "1"
+            },
+            {
+              "name": "NMS",
+              "portType": "Panel-NMS",
+              "biDirection": true,
+              "index": "4"
+            },
+            {
+              "name": "NMS1",
+              "portType": "Panel-NMS",
+              "biDirection": true,
+              "index": "5"
+            },
+            {
+              "name": "NMS2",
+              "portType": "Panel-NMS",
+              "biDirection": true,
+              "index": "6"
+            }
+          ],
+          "externalLinks": [
+            {
+              "biDirection": true,
+              "from": "MUX",
+              "to": [
+                {
+                  "cardType": "MUX96",
+                  "port": "MUX"
+                },
+                {
+                  "cardType": "MUX64",
+                  "port": "MUX"
+                },
+                {
+                  "cardType": "MUXPANEL_32C32L",
+                  "port": "MUX"
+                },
+                {
+                  "cardType": "MUXPANEL_64",
+                  "port": "MUX"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixEquipModel": [
+    {
+      "equipTypeConfiged": "PSU",
+      "name": "PSU-1-?,21,22,1"
+    },
+    {
+      "equipTypeConfiged": "FAN",
+      "name": "FAN-1-?,31,33,1"
+    },
+    {
+      "equipTypeConfiged": "CU",
+      "name": "CU-1-?,41,42,1"
+    },
+    {
+      "equipTypeConfiged": "CHASSIS",
+      "name": "CHASSIS-1",
+      "chassisClass": "BONE_OPC"
+    }
+  ]
+}

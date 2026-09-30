@@ -1,0 +1,890 @@
+{
+  "info": {
+    "_postman_id": "device-maintenance-gateway-001",
+    "name": "Device Maintenance - Gateway Access",
+    "description": "通过Gateway（8088端口）访问Device Maintenance服务的测试集合\n\n使用方法：\n1. 先运行 Authentication > Get OAuth2 Token 获取访问令牌\n2. Token会自动保存到环境变量中\n3. 所有后续请求会自动使用该Token\n\n环境变量：\n- 使用 \"Device Maintenance - Gateway (Shanghai)\" 环境",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get OAuth2 Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.access_token).to.exist;",
+                  "    pm.environment.set(\"access_token\", jsonData.access_token);",
+                  "    pm.environment.set(\"token_type\", jsonData.token_type);",
+                  "    console.log(\"✅ Token获取成功\");",
+                  "    console.log(\"  有效期:\", jsonData.expires_in, \"秒\");",
+                  "    console.log(\"  Token已保存到环境变量: access_token\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{auth_base}}/oauth2/token?username={{oauth_username}}&password={{oauth_password}}&client_id={{oauth_client_id}}&client_secret={{oauth_client_secret}}&scope={{oauth_scope}}&grant_type={{oauth_grant_type}}",
+              "host": [
+                "{{auth_base}}"
+              ],
+              "path": [
+                "oauth2",
+                "token"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{oauth_username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{oauth_password}}"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{oauth_client_id}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{oauth_client_secret}}"
+                },
+                {
+                  "key": "scope",
+                  "value": "{{oauth_scope}}"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "{{oauth_grant_type}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Software Download",
+      "item": [
+        {
+          "name": "立即下载软件",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Task created successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.exist;",
+                  "    pm.expect(jsonData.data.taskId).to.exist;",
+                  "    ",
+                  "    // 保存taskId供后续测试使用",
+                  "    pm.environment.set(\"test_task_id\", jsonData.data.taskId);",
+                  "    ",
+                  "    console.log(\"✅ 软件下载任务已创建\");",
+                  "    console.log(\"  任务ID:\", jsonData.data.taskId);",
+                  "    console.log(\"  设备ID:\", jsonData.data.deviceId);",
+                  "    console.log(\"  文件路径:\", jsonData.data.filePath);",
+                  "    console.log(\"  状态:\", jsonData.data.status);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{test_node_id}}\",\n  \"filePath\": \"{{software_file_path}}\",\n  \"sftpServerName\": \"{{sftp_server_name}}\",\n  \"version\": \"{{software_version}}\",\n  \"remark\": \"Gateway测试: 立即下载软件\",\n  \"scheduledTime\": null\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:download-software",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:download-software"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "立即下载软件 (with debug)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response includes debug payload\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.exist;",
+                  "    pm.expect(jsonData.data.debugPayload).to.exist;",
+                  "    ",
+                  "    console.log(\"✅ 软件下载任务已创建（调试模式）\");",
+                  "    console.log(\"  任务ID:\", jsonData.data.taskId);",
+                  "    console.log(\"  Debug Payload:\");",
+                  "    console.log(JSON.stringify(jsonData.data.debugPayload, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{test_node_id}}\",\n  \"filePath\": \"{{software_file_path}}\",\n  \"sftpServerName\": \"{{sftp_server_name}}\",\n  \"version\": \"{{software_version}}\",\n  \"remark\": \"Gateway测试: 调试模式下载软件\",\n  \"scheduledTime\": null\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:download-software?debug=true",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:download-software"
+              ],
+              "query": [
+                {
+                  "key": "debug",
+                  "value": "true",
+                  "description": "启用调试模式，返回RPC payload"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "定时下载软件",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Scheduled task created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.exist;",
+                  "    pm.expect(jsonData.data.taskId).to.exist;",
+                  "    ",
+                  "    console.log(\"✅ 定时下载任务已创建\");",
+                  "    console.log(\"  任务ID:\", jsonData.data.taskId);",
+                  "    console.log(\"  计划执行时间:\", jsonData.data.scheduledTime || '未设置');",
+                  "    console.log(\"  状态:\", jsonData.data.status);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{test_node_id}}\",\n  \"filePath\": \"{{software_file_path}}\",\n  \"sftpServerName\": \"{{sftp_server_name}}\",\n  \"version\": \"{{software_version}}\",\n  \"remark\": \"Gateway测试: 定时下载软件\",\n  \"scheduledTime\": \"{{scheduled_time_future}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:download-software",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:download-software"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Database Backup",
+      "item": [
+        {
+          "name": "立即备份数据库",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Backup task created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.exist;",
+                  "    pm.expect(jsonData.data.taskId).to.exist;",
+                  "    ",
+                  "    pm.environment.set(\"test_task_id\", jsonData.data.taskId);",
+                  "    ",
+                  "    console.log(\"✅ 数据库备份任务已创建\");",
+                  "    console.log(\"  任务ID:\", jsonData.data.taskId);",
+                  "    console.log(\"  备份路径:\", jsonData.data.backupFilePath);",
+                  "    console.log(\"  状态:\", jsonData.data.status);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{test_node_id}}\",\n  \"backupFilePath\": \"{{backup_file_path}}/backup_gateway_test.db\",\n  \"sftpServerName\": \"{{sftp_server_name}}\",\n  \"remark\": \"Gateway测试: 立即备份数据库\",\n  \"scheduledTime\": null\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:backup-device-data",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:backup-device-data"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "定时备份数据库",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Scheduled backup task created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    console.log(\"✅ 定时备份任务已创建\");",
+                  "    console.log(\"  计划执行时间:\", jsonData.data.scheduledTime);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{test_node_id}}\",\n  \"backupFilePath\": \"{{backup_file_path}}/backup_scheduled.db\",\n  \"sftpServerName\": \"{{sftp_server_name}}\",\n  \"remark\": \"Gateway测试: 定时备份\",\n  \"scheduledTime\": \"{{scheduled_time_future}}\"\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:backup-device-data",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:backup-device-data"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Database Restore",
+      "item": [
+        {
+          "name": "立即恢复数据库",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Restore task created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    ",
+                  "    console.log(\"✅ 数据库恢复任务已创建\");",
+                  "    console.log(\"  任务ID:\", jsonData.data.taskId);",
+                  "    console.log(\"  恢复类型:\", jsonData.data.restoreType);",
+                  "    console.log(\"  强制恢复:\", jsonData.data.forceRestore);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{test_node_id}}\",\n  \"backupFilePath\": \"{{backup_file_path}}/backup_gateway_test.db\",\n  \"sftpServerName\": \"{{sftp_server_name}}\",\n  \"restoreType\": \"full\",\n  \"forceRestore\": false,\n  \"remark\": \"Gateway测试: 立即恢复数据库\",\n  \"scheduledTime\": null\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:restore-device-data",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:restore-device-data"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "强制恢复数据库",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Force restore task created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.forceRestore).to.be.true;",
+                  "    ",
+                  "    console.log(\"✅ 强制恢复任务已创建\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{test_node_id}}\",\n  \"backupFilePath\": \"{{backup_file_path}}/backup_gateway_test.db\",\n  \"sftpServerName\": \"{{sftp_server_name}}\",\n  \"restoreType\": \"full\",\n  \"forceRestore\": true,\n  \"remark\": \"Gateway测试: 强制恢复\",\n  \"scheduledTime\": null\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:restore-device-data",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:restore-device-data"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Task Management",
+      "item": [
+        {
+          "name": "查询所有任务",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has task list\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "    ",
+                  "    console.log(\"✅ 任务列表查询成功\");",
+                  "    console.log(\"  总任务数:\", jsonData.data.length);",
+                  "    ",
+                  "    if (jsonData.data.length > 0) {",
+                  "        console.log(\"  最新任务:\");",
+                  "        console.log(\"    - ID:\", jsonData.data[0].taskId);",
+                  "        console.log(\"    - 类型:\", jsonData.data[0].taskType);",
+                  "        console.log(\"    - 状态:\", jsonData.data[0].status);",
+                  "        console.log(\"    - 设备:\", jsonData.data[0].deviceId);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:get-device-tasks",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "查询单个任务",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Task details retrieved\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.exist;",
+                  "    pm.expect(jsonData.data.taskId).to.eql(pm.environment.get(\"test_task_id\"));",
+                  "    ",
+                  "    console.log(\"✅ 任务详情查询成功\");",
+                  "    console.log(\"  任务ID:\", jsonData.data.taskId);",
+                  "    console.log(\"  任务类型:\", jsonData.data.taskType);",
+                  "    console.log(\"  状态:\", jsonData.data.status);",
+                  "    console.log(\"  创建时间:\", jsonData.data.createdTime);",
+                  "    console.log(\"  更新时间:\", jsonData.data.updatedTime);",
+                  "    if (jsonData.data.errorMessage) {",
+                  "        console.log(\"  错误信息:\", jsonData.data.errorMessage);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"taskId\": \"{{test_task_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:get-device-task-detail",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-task-detail"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "按设备ID查询任务",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Device tasks retrieved\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "    ",
+                  "    console.log(\"✅ 设备任务查询成功\");",
+                  "    console.log(\"  该设备的任务数:\", jsonData.data.length);",
+                  "    ",
+                  "    // 统计任务类型",
+                  "    var taskTypes = {};",
+                  "    jsonData.data.forEach(function(task) {",
+                  "        taskTypes[task.taskType] = (taskTypes[task.taskType] || 0) + 1;",
+                  "    });",
+                  "    console.log(\"  任务类型统计:\", taskTypes);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"deviceId\": \"{{test_node_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:get-device-tasks",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "按任务类型查询",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Download tasks retrieved\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    ",
+                  "    console.log(\"✅ 软件下载任务查询成功\");",
+                  "    console.log(\"  任务数:\", jsonData.data.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"taskType\": \"DOWNLOAD\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:get-device-tasks",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "按状态查询任务",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Running tasks retrieved\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    ",
+                  "    console.log(\"✅ 运行中任务查询成功\");",
+                  "    console.log(\"  任务数:\", jsonData.data.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"status\": \"RUNNING\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:get-device-tasks",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:get-device-tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "删除任务",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Task deleted successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    ",
+                  "    console.log(\"✅ 任务删除成功\");",
+                  "    console.log(\"  消息:\", jsonData.message);",
+                  "    console.log(\"  已通知TaskInfo进行软删除\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"taskId\": \"{{test_task_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:delete-device-task",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:delete-device-task"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Batch Operations",
+      "item": [
+        {
+          "name": "批量下载软件",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Batch download initiated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "    ",
+                  "    console.log(\"✅ 批量下载任务已创建\");",
+                  "    console.log(\"  子任务数:\", jsonData.data.length);",
+                  "    ",
+                  "    if (jsonData.data.length > 0) {",
+                  "        console.log(\"  批次ID:\", jsonData.data[0].batchId);",
+                  "        jsonData.data.forEach(function(task, index) {",
+                  "            console.log(\"  子任务\", (index + 1) + \":\", task.taskId, \"(\", task.deviceId, \")\");",
+                  "        });",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tasks\": [\n    {\n      \"deviceId\": \"{{test_node_id}}\",\n      \"filePath\": \"{{software_file_path}}\",\n      \"sftpServerName\": \"{{sftp_server_name}}\",\n      \"version\": \"{{software_version}}\"\n    }\n  ],\n  \"remark\": \"Gateway测试: 批量下载软件\",\n  \"scheduledTime\": null\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:batch-download-software",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-download-software"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "批量备份数据库",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Batch backup initiated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    ",
+                  "    console.log(\"✅ 批量备份任务已创建\");",
+                  "    console.log(\"  子任务数:\", jsonData.data.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tasks\": [\n    {\n      \"deviceId\": \"{{test_node_id}}\",\n      \"backupFilePath\": \"{{backup_file_path}}/batch_backup_1.db\",\n      \"sftpServerName\": \"{{sftp_server_name}}\"\n    }\n  ],\n  \"remark\": \"Gateway测试: 批量备份\",\n  \"scheduledTime\": null\n}"
+            },
+            "url": {
+              "raw": "{{device_maintenance_base}}/device-maintenance:batch-backup-device-data",
+              "host": [
+                "{{device_maintenance_base}}"
+              ],
+              "path": [
+                "device-maintenance:batch-backup-device-data"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

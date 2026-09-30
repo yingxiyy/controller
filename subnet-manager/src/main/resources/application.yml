@@ -1,0 +1,20 @@
+server:
+  port: 19901
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+kafka:
+  bootstrap-servers: 127.0.0.1:9092
+  consumer-group: alarm-notifier-local
+
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+kafka:
+  bootstrap-servers: ${KAFKA_BROKER}

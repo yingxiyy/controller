@@ -1,0 +1,60 @@
+{
+  "id": "sit-environment",
+  "name": "SIT Environment",
+  "values": [
+    {
+      "key": "sit_server_host",
+      "value": "116.128.204.13",
+      "description": "SIT服务器主机地址",
+      "enabled": true
+    },
+    {
+      "key": "nemgr_host",
+      "value": "116.128.204.13",
+      "description": "NE Manager微服务主机地址",
+      "enabled": true
+    },
+    {
+      "key": "nemgr_port",
+      "value": "18002",
+      "description": "NE Manager微服务端口",
+      "enabled": true
+    },
+    {
+      "key": "sftpserver_host",
+      "value": "116.128.204.13",
+      "description": "SFTP Server微服务主机地址",
+      "enabled": true
+    },
+    {
+      "key": "sftpserver_port",
+      "value": "18280",
+      "description": "SFTP Server微服务端口",
+      "enabled": true
+    },
+    {
+      "key": "status_host",
+      "value": "116.128.204.13",
+      "description": "Status微服务主机地址",
+      "enabled": true
+    },
+    {
+      "key": "status_port",
+      "value": "18005",
+      "description": "Status微服务端口",
+      "enabled": true
+    },
+    {
+      "key": "taskinfo_host",
+      "value": "116.128.204.13",
+      "description": "TaskInfo微服务主机地址",
+      "enabled": true
+    },
+    {
+      "key": "taskinfo_port",
+      "value": "18200",
+      "description": "TaskInfo微服务端口",
+      "enabled": true
+    }
+  ]
+}

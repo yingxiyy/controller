@@ -1,0 +1,7 @@
+{
+  "bytedance": {
+    "wss-channel.psd-value.source-to-dest-voa": "15.00",
+    "wss-channel.psd-value.source-to-dest-voa--DGE": "3.00",
+    "ase-inject-grid": 100
+  }
+}

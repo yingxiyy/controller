@@ -1,0 +1,61 @@
+#
+# /*
+#  * Copyright (c) 2021-2020 and others.  All rights reserved.
+#  *
+#  * This program and the accompanying materials are made available under the
+#  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+#  * and is available at http://www.eclipse.org/legal/epl-v10.html
+#  */
+#
+server:
+  port: 8081
+author:
+  account: admin
+  password: admin
+
+spring:
+  application:
+    name: dci-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: sdn
+          uri: lb://sdn
+          predicates:
+            - Path=/**
+#  security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          jwk-set-uri: 'http://localhost:18443/rsa/publicKey'
+balancer:
+  strategy: RoundRobin
+secure:
+  ignore:
+    urls:
+      - "/actuator/**"
+      - "/oauth2/**"
+      - "/rsa/publicKey"
+logging:
+  level:
+    root: debug
+    org.apache.kafka.clients: OFF
+#logging.level.org.mongodb.driver: OFF
+logging.level.org.apache.zookeeper: OFF
+
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+logging:
+  config: ./config/logback-spring.xml

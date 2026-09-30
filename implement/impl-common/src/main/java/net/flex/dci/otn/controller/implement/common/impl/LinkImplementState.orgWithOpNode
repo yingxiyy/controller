@@ -1,0 +1,471 @@
+/*
+ *  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+ *
+ *  This program and the accompanying materials are made available under the
+ *  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ *  and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+
+package net.flex.dci.otn.controller.implement.common.impl;
+
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import net.flex.dci.otc.common.exception.CommonException;
+import net.flex.dci.otc.common.exception.CommonExceptionType;
+import net.flex.dci.otc.common.util.SpringBeanFinder;
+import net.flex.dci.otc.common.util.namingrule.*;
+import net.flex.dci.otc.mongo.dao.OchLinkDao;
+import net.flex.dci.otc.mongo.mdoel.ChangedObject;
+import net.flex.dci.otc.mongo.utils.MultipleTransaction;
+import net.flex.dci.otc.tools.lock.impl.zk.ZkResourceLock;
+import net.flex.dci.otn.controller.implement.common.config.ImplConfig;
+import net.flex.dci.otn.controller.implement.common.lifecycle.LifeCycleSevice;
+import net.flex.dci.otn.controller.implement.common.recorder.StepRecord;
+import net.flex.dci.otc.common.util.RouteInfo;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.common.otn.types.rev180515.AdminStatus;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.common.otn.types.rev180515.ImplementState;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.common.otn.types.rev180515.PortType;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.common.otn.types.rev180515.properties.Properties;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.common.otn.types.rev180515.properties.PropertiesBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.common.otn.types.rev180515.properties.properties.Property;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPoint;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.*;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.cross.connections.CrossConnections;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPointBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.cross.connections.CrossConnectionsBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.osc.attributes.OscBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.otu.client.attributes.ClientBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.node.attributes.physical.Equipments;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.node.attributes.physical.EquipmentsBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.tp.attributes.Physical;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.tp.attributes.PhysicalBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.tp.attributes.physical.OtuClientBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.tp.attributes.physical.OtuLineBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.tp.attributes.physical.WdmBuilder;
+
+import java.util.*;
+import java.util.function.BiConsumer;
+
+
+/**
+ * @author YYX
+ * @version 1.0
+ */
+@Slf4j
+@Data
+public class LinkImplementState {
+
+  public LinkImplementState setActionType(ImplActionType actionType) {
+    this.actionType = actionType;
+
+    return this;
+  }
+
+  public enum LinkType {
+    None,
+    ExLink,
+    InLink,
+    SiteLink,
+    OchLink,
+    Tunnel,
+    PhyLink
+  }
+
+  private ImplActionType actionType;
+  private LinkType linkType;
+  private String linkId;
+  private String friendlyName;
+  private RouteInfo rInfo;
+//  private boolean isImplementAction;
+  private ZkResourceLock locker;
+  private BiConsumer<Boolean, Throwable> onFinish;
+
+  /**
+   * impl/deImpl the assigned link.
+   */
+  public LinkImplementState(LinkType linkType, String linkId, String friendlyName, RouteInfo rInfo, ZkResourceLock locker, BiConsumer<Boolean, Throwable> onFinish) {
+    this.linkType = linkType;
+    this.linkId = linkId;
+    this.friendlyName = friendlyName;
+    this.rInfo = rInfo;
+    this.locker = locker;
+    this.onFinish = onFinish;
+  }
+
+  /**
+   * based on route find all tp, xc, il (grouping them with node)
+   * each node is one thread, impl base on node steps
+   */
+  public void changeAs(LifeCycleSevice lifeService) {
+//    isImplementAction = actionType.equals(ActionType.Implement);
+
+    Map<String, PhysicalNode.ReadyResource> readyResourceMap = new HashMap<>();
+    log.debug("very important step, build data for this action");
+    Collection<Node> nodeList = extractChangedNode(readyResourceMap);
+
+    StepToe toe = new StepToe();
+    for (Node node : nodeList) {
+      toe.addToe(new ConfigNeSequence(node, actionType, lifeService).prepare(readyResourceMap));
+    }
+    Step<StepRecord> step = new Step(toe);
+    step.start(new SummaryLinkState(linkType, linkId, rInfo, actionType, lifeService, locker, onFinish));
+  }
+
+  //opNode 需要把implState写为ing, 展现给UI，正在做事
+  //cfgNode 读取与TP，板卡相关,XC, internalLink，准备写入网元
+  private Collection<Node> extractChangedNode(Map<String, PhysicalNode.ReadyResource> readyResourceMap) {
+//    extractChangedOpNode();
+    return extractChangedCfgNode(readyResourceMap);
+  }
+
+  /**
+   * 修改OpNe 下各种对象的impl状态，不需要了
+   */
+  private void extractChangedOpNode() {
+    ChangedObject changedObject = new ChangedObject();
+    PhysicalNode physicalNode = new PhysicalNode(actionType);
+    for (String tpId : rInfo.getTpIdList()) {
+      String nodeId = PhysicalTpIdNamingRule.getNodeId(tpId);
+      Node orgOpNode = changedObject.getChangedPhyOpNode(nodeId);
+      Node newNode = physicalNode.constructOpNodeByTp(orgOpNode, tpId);
+      changedObject.addChangedPhyOpNode(newNode);
+    }
+
+    for (String xcId : rInfo.getXcIdList()) {
+      String nodeId = PhysicalXcIdNamingRule.getNodeId(xcId);
+      Node orgOpNode = changedObject.getChangedPhyOpNode(nodeId);
+      Node newNode = physicalNode.constructOpNodeByXc(orgOpNode, xcId);
+      changedObject.addChangedPhyOpNode(newNode);
+    }
+
+    for (String linkId : rInfo.getPhyLinkIdList()) {
+      String anodeId = PhysicalLinkIdNamingRule.getNodeAId(linkId);
+      Node orgOpNode = changedObject.getChangedPhyOpNode(anodeId);
+      Node newNode = physicalNode.constructOpNodeByLink(orgOpNode, linkId);
+      changedObject.addChangedPhyOpNode(newNode);
+
+      String znodeId = PhysicalLinkIdNamingRule.getNodeZId(linkId);
+      orgOpNode = changedObject.getChangedPhyOpNode(znodeId);
+      newNode = physicalNode.constructOpNodeByLink(orgOpNode, linkId);
+      changedObject.addChangedPhyOpNode(newNode);
+    }
+  }
+
+  /**
+   * 基于Link 路由，构建需要下发的Node信息
+   * 人Info中的tpIdList, xcIdList, linkIdList 都是包含了路由（所有层级）的信息
+   * @return
+   * @param readyResourceMap
+   */
+  private Collection<Node> extractChangedCfgNode(Map<String, PhysicalNode.ReadyResource> readyResourceMap) {
+//    改为单独API触发，不自动upload
+
+    if (actionType.equals(ImplActionType.Implement)) {
+      ImplConfig implConfig = SpringBeanFinder.getBean(ImplConfig.class);
+      if (implConfig.isUploadNeParam()) {
+        rewriteOp2Cfg(rInfo);
+      }
+    }
+
+    ChangedObject changedObject = new ChangedObject();
+    Map<String, Node> cfgNodeMap = new HashMap<>();
+
+    PhysicalNode physicalNode = new PhysicalNode(actionType);
+
+    if (actionType.equals(ImplActionType.DummyOch)) {
+      for (String nodeId : rInfo.getNodeIdList()) {
+        Node orgCfgNode = changedObject.getChangedPhyNode(nodeId);
+        physicalNode.constructCfgNodeByAseXcAndOcm(orgCfgNode, cfgNodeMap);
+      }
+    } else {
+      //normal impl, deimpl
+      for (String linkId : rInfo.getPhyLinkIdList()) {
+        //构建网元内部连接，为了方便写入网元
+//      rInfo.getLinkIdList() 中包含了所有的link。
+        if (OchLinkIdNamingRule.isOchLink(linkId) ||
+                SiteLinkIdNamingRule.isSiteLink(linkId)) {
+          continue;
+        }
+
+        if (PhysicalLinkIdNamingRule.isWssLink(linkId) && actionType.equals(ImplActionType.Deimplement)) {
+          //因为WSS-Link上面可能还有其他ochLink, 他也是一个多frequency的复用link
+          //所以在deImpl的时候需要确认是不是最后最后一个
+          if (counterOfThisWssLink(linkId) > 1) {
+            rInfo.getTpIdList().remove(PhysicalLinkIdNamingRule.getTpAId(linkId));
+            rInfo.getTpIdList().remove(PhysicalLinkIdNamingRule.getTpZId(linkId));
+            continue;
+          }
+        }
+
+        String anodeId = PhysicalLinkIdNamingRule.getNodeAId(linkId);
+        Node orgCfgNode = changedObject.getChangedPhyNode(anodeId);
+        Node orgOpNode = changedObject.getChangedPhyOpNode(anodeId);
+        physicalNode.constructCfgNodeByLink(orgCfgNode, cfgNodeMap, orgOpNode, linkId);
+
+        String znodeId = PhysicalLinkIdNamingRule.getNodeZId(linkId);
+        orgCfgNode = changedObject.getChangedPhyNode(znodeId);
+        orgOpNode = changedObject.getChangedPhyOpNode(znodeId);
+        physicalNode.constructCfgNodeByLink(orgCfgNode, cfgNodeMap, orgOpNode, linkId);
+      }
+
+      for (String tpId : rInfo.getTpIdList()) {
+        String nodeId = PhysicalTpIdNamingRule.getNodeId(tpId);
+        Node orgCfgNode = changedObject.getChangedPhyNode(nodeId);
+        Node orgOpNode = changedObject.getChangedPhyOpNode(nodeId);
+        physicalNode.constructCfgNodeByTp(orgCfgNode, cfgNodeMap, orgOpNode, tpId);
+      }
+
+      for (String eqId : rInfo.getEqIdList()) {
+        String nodeId = PhysicalEqpIdNamingRule.getNodeId(eqId);
+        Node orgCfgNode = changedObject.getChangedPhyNode(nodeId);
+        Node orgOpNode = changedObject.getChangedPhyOpNode(nodeId);
+        physicalNode.constructCfgNodeByEq(orgCfgNode, cfgNodeMap, orgOpNode, eqId);
+      }
+
+      for (String xcId : rInfo.getXcIdList()) {
+        String nodeId = PhysicalXcIdNamingRule.getNodeId(xcId);
+        Node orgCfgNode = changedObject.getChangedPhyNode(nodeId);
+        Node orgOpNode = changedObject.getChangedPhyOpNode(nodeId);
+        physicalNode.constructCfgNodeByXc(orgCfgNode, cfgNodeMap, orgOpNode, xcId);
+      }
+
+      //ocm list
+      for (String nodeId : cfgNodeMap.keySet()) {
+        Node orgCfgNode = changedObject.getChangedPhyNode(nodeId);
+        physicalNode.constructCfgNodeOcm(orgCfgNode, cfgNodeMap);
+      }
+    }
+    readyResourceMap.putAll(physicalNode.getReadyResource());
+    return cfgNodeMap.values();
+  }
+
+  private long counterOfThisWssLink(String linkId) {
+    OchLinkDao ochDao = SpringBeanFinder.getBean(OchLinkDao.class);
+    return ochDao.CounterOfWssLinkUsedInOch(linkId);
+  }
+
+
+  /**
+   * 这个方法需要增强，不是所有网元都op-->config, 只有特定的网元，而且这个方法应该是单独API触发
+   * @param rInfo
+   */
+  private void rewriteOp2Cfg(RouteInfo rInfo) {
+    ChangedObject changedObject = new ChangedObject();
+
+    Set<String> changedNodeList = new HashSet<>();
+    for (String tpId : rInfo.getTpIdList()) {
+      String nodeId = PhysicalTpIdNamingRule.getNodeId(tpId);
+      if (changedNodeList.contains(nodeId)) {
+        continue;
+      }
+
+      Node orgOpNode = changedObject.getChangedPhyOpNode(nodeId);
+      if (orgOpNode == null) {
+        continue;
+      }
+      Node orgCfgNode = changedObject.getChangedPhyNode(nodeId);
+      Node updateCfgNode = uploadTpParam(orgCfgNode, orgOpNode);
+      updateCfgNode = uploadEqParam(updateCfgNode, orgOpNode);
+      updateCfgNode = uploadXcParam(updateCfgNode, orgOpNode);
+      changedObject.addChangedPhyNode(updateCfgNode);
+      changedNodeList.add(nodeId);
+    }
+
+    changedObject.unsetAllPhyOpNode();
+    MultipleTransaction multipleTransaction = SpringBeanFinder.getBean(MultipleTransaction.class);
+    multipleTransaction.save(changedObject);
+  }
+
+  private Node uploadTpParam(Node orgCfgNode, Node orgOpNode) {
+    List<TerminationPoint> newTpList = new ArrayList<>();
+    String displayStr = String.format("%s (%s)",
+            orgCfgNode.getAugmentation(Node1.class).getPhysical().getFriendlyName(),
+            orgCfgNode.getAugmentation(Node1.class).getPhysical().getIp());
+
+    for (TerminationPoint cfgTp : orgCfgNode.getTerminationPoint()) {
+      Physical cfgTpAttr = cfgTp.getAugmentation(TerminationPoint1.class).getPhysical();
+      if (!cfgTpAttr.getPortType().equals(PortType.OTULine) && !cfgTpAttr.getPortType().equals(PortType.OTUClient)
+              && !cfgTpAttr.getPortType().equals(PortType.OALine)
+              && !cfgTpAttr.getPortType().equals(PortType.ILALINEA) && !cfgTpAttr.getPortType().equals(PortType.ILALINEB)) {
+
+        newTpList.add(cfgTp);
+        continue;
+      }
+      if (cfgTpAttr.getConnectionStatus() == null || !cfgTpAttr.getConnectionStatus().equals(ConnectionStatus.Busy)) {
+        newTpList.add(cfgTp);
+        continue;
+      }
+
+      PhysicalBuilder cfgAttrBuilder = new PhysicalBuilder(cfgTpAttr);
+      Optional<TerminationPoint> opTpOp = orgOpNode.getTerminationPoint().stream().filter(tp -> tp.getTpId().getValue().equals(cfgTp.getTpId().getValue())).findFirst();
+      if (opTpOp.isPresent()) {
+        TerminationPoint opTp = opTpOp.get();
+        Physical opAttr = opTp.getAugmentation(TerminationPoint1.class).getPhysical();
+        if (opAttr.getAdminState().equals(AdminStatus.Up)) {
+          //只有up的才需要copy网元数据
+          cfgAttrBuilder.setAdminState(opAttr.getAdminState());
+          cfgAttrBuilder.setImplementState(opAttr.getImplementState());
+
+          switch (opAttr.getPortType()) {
+            case OTULine:
+              if (!opAttr.getOtuLine().getSignalRate().getSimpleName().equals(cfgTpAttr.getOtuLine().getSignalRate().getSimpleName())) {
+                throw new CommonException(CommonExceptionType.INVALID_PARAMETER,
+                        String.format("%s port signalRate on NE %s is %s, on controller is %s",
+                                cfgTpAttr.getFriendlyName(), displayStr,
+                                opAttr.getOtuLine().getSignalRate().getSimpleName(),
+                                cfgTpAttr.getOtuLine().getSignalRate().getSimpleName()));
+              }
+              if (opAttr.getOtuLine().getCentralFrequency().getValue().longValue() != cfgTpAttr.getOtuLine().getCentralFrequency().getValue().longValue()) {
+                throw new CommonException(CommonExceptionType.INVALID_PARAMETER,
+                        String.format("%s port frequency on NE %s is %s, on controller is %s",
+                                cfgTpAttr.getFriendlyName(), displayStr,
+                                opAttr.getOtuLine().getCentralFrequency().getValue().longValue(),
+                                cfgTpAttr.getOtuLine().getCentralFrequency().getValue().longValue()));
+              }
+              cfgAttrBuilder.setOtuLine(new OtuLineBuilder()
+                      .setTargetOutputPowerHigher(opAttr.getOtuLine().getTargetOutputPower())
+                      .setSignalRate(opAttr.getOtuLine().getSignalRate())
+                      .setCentralFrequency(opAttr.getOtuLine().getCentralFrequency())
+                      .build());
+              break;
+            case OTUClient:
+              cfgAttrBuilder.setOtuClient(new OtuClientBuilder()
+                      .setClient(new ClientBuilder()
+                              .setEthComplianceCode(opAttr.getOtuClient().getClient().getEthComplianceCode())
+                              .setFecMode(opAttr.getOtuClient().getClient().getFecMode())
+                              .build())
+                      .build());
+              break;
+            case OALine:
+            case ILALINEA:
+            case ILALINEB:
+              if (opAttr.getWdm() != null && opAttr.getWdm().getOsc() != null) {
+                cfgAttrBuilder.setWdm(new WdmBuilder()
+                        .setOsc(new OscBuilder()
+                                .setAutoAttenuationMode(opAttr.getWdm().getOsc().isAutoAttenuationMode())
+                                .build())
+                        .build());
+              } else {
+                cfgAttrBuilder.setWdm(null);
+              }
+          }
+
+          //properties 只merge cfg 有的
+          Properties newProperties = mergeProperties(cfgTpAttr.getProperties(), opAttr.getProperties());
+          if (newProperties != null) {
+            cfgAttrBuilder.setProperties(newProperties);
+          }
+
+          TerminationPoint newTp = new TerminationPointBuilder(cfgTp)
+                  .addAugmentation(TerminationPoint1.class, new TerminationPoint1Builder()
+                          .setPhysical(new PhysicalBuilder(cfgAttrBuilder.build())
+                                  .build())
+                          .build())
+                  .build();
+          newTpList.add(newTp);
+          continue;
+        }
+      }
+
+      newTpList.add(cfgTp);
+    }
+
+    return new NodeBuilder(orgCfgNode).setTerminationPoint(newTpList).build();
+  }
+
+  private Properties mergeProperties(Properties cfgProperties, Properties orgProperties) {
+    List<Property> propertyList = new ArrayList<>();
+    if (cfgProperties == null) {
+      return null;
+    } else {
+      for (Property cfgPro : cfgProperties.getProperty()) {
+        Optional<Property> orgProOp = orgProperties.getProperty().stream().filter(pro -> pro.getName().equals(cfgPro.getName())).findFirst();
+        if (orgProOp.isPresent()) {
+          //replace
+          propertyList.add(orgProOp.get());
+        } else {
+          log.debug("discard cfgProperty because op hasn't it {}", cfgPro.getName());
+        }
+      }
+      return new PropertiesBuilder().setProperty(propertyList).build();
+    }
+  }
+
+
+  private Node uploadXcParam(Node orgCfgNode, Node orgOpNode) {
+    List<CrossConnections> newXcList = new ArrayList<>();
+    for (CrossConnections cfgXc : orgCfgNode.getAugmentation(Node1.class).getPhysical().getCrossConnections()) {
+      Optional<CrossConnections> opXcOp = orgOpNode.getAugmentation(Node1.class).getPhysical().getCrossConnections()
+              .stream().filter(xc -> xc.getCrossConnectionId().getValue().equals(cfgXc.getCrossConnectionId().getValue())).findFirst();
+
+      if (opXcOp.isPresent()) {
+        CrossConnections opXc = opXcOp.get();
+        if (opXc.getAdminState().equals(AdminStatus.Up)) {
+          CrossConnectionsBuilder newXcBuilder = new CrossConnectionsBuilder(cfgXc);
+          newXcBuilder.setAdminState(opXc.getAdminState());
+          newXcBuilder.setImplementState(opXc.getImplementState());
+
+          if (cfgXc.getAps() != null) {
+            newXcBuilder.setAps(opXc.getAps()).build();
+          } else if (cfgXc.getAmplifier() != null) {
+            newXcBuilder.setAmplifier(opXc.getAmplifier()).build();
+          } else if (cfgXc.getWssChannel() != null) {
+            newXcBuilder.setWssChannel(opXc.getWssChannel()).build();
+          }
+          Properties newProperties = mergeProperties(cfgXc.getProperties(), opXc.getProperties());
+          newXcBuilder.setProperties(newProperties);
+          newXcList.add(newXcBuilder.build());
+          continue;
+        }
+      }
+
+      newXcList.add(cfgXc);
+    }
+    return new NodeBuilder(orgCfgNode)
+            .addAugmentation(Node1.class, new Node1Builder()
+                    .setPhysical(new org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.node.attributes.PhysicalBuilder(orgCfgNode.getAugmentation(Node1.class).getPhysical())
+                            .setCrossConnections(newXcList)
+                            .build())
+                    .build())
+            .build();
+  }
+
+  private Node uploadEqParam(Node orgCfgNode, Node orgOpNode) {
+    List<Equipments> newEqList = new ArrayList<>();
+    for (Equipments cfgEq : orgCfgNode.getAugmentation(Node1.class).getPhysical().getEquipments()) {
+      Optional<Equipments> opEqOp = orgOpNode.getAugmentation(Node1.class).getPhysical().getEquipments()
+              .stream().filter(eq -> eq.getEquipmentId().equals(cfgEq.getEquipmentId())).findFirst();
+
+      if (opEqOp.isPresent()) {
+        Equipments opEq = opEqOp.get();
+        if (opEq.getAdminState().equals(AdminStatus.Up)) {
+          Properties newProperties = mergeProperties(cfgEq.getProperties(), opEq.getProperties());
+
+          Equipments newEq = new EquipmentsBuilder(cfgEq)
+                  .setAdminState(opEq.getAdminState())
+                  .setImplementState(opEq.getImplementState())
+                  .setProperties(newProperties)
+                  .build();
+
+          newEqList.add(newEq);
+          continue;
+        }
+      }
+
+      newEqList.add(cfgEq);
+    }
+
+    return new NodeBuilder(orgCfgNode)
+            .addAugmentation(Node1.class, new Node1Builder()
+                    .setPhysical(new org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.otn.phy.topology.rev180514.phy.node.attributes.PhysicalBuilder(orgCfgNode.getAugmentation(Node1.class).getPhysical())
+                            .setEquipments(newEqList)
+                            .build())
+                    .build())
+            .build();
+  }
+
+
+
+}

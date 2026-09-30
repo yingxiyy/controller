@@ -1,0 +1,28 @@
+/*
+ *  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+ *
+ *  This program and the accompanying materials are made available under the
+ *  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ *  and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+
+package net.flex.dci.otn.controller.tools.lifecycle.properties.dto;
+
+import com.alibaba.fastjson.annotation.JSONField;
+import java.io.Serializable;
+import lombok.Data;
+
+/**
+ * @author zhaoxy
+ * @version 1.0
+ * @date 2021/9/29 13:52
+ */
+@Data
+public class OperationDetailInfo implements Serializable {
+
+    private String operation;
+
+    @JSONField(name = "operation-name")
+    private String name;
+
+}

@@ -1,0 +1,6 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+net.flex.dci.otn.controller.webapp.LoggingFilter,\
+net.flex.dci.otn.controller.webapp.LogInterceptor,\
+net.flex.dci.otn.controller.webapp.WebConfiguration,\
+net.flex.dci.otn.controller.webapp.CorsFilterConfiguration,\
+net.flex.dci.otn.controller.webapp.exception.RestfulExceptionAdvice

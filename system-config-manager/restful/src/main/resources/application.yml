@@ -1,0 +1,40 @@
+server:
+  #  port: 8092
+  port: @port.alarm-notifier@
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+  alarm:
+    topic: odl-alarm
+kafka:
+  consumer-group: alarm-notifier
+  client-concurrency: 1
+mail.timeout: 5000
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+  alarm:
+    topic: odl-alarm-local
+kafka:
+  bootstrap-servers: 127.0.0.1:9092
+  consumer-group: alarm-notifier-local
+
+#logging.level.org.springframework.web: DEBUG
+logging.level.org.springframework.boot: DEBUG
+#logging.level.org.springframework.cloud.stream: DEBUG
+logging.level.org.apache.kafka.clients: OFF
+#logging.level.root: DEBUG
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+kafka:
+  bootstrap-servers: ${KAFKA_BROKER}
+server:
+  address: ${myIp}
+logging.level.net.flex.dci.otn.controller.alarm.notifier: INFO

@@ -1,0 +1,42 @@
+{
+  "input": {
+    "src-site": "Site-2071434923100737536",
+    "dst-site": "Site-2071434922207350784",
+    "bundle-number": 1,
+    "customer": "customer",
+    "order-id": "上海",
+    "service-type": "MUX_2x400G",
+    "signal-rate": "common-otn-types:prot-400GE",
+    "risk-group-info": [
+      {
+        "risk-group-name": "DefaultRiskPlane",
+        "plane-name": "test",
+        "plane-id": "SUBNET_2qATV0H6CWs"
+      }
+    ],
+    "routing-policy-id": 1,
+    "card-type": "L2X8C16_L",
+    "route-restriction": [
+      {
+        "index": 0,
+        "mandatory-node": [],
+        "mandatory-site-link": []
+      }
+    ],
+    "frequenceWidth": "150",
+    "vendor-occupation-rate": [
+      {
+        "vendor-name": "HUAWEI",
+        "node-type": "OD",
+        "product-type": "DC908",
+        "number": "1"
+      }
+    ],
+    "client-physical-medium-a": "common-otn-types:ETH_400GBASE_FR4",
+    "client-physical-medium-z": "common-otn-types:ETH_400GBASE_FR4",
+    "protection-type": "common-otn-types:protection-unprotected",
+    "line-signal-rate": "common-otn-types:prot-OTUc8",
+    "failure-rate": 1,
+    "is-reused-tpc": true
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "bytedance": {
+    "wss-channel.psd-value.source-to-dest-voa": "15.00",
+    "wss-channel.psd-value.source-to-dest-voa--DGE": "3.00",
+    "wss-channel.ots-link.control-mode": "APC",
+    "wss-channel.source-to-dest-power-control-mode": "APC",
+    "wss-channel.dest-to-source-power-control-mode": "APC",
+    "wss-channel.auto-control-active-threshold-dest": "0.5",
+    "wss-channel.auto-control-active-threshold-source": "0.5",
+    "wss-channel.auto-control-range": "6",
+    "ase-inject-grid": 100
+  }
+}

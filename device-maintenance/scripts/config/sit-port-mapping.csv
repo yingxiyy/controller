@@ -1,0 +1,25 @@
+服务名称,目录名,端口,服务类型,描述,服务器地址
+neManager,neManager-1.0.0-SNAPSHOT,18002,核心业务,网络设备管理,116.128.204.13
+sftpserver,sftpserver-1.0.0-SNAPSHOT,18280,核心业务,SFTP服务器管理,116.128.204.13
+status,status-1.0.0-SNAPSHOT,18005,核心业务,状态管理服务,116.128.204.13
+notifier,notifier-1.0.0-SNAPSHOT,8885,核心业务,消息通知服务,116.128.204.13
+allocate-app,allocate-app-1.0.0-SNAPSHOT,18006,核心业务,分配服务,116.128.204.13
+gateway-rest,gateway-rest-1.0.0-SNAPSHOT,8181,网关认证,API网关,116.128.204.13
+auth-rest,auth-rest-1.0.0-SNAPSHOT,18443,网关认证,认证服务,116.128.204.13
+user-manager,user-manager-1.0.0-SNAPSHOT,18433,网关认证,用户管理,116.128.204.13
+taskinfo,taskinfo-1.0.0-SNAPSHOT,18200,任务调度,任务信息服务,116.128.204.13
+advance,advance-1.0.0-SNAPSHOT,18027,任务调度,高级服务,116.128.204.13
+discover2,discover2-1.0.0-SNAPSHOT,18010,任务调度,服务发现,116.128.204.13
+impl-app,impl-app-1.0.0-SNAPSHOT,18007,任务调度,实施应用,116.128.204.13
+app-monitor,app-monitor-1.0.0-SNAPSHOT,18000,监控管理,应用监控,116.128.204.13
+db-monitor,db-monitor-1.0.0-SNAPSHOT,18982,监控管理,数据库监控,116.128.204.13
+idc-manager,idc-manager-1.0.0-SNAPSHOT,18009,监控管理,IDC管理,116.128.204.13
+nms-rest,nms-rest-1.0.0-SNAPSHOT,18181,REST服务,网管REST服务,116.128.204.13
+maintenance-rest,maintenance-rest-1.0.0-SNAPSHOT,18092,REST服务,维护REST服务,116.128.204.13
+otdr-rest,otdr-rest-1.0.0-SNAPSHOT,18201,REST服务,OTDR REST服务,116.128.204.13
+an-rest,an-rest-1.0.0-SNAPSHOT,8092,REST服务,告警通知REST服务,116.128.204.13
+adapter,adapter-1.0.0-SNAPSHOT,8181,REST服务,适配器服务,116.128.204.13
+pm-query,pm-query-1.0.0-SNAPSHOT,8094,性能日志,性能查询服务,116.128.204.13
+pm-stream,pm-stream-1.0.0-SNAPSHOT,8095,性能日志,性能流服务,116.128.204.13
+apsswitchlog,apsswitchlog-1.0.0-SNAPSHOT,18202,性能日志,APS切换日志服务,116.128.204.13
+cli-service,cli-service-1.0.0-SNAPSHOT,19009,性能日志,命令行服务,116.128.204.13

@@ -1,0 +1,48 @@
+#sbi_version: 'v1.1.0.11,v1.1.0.12'
+#server.port: 18002
+#logging:
+#  config: classpath:logback.xml
+#  level:
+#    org.springframework.web: DEBUG
+#    org.apache.kafka.clients: OFF
+server:
+  #  port: 8092
+  port: @port.neMgr@
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+sbi_version: 'v1.1.0.11,v1.1.0.12'
+monitor:
+  interval: 15
+  unit: m
+  slice-count: 5
+  max-slice-count: 20
+  stagger-seconds: 10
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+
+kafka:
+  bootstrap-servers: 172.18.86.38:9092
+  consumer-group: ne-manager-test
+#logging.level.org.springframework.web: DEBUG
+logging.level.org.springframework.boot: DEBUG
+#logging.level.org.springframework.cloud.stream: DEBUG
+logging.level.org.apache.kafka.clients: OFF
+logging.level.org.mongodb.driver: OFF
+logging.level.root: DEBUG
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+kafka:
+  bootstrap-servers: ${KAFKA_BROKER}
+server:
+  address: ${myIp}
+logging.level.org.mongodb.driver: OFF
+logging.level.net.flex.dci.otn.controller.ne.manager: INFO

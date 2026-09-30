@@ -1,0 +1,30 @@
+sbi_version: @yangVersion@
+server.port: @port.notifier@
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.apache.kafka.clients: OFF
+kafka:
+  bootstrap-servers: 10.242.111.39:9092
+  replication-factor: 1
+  consumer-group: test-consumer
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+kafka:
+  bootstrap-servers: ${KAFKA_BROKER}
+server:
+  address: ${myIp}
+logging.level.net.flex.dci.otn.controller.alarm.notifier: INFO

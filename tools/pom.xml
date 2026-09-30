@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>net.flex.dci.otn</groupId>
+        <artifactId>controller</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>net.flex.dci.otn.controller</groupId>
+    <artifactId>tools</artifactId>
+    <name>tools</name>
+    <description>provide tool service</description>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>batchlock</module>
+        <module>kafka</module>
+        <!--    <module>notification</module>-->
+        <!--    <module>dci-cache</module>-->
+        <module>websocket</module>
+        <module>webapp</module>
+        <module>rpc-client</module>
+        <module>scanner-port-helper</module>
+        <module>lifecycle</module>
+        <module>utils</module>
+    </modules>
+
+</project>

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>discover1</artifactId>
+  <build>
+    <plugins>
+      <plugin>
+        <!-- curl http://localhost:8080/actuator/info to get git info-->
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>4.9.10</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>
+              <artifactId>lombok</artifactId>
+              <groupId>org.projectlombok</groupId>
+            </exclude>
+          </excludes>
+          <executable>true</executable>
+          <!--<mainClass>${start-class}</mainClass>-->
+          <jvmArguments>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005
+          </jvmArguments>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+        <groupId>org.springframework.boot</groupId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <appendAssemblyId>true</appendAssemblyId>
+          <descriptors>
+            <descriptor>assembly/assembly.xml</descriptor>
+          </descriptors>
+          <finalName>${project.name}-${project.version}</finalName>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <id>make-assembly</id>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>3.3.0</version>
+      </plugin>
+      <plugin>
+        <artifactId>systemd-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate-systemd-file</goal>
+            </goals>
+            <phase>generate-resources</phase>
+          </execution>
+        </executions>
+        <groupId>net.flex.dci.otc.plugin</groupId>
+        <version>1.0.0-SNAPSHOT</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-starter</artifactId>
+      <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <scope>test</scope>
+    </dependency>
+
+
+    <dependency>
+      <artifactId>discovery-common</artifactId>
+      <groupId>net.flex.dci.otn.controller.discovery</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>common-util</artifactId>
+      <groupId>net.flex.dci.otc.common</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>zkclient4boot</artifactId>
+      <groupId>net.flex.dci.otc.zk</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>netconf-serialization</artifactId>
+      <groupId>net.flex.dci.otc</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>webapp</artifactId>
+      <groupId>net.flex.dci.otn.controller.tools</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>db-mongo</artifactId>
+      <groupId>net.flex.dci.otc</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>rpc-client</artifactId>
+      <groupId>net.flex.dci.otn</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>distribution-lock</artifactId>
+      <groupId>net.flex.dci.otc</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>fastjson</artifactId>
+      <groupId>com.alibaba</groupId>
+      <version>1.2.80</version>
+    </dependency>
+    <dependency>
+      <artifactId>lombok</artifactId>
+      <groupId>org.projectlombok</groupId>
+    </dependency>
+  </dependencies>
+  <description>discover method 1</description>
+  <groupId>net.flex.dci.otn.controller</groupId>
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>controller</artifactId>
+    <groupId>net.flex.dci.otn</groupId>
+    <relativePath>../../pom.xml</relativePath>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+</project>

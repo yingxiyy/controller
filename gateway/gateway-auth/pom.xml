@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <artifactId>gateway-auth</artifactId>
+    <dependencies>
+        <dependency>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+            <groupId>org.springframework.boot</groupId>
+        </dependency>
+        <dependency>
+            <artifactId>spring-boot-starter-security</artifactId>
+            <groupId>org.springframework.boot</groupId>
+        </dependency>
+        <dependency>
+            <artifactId>commons-codec</artifactId>
+            <groupId>commons-codec</groupId>
+        </dependency>
+        <dependency>
+            <artifactId>spring-security-config</artifactId>
+            <groupId>org.springframework.security</groupId>
+        </dependency>
+        <dependency>
+            <artifactId>spring-security-oauth2-resource-server</artifactId>
+            <groupId>org.springframework.security</groupId>
+        </dependency>
+        <dependency>
+            <artifactId>spring-security-oauth2-client</artifactId>
+            <groupId>org.springframework.security</groupId>
+        </dependency>
+        <dependency>
+            <artifactId>spring-security-oauth2-jose</artifactId>
+            <groupId>org.springframework.security</groupId>
+        </dependency>
+        <dependency>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <groupId>com.nimbusds</groupId>
+        </dependency>
+        <dependency>
+            <artifactId>dci-cache</artifactId>
+            <groupId>net.flex.dci.otc.cache</groupId>
+        </dependency>
+        <dependency>
+            <artifactId>gateway-common</artifactId>
+            <groupId>net.flex.dci.otn</groupId>
+        </dependency>
+        <dependency>
+            <artifactId>zkclient4boot</artifactId>
+            <groupId>net.flex.dci.otc.zk</groupId>
+        </dependency>
+
+    </dependencies>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>gateway</artifactId>
+        <groupId>net.flex.dci.otn</groupId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+</project>

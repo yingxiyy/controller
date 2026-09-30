@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+net.flex.dci.otn.controller.tools.kafka.autoconfigure.DciKafkaAutoconfigure\

@@ -1,0 +1,196 @@
+{
+  "amplifierProfiles": {
+    "DGE_EAST_L": {
+      "wdmBand": {
+        "DEFAULT": {
+          "grid": {
+            "DEFAULT": {
+              "fixedTargetGain": 19.0,
+              "gainRangeSource": "TARGET_GAIN",
+              "targetGainTilt": 0.0,
+              "ampMode": "CONSTANTGAIN",
+              "autoPowerReduction": true,
+              "enable": true,
+              "properties": {
+                "egress-voa-atten": "0",
+                "loss-shutdown-hold-off-time": "0"
+              }
+            }
+          }
+        }
+      }
+    },
+    "DGE_EAST_C": {
+      "wdmBand": {
+        "DEFAULT": {
+          "grid": {
+            "DEFAULT": {
+              "targetGainSource": "AMPLIFIER_GAIN",
+              "gainRangeSource": "TARGET_GAIN",
+              "targetGainTilt": 0.0,
+              "ampMode": "CONSTANTGAIN",
+              "autoPowerReduction": true,
+              "enable": true,
+              "properties": {
+                "egress-voa-atten": "0",
+                "loss-shutdown-hold-off-time": "0"
+              }
+            }
+          }
+        }
+      }
+    },
+    "IRA_BAC": {
+      "wdmBand": {
+        "DEFAULT": {
+          "grid": {
+            "DEFAULT": {
+              "fixedTargetGain": 20.0,
+              "fixedGainRange": "FIXED",
+              "targetGainTilt": 0.0,
+              "ampMode": "CONSTANTGAIN",
+              "autoPowerReduction": true,
+              "enable": true,
+              "properties": {
+                "egress-voa-atten": "0",
+                "ase-injection": "NONE",
+                "loss-shutdown-hold-off-time": "0"
+              }
+            }
+          }
+        }
+      }
+    },
+    "IRA_PAC": {
+      "wdmBand": {
+        "DEFAULT": {
+          "grid": {
+            "DEFAULT": {
+              "targetGainSource": "AMPLIFIER_GAIN",
+              "gainRangeSource": "TARGET_GAIN",
+              "targetGainTilt": 0.0,
+              "ampMode": "CONSTANTGAIN",
+              "autoPowerReduction": true,
+              "enable": true,
+              "properties": {
+                "egress-voa-atten": "0",
+                "ase-injection": "NONE",
+                "loss-shutdown-hold-off-time": "0"
+              }
+            }
+          }
+        }
+      }
+    },
+    "OA_BAC": {
+      "wdmBand": {
+        "DEFAULT": {
+          "grid": {
+            "DEFAULT": {
+              "fixedTargetGain": 13.0,
+              "fixedGainRange": "LOW",
+              "targetGainTilt": 0.0,
+              "ampMode": "CONSTANTGAIN",
+              "targetAttenuation": 0.0,
+              "autoPowerReduction": true,
+              "enable": true
+            }
+          }
+        }
+      }
+    },
+    "OA_BAC": {
+      "wdmBand": {
+        "C": {
+          "grid": {
+            "0": {
+              "fixedTargetGain": 18.0,
+              "fixedGainRange": "LOW",
+              "targetGainTilt": 0.0,
+              "ampMode": "CONSTANTGAIN",
+              "targetAttenuation": 0.0,
+              "autoPowerReduction": true,
+              "enable": true
+            },
+            "DEFAULT": {
+              "fixedTargetGain": 13.0,
+              "fixedGainRange": "LOW",
+              "targetGainTilt": 0.0,
+              "ampMode": "CONSTANTGAIN",
+              "targetAttenuation": 0.0,
+              "autoPowerReduction": true,
+              "enable": true
+            }
+          }
+        }
+      }
+    },
+    "OA_PAC": {
+      "wdmBand": {
+        "DEFAULT": {
+          "grid": {
+            "DEFAULT": {
+              "targetGainSource": "AMPLIFIER_GAIN",
+              "gainRangeSource": "TARGET_GAIN",
+              "targetGainTilt": 0.0,
+              "ampMode": "CONSTANTGAIN",
+              "autoPowerReduction": true,
+              "enable": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "terminationPointProperties": {
+    "OTS_LINE_BASE": {
+      "wdmBand": {
+        "DEFAULT": {
+          "grid": {
+            "DEFAULT": {
+              "fiber-length-ingress-planning": "",
+              "fiber-length-egress-planning": "",
+              "external-egress-attenuation": "1.5",
+              "span-loss-adaptation.control-mode.oms-c": "MANUAL",
+              "span-loss-adaptation.control-mode.oms-l": "MANUAL",
+              "span-loss-adaptation.auto-control-range.oms-c": "",
+              "span-loss-adaptation.auto-control-range.oms-l": "",
+              "tilt-control.control-mode.oms-c": "MANUAL",
+              "tilt-control.control-mode.oms-l": "MANUAL"
+            }
+          }
+        }
+      }
+    },
+    "OTS_LINE_IRA": {
+      "wdmBand": {
+        "DEFAULT": {
+          "grid": {
+            "DEFAULT": {
+              "channel-optical-power-adjustment.control-mode": "MANUAL",
+              "channel-optical-power-adjustment.total-power-stability-condition": "false"
+            }
+          }
+        }
+      }
+    },
+    "OTS_LINE_DGE": {
+      "wdmBand": {
+        "DEFAULT": {
+          "grid": {
+            "DEFAULT": {
+              "channel-optical-power-adjustment.control-mode": "MANUAL",
+              "channel-optical-power-adjustment.total-power-stability-condition": "true"
+            }
+          }
+        }
+      }
+    }
+  },
+  "equipmentProperties": {
+    "IRA_ASE": {
+      "ASEL.enabled": "true",
+      "ASEC.enabled": "true"
+    }
+  }
+}

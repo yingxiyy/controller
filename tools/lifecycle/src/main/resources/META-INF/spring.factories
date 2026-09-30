@@ -1,0 +1,14 @@
+org.springframework.boot.autoconfigure.AutoConfigurationImportFilter=\
+org.springframework.boot.autoconfigure.condition.OnBeanCondition,\
+org.springframework.boot.autoconfigure.condition.OnClassCondition,\
+org.springframework.boot.autoconfigure.condition.OnWebApplicationCondition
+
+
+
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+net.flex.dci.otn.controller.tools.lifecycle.configuration.LifecycleInterceptorConfiguration,\
+net.flex.dci.otn.controller.tools.lifecycle.properties.LifecycleModuleProperties,\
+net.flex.dci.otn.controller.tools.lifecycle.core.RequestFilter,\
+net.flex.dci.otn.controller.tools.lifecycle.LifecycleDispatcher,\
+net.flex.dci.otn.controller.tools.lifecycle.handler.DefaultLifecycleLogHandler\
+

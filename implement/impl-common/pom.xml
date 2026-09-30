@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>controller</artifactId>
+    <groupId>net.flex.dci.otn</groupId>
+    <relativePath>../../pom.xml</relativePath>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+	
+  <groupId>net.flex.dci.otn.controller.implement</groupId>
+  <artifactId>impl-common</artifactId>
+  <description>provide nbi service for implement common module</description>
+  
+  <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jdk.version>1.8</jdk.version>
+        <jupiter.version>5.7.0</jupiter.version>
+        <test-containers.version>1.14.3</test-containers.version>
+    </properties>
+	
+	<dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>3.17.2</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+	
+  <dependencies>
+    <!-- 复用与 allocate、advance 相同的 RAMAN 透明路由解析。 -->
+    <dependency>
+      <groupId>net.flex.dci.otc</groupId>
+      <artifactId>optical-tools</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+      <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>spring-webmvc</artifactId>
+      <groupId>org.springframework</groupId>
+    </dependency>
+
+    <dependency>
+        <groupId>net.flex.dci.otc</groupId>
+        <artifactId>distribution-lock</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>net.flex.dci.otc</groupId>
+      <artifactId>netconf-serialization</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>net.flex.dci.otn.controller.batchlock</groupId>-->
+<!--      <artifactId>batchlock-lib</artifactId>-->
+<!--      <version>${project.version}</version>-->
+<!--    </dependency>-->
+    <dependency>
+      <groupId>net.flex.dci.otc.common</groupId>
+      <artifactId>common-util</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.flex.dci.otc.common</groupId>
+      <artifactId>common-model</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <artifactId>zkclient4boot</artifactId>
+      <groupId>net.flex.dci.otc.zk</groupId>
+      <version>${project.version}</version>
+
+    </dependency>
+    <dependency>
+      <groupId>net.flex.dci.otc</groupId>
+      <artifactId>db-mongo</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.flex.dci.otn</groupId>
+      <artifactId>rpc-client</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.flex.dci.otn.controller.tools</groupId>
+      <artifactId>kafka</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
+    <!-- 
+    <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+     -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+        </dependency>
+        
+        <dependency>
+		  <groupId>org.projectlombok</groupId>
+		  <artifactId>lombok</artifactId>
+		  <version>1.18.22</version>
+		</dependency>
+  </dependencies>
+
+
+</project>

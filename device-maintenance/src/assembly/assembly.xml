@@ -1,0 +1,81 @@
+<!--
+  Device Maintenance Service Assembly Configuration
+
+  打包结构:
+  device-maintenance-VERSION-bin.tar.gz
+  ├── device-maintenance-VERSION.jar  (根目录)
+  ├── *.conf                          (根目录)
+  ├── config/                         (配置目录)
+  │   ├── application*.yml
+  │   ├── logback-spring.xml
+  │   └── *.properties
+  └── bin/                            (脚本目录)
+      ├── *.sh
+      └── *.service
+-->
+
+<assembly>
+  <fileSets>
+    <!-- 把配置文件，打包进tar.gz文件的config目录 -->
+    <fileSet>
+      <directory>${project.basedir}/src/main/resources</directory>
+      <filtered>true</filtered>
+      <includes>
+        <include>*.xml</include>
+        <include>*.properties</include>
+        <include>application.yml</include>
+        <include>*.key</include>
+      </includes>
+      <lineEnding>lf</lineEnding>
+      <outputDirectory>config</outputDirectory>
+    </fileSet>
+
+    <!-- 把.conf文件放到根目录 -->
+    <fileSet>
+      <directory>${project.basedir}/src/main/resources</directory>
+      <includes>
+        <include>*.conf</include>
+      </includes>
+      <outputDirectory></outputDirectory>
+    </fileSet>
+
+    <!-- 把jar包，打进tar.gz文件的根目录 -->
+    <fileSet>
+      <directory>${project.build.directory}</directory>
+      <fileMode>0755</fileMode>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+      <outputDirectory></outputDirectory>
+    </fileSet>
+
+    <!-- Put generated systemd service file to /bin -->
+    <fileSet>
+      <directory>${project.build.directory}</directory>
+      <filtered>true</filtered>
+      <includes>
+        <include>*.service</include>
+      </includes>
+      <lineEnding>lf</lineEnding>
+      <outputDirectory>bin</outputDirectory>
+    </fileSet>
+
+    <!-- Put all generated script to /bin -->
+    <fileSet>
+      <directory>${project.build.directory}</directory>
+      <fileMode>0755</fileMode>
+      <filtered>true</filtered>
+      <includes>
+        <include>*.sh</include>
+      </includes>
+      <lineEnding>lf</lineEnding>
+      <outputDirectory>bin</outputDirectory>
+    </fileSet>
+
+  </fileSets>
+  <formats>
+    <format>tar.gz</format>
+  </formats>
+
+  <id>bin</id>
+</assembly>

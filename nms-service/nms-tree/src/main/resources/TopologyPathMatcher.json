@@ -1,0 +1,54 @@
+{
+  "pathMatchers": [
+    {
+      "antPathMatcher": "network-topology:network-topology/topology/site-view-topology/node/{nodeId}/view-topology:view",
+      "pathVariable": "nodeId",
+      "type": "VIEW_NODE"
+    },
+    {
+      "antPathMatcher": "network-topology:network-topology/topology/site-topology/node/{nodeId}",
+      "pathVariable": "nodeId",
+      "type": "SITE_NODE"
+    },
+    {
+      "antPathMatcher": "network-topology:network-topology/topology/otn-phy-topology/node/{nodeId}",
+      "pathVariable": "nodeId",
+      "type": "PHY_NODE"
+    },
+    {
+      "antPathMatcher": "network-topology:network-topology/topology/otn-phy-topology/node/{nodeId}/termination-point/{tpId}",
+      "pathVariable": "nodeId,tpId",
+      "type": "PHY_TP"
+    },
+    {
+      "antPathMatcher": "network-topology:network-topology/topology/site-topology/link/{linkId}",
+      "pathVariable": "linkId",
+      "type": "SITE_LINK"
+    },
+    {
+      "antPathMatcher": "network-topology:network-topology/topology/site-topology/tunnel/{tunnelId}",
+      "pathVariable": "tunnelId",
+      "type": "TUNNEL"
+    },
+    {
+      "antPathMatcher": "network-topology:network-topology/",
+      "pathVariable": "",
+      "type": "TOPOLOGY"
+    },
+    {
+      "antPathMatcher": "network-topology:network-topology/topology/site-view-topology",
+      "pathVariable": "",
+      "type": "VIEW_TOPOLOGY"
+    },
+    {
+      "antPathMatcher": "network-topology:network-topology/topology/otn-phy-topology/link/{phyLinkId}",
+      "pathVariable": "phyLinkId",
+      "type": "PHY_LINK"
+    },
+    {
+      "antPathMatcher": "network-topology:network-topology/topology/och-topology/link/{ochLinkId}",
+      "pathVariable": "ochLinkId",
+      "type": "OCH_LINK"
+    }
+  ]
+}

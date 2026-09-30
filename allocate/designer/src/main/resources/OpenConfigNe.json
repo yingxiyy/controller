@@ -1,0 +1,65 @@
+{
+  "timezone": "Asia/Shanghai",
+  "ntp": [
+    {
+      "ip": "127.0.0.1"
+    }
+  ],
+  "syslog": [
+    {
+      "ip": "127.0.0.1",
+      "port": 1234,
+      "selector": "ALL",
+      "severity": "DEBUG"
+    }
+  ],
+  "radius": [
+    {
+      "ip": "127.0.0.1",
+      "authPort": 1234,
+      "secretKey": "nokia-sbell",
+      "retryTimes": 10,
+      "timeout": 60
+    }
+  ],
+  "loginInfo": [
+    {
+      "vendor": "II-VI",
+      "name": "root",
+      "passwd": "iiviossdn",
+      "port": 830
+    },
+    {
+      "vendor": "Accelink",
+      "name": "admin",
+      "passwd": "Admin_123",
+      "port": 830
+    },
+    {
+      "vendor": "ZTE",
+      "name": "who",
+      "passwd": "Who_1234",
+      "port": 830
+    },
+    {
+      "vendor": "HW",
+      "name": "netconf",
+      "passwd": "Changeme_123",
+      "port": 830
+    },
+    {
+      "vendor": "NOKIA",
+      "name": "admin",
+      "passwd": "admin",
+      "port": 830
+    },
+    {
+      "vendor": "COHERENT",
+      "name": "admin",
+      "passwd": "Changeit@123",
+      "port": 830
+    }
+
+
+  ]
+}

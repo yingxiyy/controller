@@ -1,0 +1,38 @@
+
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j='http://jakarta.apache.org/log4j/'>
+ 
+	<appender name="appendConsole" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss:SSS} %l %m%n" />
+		</layout>
+		<!--限制输出级别 -->
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="LevelMax" value="FATAL" />
+			<param name="LevelMin" value="DEBUG" />
+		</filter>
+	</appender>
+ 
+	<appender name="myFile" class="org.apache.log4j.RollingFileAppender">          
+	        <param name="File" value="test.log" /><!-- 设置日志输出文件名 -->       
+	        <!-- 设置是否在重新启动服务时，在原有日志的基础添加新日志 -->       
+	        <param name="Append" value="true" />       
+	        <param name="MaxBackupIndex" value="10" />       
+	        <layout class="org.apache.log4j.PatternLayout">       
+	            <param name="ConversionPattern" value="%p (%c:%L)- %m%n" />       
+	        </layout>       
+	</appender>
+ 
+	<root>
+		<priority value="debug" />
+		<appender-ref ref="appendConsole" />
+		<appender-ref ref="myFile"/>
+	</root>
+</log4j:configuration>

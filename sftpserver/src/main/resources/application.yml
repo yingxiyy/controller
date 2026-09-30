@@ -1,0 +1,40 @@
+sbi_version: @yangVersion@
+server.port: @port.sftp@
+
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    net.flex.dci.otn.controller.sftp.manager: debug
+    org.apache.kafka.clients: OFF
+    com.mongodb.diagnostics: OFF
+
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+
+kafka:
+  bootstrap-servers: 172.18.86.38:9092
+  replication-factor: 1
+  consumer-group: sftp-manager
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+logging:
+  config: ./config/logback-spring.xml
+
+kafka:
+  bootstrap-servers: ${KAFKA_BROKER}
+  replication-factor: 1
+  consumer-group: sftp-server

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion><parent><groupId>net.flex.dci.otn</groupId><artifactId>controller</artifactId><version>1.0.0-SNAPSHOT</version><relativePath>../../pom.xml</relativePath></parent>
+
+    <artifactId>ne-attribute-upgrade-tool</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+    <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+    <groupId>net.flex.dci.otc</groupId>
+    <artifactId>db-mongo</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    </dependency>
+    <dependency>
+    <groupId>net.flex.dci.otn</groupId>
+    <artifactId>rpc-client</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+</dependencies>
+
+<build>
+  <resources>
+  <resource>
+     <directory>${basedir}/src/main/resources</directory>
+             <filtering>true</filtering>
+             <includes>
+               <include>**/application*.yml</include>
+               <include>*.properties</include>
+               <include>logback-spring.xml</include>
+               <include>neUpperIp.json</include>
+             </includes>
+    </resource>
+    </resources>
+        <plugins>
+      <plugin>
+        <!-- curl http://localhost:8080/actuator/info to get git info-->
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>4.9.10</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+             <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                  </plugin>
+                  <plugin>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <groupId>org.apache.maven.plugins</groupId>
+                  </plugin>
+                  <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                  </plugin>
+                  <plugin>
+                    <groupId>net.flex.dci.otc.plugin</groupId>
+                    <artifactId>systemd-maven-plugin</artifactId>
+                  </plugin>
+         </plugins>
+</build>
+    
+</project>

@@ -1,0 +1,58 @@
+#
+# /*
+#  * Copyright (c) 2021-2020 and others.  All rights reserved.
+#  *
+#  * This program and the accompanying materials are made available under the
+#  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+#  * and is available at http://www.eclipse.org/legal/epl-v10.html
+#  */
+#
+server:
+  port: 1999
+export:
+  file:
+    path: /Volumes/musa/download
+    ttl: 3 #days
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+clickhouse:
+  url: jdbc:clickhouse://127.0.0.1:8123/dciworld?compress=1
+  username: default
+  password: dciUser123!@#
+  hikari:
+    maximumPoolSize: 30
+    minimumIdle: 5
+    connectionTimeout: 30000
+    maxLifetime: 600000
+    idlTimeout: 1800000
+
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    org.springframework.web: DEBUG
+    org.apache.kafka.clients: OFF
+
+#logging.level.org.springframework.web: DEBUG
+logging.level.org.springframework.boot: info
+logging.level.org.apache.zookeeper: OFF
+#logging.level.org.springframework.cloud.stream: DEBUG
+logging.level.org.apache.kafka.clients: OFF
+logging.level.net.flex.dci.otc.zkclient4boot: OFF
+#logging.level.root: DEBUG
+kafka:
+  bootstrap-servers: 127.0.0.1:9092
+  replication-factor: 1
+  consumer-group: test-consumer
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+kafka:
+  bootstrap-servers: ${KAFKA_BROKER}
+logging.level.net.flex.dci.otn.controller.db.monitor: INFO
+
+

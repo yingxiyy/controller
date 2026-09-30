@@ -1,0 +1,27 @@
+/*
+ *  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+ *
+ *  This program and the accompanying materials are made available under the
+ *  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ *  and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+
+package net.flex.dci.otc.controller.notifier.core.domain.objectdetail;
+
+import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
+import lombok.Builder;
+import lombok.Data;
+
+/**
+ * @version 1.0
+ * @date 2021/11/5 16:19
+ */
+@Data
+@Builder
+public class ObjectNotification implements Serializable {
+
+    @SerializedName("object-notification")
+    private ObjectDetailNotification objectDetailNotification;
+
+}

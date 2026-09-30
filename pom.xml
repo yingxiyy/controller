@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~  Copyright (c) 2019 Network Flex Any Comp. and others and others.  All rights reserved.
+  ~
+  ~  This program and the accompanying materials are made available under the
+  ~  terms of the Eclipse Public License v1.0 which accompanies this distribution,
+  ~  and is available at http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <groupId>org.springframework.boot</groupId>
+    <relativePath></relativePath>
+    <version>2.4.1</version>
+  </parent>
+
+  <description>SDN for OTN network</description>
+  <artifactId>controller</artifactId>
+  <groupId>net.flex.dci.otn</groupId>
+  <version>1.0.0-SNAPSHOT</version>
+  <name>controller</name>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>tools</module>
+    <module>app-monitor</module>
+    <module>status</module>
+    <module>gateway</module>
+    <!--    <module>adapterMgr</module>-->
+    <module>neMgr</module>
+    <module>allocate</module>
+    <!--    <module>telemetryMgr</module>-->
+    <module>system-config-manager</module>
+    <module>notifier</module>
+    <module>sftpserver</module>
+    <module>implement</module>
+    <!--    <module>discovery</module>-->
+    <module>db-monitor</module>
+    <module>idc-manager</module>
+    <module>taskInfo</module>
+    <module>nms-service</module>
+    <module>auth-service</module>
+    <module>user-manager</module>
+    <module>otdr-manager</module>
+    <module>schedule</module>
+    <module>devicelog</module>
+    <module>cli-service</module>
+    <module>device-maintenance</module>
+    <module>subnet-manager</module>
+    <module>resource-statistic</module>
+    <module>assemble</module>
+    <!--
+        <module>task</module>
+        <module>adapterconnector</module>
+        <module>ne-designer</module>
+        <module>test</module>
+        <module>config</module>
+        <module>../systemdmavenplugin</module>
+    -->
+  </modules>
+
+  <properties>
+    <java.version>1.8</java.version>
+    <port.adapterMgr>18001</port.adapterMgr>
+    <port.advance>18027</port.advance>
+
+    <port.alarm-notifier>8092</port.alarm-notifier>
+    <port.allocate>18006</port.allocate>
+    <port.app-monitor>18000</port.app-monitor>
+    <port.devicelog>18202</port.devicelog>
+    <port.discover>18010</port.discover>
+    <port.gateway>8181</port.gateway>
+    <port.impl-app>18007</port.impl-app>
+    <port.neMgr>18002</port.neMgr>
+    <port.notifier>8885</port.notifier>
+    <port.otdr-manager>18201</port.otdr-manager>
+    <port.sftp>18280</port.sftp>
+    <port.status>18005</port.status>
+    <port.taskinfo>18200</port.taskinfo>
+    <port.telemetryMgr>18082</port.telemetryMgr>
+    <projectVersion>v1.2.2.0</projectVersion>
+    <yangVersion>v1.35</yangVersion>
+    <logback.version>1.2.13</logback.version>
+    <!-- 默认打 fatjar tag -->
+    <fatjar.tag.skip>false</fatjar.tag.skip>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <artifactId>spring-boot</artifactId>
+      <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+      <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-configuration-processor</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>lombok</artifactId>
+      <groupId>org.projectlombok</groupId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <artifactId>reactor-test</artifactId>
+      <groupId>io.projectreactor</groupId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <exclusions>
+          <exclusion>
+            <artifactId>curator-x-discovery</artifactId>
+            <groupId>org.apache.curator</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>curator-recipes</artifactId>
+            <groupId>org.apache.curator</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>curator-framework</artifactId>
+            <groupId>org.apache.curator</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>curator-client</artifactId>
+            <groupId>org.apache.curator</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>apache-curator</artifactId>
+            <groupId>org.apache.curator</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>zookeeper</artifactId>
+            <groupId>org.apache.zookeeper</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>spring-boot-starter-logging</artifactId>
+            <groupId>org.springframework.boot</groupId>
+          </exclusion>
+        </exclusions>
+        <groupId>org.springframework.boot</groupId>
+        <scope>import</scope>
+        <type>pom</type>
+
+        <version>2.4.1</version>
+      </dependency>
+
+      <dependency>
+        <artifactId>slf4j-log4j12</artifactId>
+        <groupId>org.slf4j</groupId>
+        <version>1.7.30</version>
+      </dependency>
+      <dependency>
+        <artifactId>slf4j-simple</artifactId>
+        <groupId>org.slf4j</groupId>
+        <version>1.7.30</version>
+      </dependency>
+
+      <dependency>
+        <artifactId>zkclient4boot</artifactId>
+        <groupId>net.flex.dci.otc.zk</groupId>
+        <version>1.0.0-SNAPSHOT</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>3.8.1</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+    </plugins>
+
+    <pluginManagement>
+
+
+      <plugins>
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>2.4.1</version>
+          <configuration>
+            <excludes>
+              <exclude>
+                <artifactId>lombok</artifactId>
+                <groupId>org.projectlombok</groupId>
+              </exclude>
+            </excludes>
+            <executable>true</executable>
+            <!--<mainClass>${start-class}</mainClass>-->
+            <jvmArguments>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005
+            </jvmArguments>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>repackage</goal>
+                <goal>build-info</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <groupId>org.apache.maven.plugins</groupId>
+          <version>2.7</version>
+          <configuration>
+            <delimiters>
+              <delimiter>@</delimiter>
+            </delimiters>
+            <useDefaultDelimiters>false</useDefaultDelimiters>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>3.3.0</version>
+          <configuration>
+            <descriptors>
+              <descriptor>src/assembly/assembly.xml</descriptor>
+            </descriptors>
+            <finalName>${project.name}-${project.version}</finalName>
+            <appendAssemblyId>true</appendAssemblyId>
+          </configuration>
+          <executions>
+            <execution>
+              <id>make-assembly</id>
+              <phase>package</phase>
+              <goals>
+                <goal>single</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>net.flex.dci.otc.plugin</groupId>
+          <artifactId>systemd-maven-plugin</artifactId>
+          <version>1.0.0-SNAPSHOT</version>
+          <executions>
+            <execution>
+              <phase>generate-resources</phase>
+              <goals>
+                <goal>generate-systemd-file</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <!-- 1. 生成 project.tag -->
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>3.4.0</version>
+          <executions>
+            <execution>
+              <id>generate-fatjar-tag</id>
+              <phase>initialize</phase>
+              <goals>
+                <goal>timestamp-property</goal>
+              </goals>
+              <configuration>
+                <name>fatjar.tag</name>
+                <pattern>yyyyMMdd-HHmm</pattern>
+                <skip>${fatjar.tag.skip}</skip>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+
+        <!-- 2. 生成 tag-info -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>3.1.0</version>
+          <executions>
+            <execution>
+              <id>generate-fatjar-tag-info</id>
+              <phase>generate-resources</phase>
+              <goals>
+                <goal>run</goal>
+              </goals>
+              <configuration>
+                <exportAntProperties>true</exportAntProperties>
+                <target>
+                  <!-- 检查 platform.tag -->
+                  <condition property="hasPlatformTag">
+                    <and>
+                      <isset property="platform.tag"/>
+                      <not>
+                        <equals arg1="${platform.tag}" arg2=""/>
+                      </not>
+                    </and>
+                  </condition>
+                  <fail message="ERROR: platform.tag is required" unless="hasPlatformTag"/>
+
+                  <!-- 创建 classes 目录 -->
+                  <mkdir dir="target/classes"/>
+                  <echo message="Debug: fatjar.tag is ${fatjar.tag}"/>
+
+                  <!-- 写 tag-info -->
+                  <echo file="target/classes/tag-info">
+                    ${platform.tag}--${fatjar.tag}__${project.artifactId}
+                  </echo>
+                  <property name="fatjar.full.tag"
+                            value="${platform.tag}__${fatjar.tag}_${project.artifactId}"/>
+                </target>
+                <skip>${fatjar.tag.skip}</skip>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+
+        <!-- 3. git tag -->
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>3.1.0</version>
+          <executions>
+            <execution>
+              <id>create-fatjar-git-tag</id>
+              <phase>package</phase>
+              <goals>
+                <goal>exec</goal>
+              </goals>
+
+              <configuration>
+                <executable>git</executable>
+                <workingDirectory>${project.basedir}</workingDirectory>
+                <!--                <commandlineArgs>tag ${fatjar.full.tag}</commandlineArgs>-->
+                <arguments>
+                  <argument>tag</argument>
+                  <argument>${fatjar.full.tag}</argument>
+                </arguments>
+                <skip>${fatjar.tag.skip}</skip>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+
+      </plugins>
+    </pluginManagement>
+  </build>
+
+</project>

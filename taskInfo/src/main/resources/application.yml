@@ -1,0 +1,25 @@
+server:
+  port: @port.taskinfo@
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+kafka:
+  bootstrap-servers: 127.0.0.1:9092
+  consumer-group: task-info-test
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+kafka:
+  bootstrap-servers: ${KAFKA_BROKER}
+  replication-factor: ${KAFKA_REPLICA}
+  consumer-group: task-info
