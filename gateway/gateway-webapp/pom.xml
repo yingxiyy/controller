@@ -23,7 +23,8 @@
   <description>rest gateway project for Spring Boot</description>
 
   <properties>
-    <java.version>1.8</java.version>
+    <!-- Keep this service aligned with the controller Java 21 baseline. -->
+    <java.version>21</java.version>
     <frontend-dir>${project.basedir}/../../../ui/web/dist/</frontend-dir>
   </properties>
   <dependencies>
